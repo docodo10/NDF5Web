@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Vault | NDF5 Productions</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ndf: {
+              paper: "#F0EFE9",
+              deep: "#0B0806",
+              gold: "#C5A065",
+              red: "#B10E0E",
+              twilight: "#1C1A18"
+            }
+          },
+          fontFamily: {
+            sans: ["Manrope", "system-ui", "sans-serif"],
+            serif: ["Playfair Display", "serif"],
+            mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { background:#0B0806; color:#F0EFE9; }
+    ::selection { background:#C5A065; color:#0B0806; }
+  </style>
+</head>
+
+<body class="min-h-screen">
+  <!-- TOP BAR -->
+  <header class="sticky top-0 z-40">
+    <div class="backdrop-blur bg-ndf-deep/70 border-b border-white/10">
+      <nav class="mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <a href="../Website_NDF.html" class="flex items-center gap-3">
+            <img
+              src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.PNG"
+              alt="NDF5 Productions"
+              class="h-12 w-auto object-contain"
+              decoding="async"
+            />
+            <span class="hidden sm:inline text-xs font-mono uppercase tracking-widest text-white/60" data-i18n="top_kicker">Restricted</span>
+          </a>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="button" onclick="NDFVault.toggleLang()"
+            class="bg-white/5 border border-white/15 px-4 py-2 text-xs font-mono uppercase tracking-widest text-white/70 hover:text-white hover:border-white/25 transition rounded-full">
+            <span id="langLabel">FR</span>
+          </button>
+
+          <a href="../Website_NDF.html"
+             class="hidden sm:inline-flex items-center gap-2 bg-white/5 border border-white/15 px-4 py-2 text-xs font-mono uppercase tracking-widest rounded-full text-white/75 hover:text-white hover:border-white/25 transition">
+            <i data-lucide="home" class="w-4 h-4"></i>
+            <span data-i18n="top_home">Main</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- AUTH MODAL (Vault access) -->
+  <div id="auth-modal"
+       class="fixed inset-0 z-[200] hidden bg-black/90 backdrop-blur-xl flex items-center justify-center opacity-0 transition-opacity duration-500">
+    <div class="w-full max-w-md p-8 relative">
+      <button onclick="NDFVault.closeVault()"
+              class="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors"
+              aria-label="Close">
+        <i data-lucide="x" class="w-8 h-8"></i>
+      </button>
+
+      <div class="text-center mb-10">
+        <i data-lucide="shield-alert" class="w-12 h-12 text-ndf-gold mx-auto mb-4"></i>
+        <h2 class="font-serif text-3xl text-ndf-paper" data-i18n="auth_title">Restricted Access</h2>
+        <p class="font-mono text-xs text-ndf-gold/60 mt-2 uppercase tracking-widest" data-i18n="auth_sub">Authorized Partners Only</p>
+      </div>
+
+      <form onsubmit="NDFVault.handleLogin(event)" class="space-y-8">
+        <div class="relative group">
+          <input
+            type="password"
+            id="password"
+            class="w-full bg-transparent border-b border-white/20 py-3 text-center text-xl text-ndf-gold font-serif tracking-widest focus:outline-none focus:border-ndf-gold transition-colors placeholder:text-white/10 placeholder:font-sans"
+            placeholder="••••••••"
+            autocomplete="off"
+          >
+        </div>
+
+        <button type="submit"
+                class="w-full py-4 bg-ndf-gold text-ndf-deep font-mono text-xs font-bold uppercase tracking-widest hover:bg-white transition-colors duration-300">
+          <span data-i18n="auth_btn">Authenticate</span>
+        </button>
+      </form>
+
+      <p id="error-msg"
+         class="text-ndf-red text-xs font-mono text-center mt-6 opacity-0 tracking-widest"
+         data-i18n="auth_error">ACCESS DENIED</p>
+
+      <p class="mt-8 text-[11px] leading-relaxed text-white/40 font-mono uppercase tracking-widest"
+         data-i18n="auth_note">
+        Replace the password string in vault.js before publishing.
+      </p>
+    </div>
+  </div>
+
+  <!-- VAULT CONTENT (post-auth UI) -->
+  <div id="vault-content" class="hidden min-h-[calc(100vh-80px)] bg-ndf-deep overflow-y-auto">
+    <div class="mx-auto max-w-6xl px-6 md:px-12 py-10 md:py-14">
+
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-10 border-b border-ndf-gold/30 pb-6">
+        <div>
+          <div class="text-xs font-mono uppercase tracking-widest text-white/50" data-i18n="vault_kicker">The Vault</div>
+          <h1 class="mt-2 text-4xl md:text-5xl font-serif italic text-ndf-gold" data-i18n="vault_title">The Vault</h1>
+          <p class="mt-3 text-sm md:text-base text-white/65 leading-relaxed" data-i18n="vault_sub">
+            Confidential materials for authorized partners.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="NDFVault.logout()"
+                  class="inline-flex items-center gap-2 bg-white/5 border border-white/15 px-4 py-2 text-xs font-mono uppercase tracking-widest rounded-full text-ndf-red hover:text-white hover:border-white/25 transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span data-i18n="vault_logout">Log Out</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div class="rounded-2xl bg-white/5 p-7 border border-white/10">
+          <div class="flex items-start justify-between gap-4">
+            <h3 class="font-serif text-2xl text-ndf-paper" data-i18n="card1_title">Investment Prospectus</h3>
+            <i data-lucide="file-down" class="w-5 h-5 text-white/50"></i>
+          </div>
+          <p class="text-white/55 text-sm mt-3 mb-6 leading-relaxed" data-i18n="card1_desc">
+            Financial modeling and distribution strategy (example placeholder).
+          </p>
+          <a href="#"
+             class="inline-flex items-center gap-2 text-ndf-gold text-xs uppercase tracking-widest hover:text-white transition"
+             data-i18n="card1_action">
+            <i data-lucide="download" class="w-4 h-4"></i> Download PDF
+          </a>
+        </div>
+
+        <div class="rounded-2xl bg-white/5 p-7 border border-white/10">
+          <div class="flex items-start justify-between gap-4">
+            <h3 class="font-serif text-2xl text-ndf-paper" data-i18n="card2_title">Script: Chapter I</h3>
+            <i data-lucide="file-text" class="w-5 h-5 text-white/50"></i>
+          </div>
+          <p class="text-white/55 text-sm mt-3 mb-6 leading-relaxed" data-i18n="card2_desc">
+            Watermarked draft for review (example placeholder).
+          </p>
+          <a href="#"
+             class="inline-flex items-center gap-2 text-ndf-gold text-xs uppercase tracking-widest hover:text-white transition"
+             data-i18n="card2_action">
+            <i data-lucide="eye" class="w-4 h-4"></i> View Document
+          </a>
+        </div>
+      </div>
+
+      <div class="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div class="text-xs font-mono uppercase tracking-widest text-white/50" data-i18n="footer_line">
+          For industry presentation purposes.<br>© 2026 NDF5 Productions Inc. All rights reserved.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- OPTIONAL (shared JS): include vault.js as a separate file -->
+  <script src="./vault.js"></script>
+</body>
+</html>
