@@ -1,0 +1,700 @@
+<!-- Characters-L2.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NDF — Characters (L2)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Manrope", "ui-sans-serif", "system-ui"],
+            serif: ["Playfair Display", "ui-serif", "Georgia"],
+            mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular"]
+          },
+          colors: {
+            ndf: {
+              deep: "#0E0F12",
+              ink:  "#17181C",
+              paper:"#F6F2EA",
+              gold: "#C7A35A",
+              steel:"#3A3D45"
+            }
+          },
+          boxShadow: {
+            soft: "0 14px 48px rgba(0,0,0,.35)",
+            card: "0 10px 34px rgba(0,0,0,.38)"
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root { color-scheme: dark; }
+
+    .noise:before{
+      content:"";
+      position:fixed; inset:0;
+      pointer-events:none;
+      opacity:.08;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+    }
+
+    .reveal{ opacity:0; transform: translateY(12px); transition: opacity .65s ease, transform .65s ease; }
+    .reveal.on{ opacity:1; transform:none; }
+
+    .card-img{
+      filter: grayscale(100%) contrast(1.05) brightness(.92);
+      transition: filter .65s ease, transform .65s ease;
+      will-change: filter, transform;
+    }
+    .card:hover .card-img,
+    .card:focus-visible .card-img{
+      filter: grayscale(0%) contrast(1.03) brightness(1);
+      transform: scale(1.02);
+    }
+
+    .ring-soft{ box-shadow: 0 0 0 1px rgba(199,163,90,.22) inset; }
+
+    .modal-backdrop{
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(10px);
+    }
+
+    .card-overlay{
+      background: linear-gradient(to top, rgba(0,0,0,.86), rgba(0,0,0,.28), rgba(0,0,0,0));
+    }
+
+    /* nicer focus ring on dark */
+    .focus-gold:focus{
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(199,163,90,.35);
+    }
+  </style>
+</head>
+
+<body class="noise bg-ndf-deep text-ndf-paper">
+  <header class="sticky top-0 z-40">
+    <div class="backdrop-blur bg-ndf-deep/75 border-b border-white/10">
+      <nav class="mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
+
+        <div class="flex items-center gap-4">
+          <button type="button" class="shrink-0"
+            onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            aria-label="Scroll to top">
+            <img
+              src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
+              alt="NDF5 Productions"
+              class="h-14 w-auto block object-contain"
+              decoding="async"
+            />
+          </button>
+
+          <div class="flex items-center gap-3">
+            <a id="backLink" href="#"
+              class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-ndf-paper/70 hover:text-ndf-paper transition">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+              <span data-i18n="back_main">Back</span>
+            </a>
+            <span class="text-white/20">/</span>
+            <span class="text-xs font-mono uppercase tracking-widest text-ndf-paper/55" data-i18n="kicker">Characters</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="button" onclick="toggleLang()"
+            class="bg-white/25 border border-white/15 px-4 py-2 text-xs font-mono uppercase tracking-widest text-ndf-paper/80 hover:bg-ndf-gold hover:border-ndf-gold hover:text-ndf-deep transition-all duration-300">
+            <span id="lang-btn">FR</span>
+          </button>
+
+          <a id="mainLinkTop" href="#"
+            class="hidden sm:inline-flex items-center gap-2 bg-white/25 border border-white/15 text-ndf-paper/85 px-6 py-2 text-xs font-mono uppercase tracking-widest hover:bg-ndf-gold hover:border-ndf-gold hover:text-ndf-deep transition-all duration-300">
+            <span data-i18n="open_main">Main</span>
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </div>
+
+      </nav>
+    </div>
+  </header>
+
+  <main class="relative z-10">
+    <section class="mx-auto max-w-7xl px-6 pt-14 pb-8">
+      <div class="reveal">
+        <div class="text-2xl font-mono tracking-widest uppercase text-ndf-gold" data-i18n="label">Characters</div>
+
+        <h1 class="mt-4 font-serif text-center text-4xl leading-tight text-ndf-paper"
+            data-i18n="headline">
+          A large ensemble designed for <br>long-term arcs and premium talent.
+        </h1>
+
+        <div class="mt-6 grid md:grid-cols-2 gap-5 md:gap-6">
+          <div class="rounded-2xl bg-white/5 border border-white/10 ring-soft shadow-card p-6">
+            <p class="text-base md:text-lg leading-relaxed text-ndf-paper/75" data-i18n="p_left_1"></p>
+            <p class="mt-4 text-base md:text-lg leading-relaxed text-ndf-paper/75" data-i18n="p_left_2"></p>
+          </div>
+
+          <div class="rounded-2xl bg-white/5 border border-white/10 ring-soft shadow-card p-6">
+            <p class="text-base md:text-lg leading-relaxed text-ndf-paper/75" data-i18n="p_right_1"></p>
+            <p class="mt-4 text-base md:text-lg leading-relaxed text-ndf-paper/75" data-i18n="p_right_2"></p>
+
+            <div class="mt-6 flex flex-wrap gap-2 text-xs font-mono tracking-widest uppercase text-ndf-paper/70">
+              <span class="px-3 py-2 rounded-full bg-white/25 border border-white/10 ring-soft" data-i18n="pill_1"></span>
+              <span class="px-3 py-2 rounded-full bg-white/25 border border-white/10 ring-soft" data-i18n="pill_2"></span>
+              <span class="px-3 py-2 rounded-full bg-white/25 border border-white/10 ring-soft" data-i18n="pill_3"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-7xl px-6 pb-6">
+      <div class="reveal flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+        <div class="flex flex-wrap gap-2">
+          <button class="filterBtn px-3 py-2 rounded-md bg-ndf-gold hover:bg-white border border-white/10 ring-soft text-xs font-mono tracking-widest uppercase text-ndf-deep/85"
+                  data-filter="all" data-i18n="f_all">All</button>
+
+          <button class="filterBtn px-3 py-2 rounded-md bg-ndf-gold hover:bg-white border border-white/10 ring-soft text-xs font-mono tracking-widest uppercase text-ndf-deep/85"
+                  data-filter="family" data-i18n="f_family">Family</button>
+
+          <button class="filterBtn px-3 py-2 rounded-md bg-ndf-gold hover:bg-white border border-white/10 ring-soft text-xs font-mono tracking-widest uppercase text-ndf-deep/85"
+                  data-filter="allies" data-i18n="f_allies">Allies</button>
+
+          <button class="filterBtn px-3 py-2 rounded-md bg-ndf-gold hover:bg-white border border-white/10 ring-soft text-xs font-mono tracking-widest uppercase text-ndf-deep/85"
+                  data-filter="staff" data-i18n="f_staff">Staff</button>
+
+          <button class="filterBtn px-3 py-2 rounded-md bg-ndf-gold hover:bg-white  border border-white/10 ring-soft text-xs font-mono tracking-widest uppercase text-ndf-deep/85"
+                  data-filter="friends" data-i18n="f_friends">Friends</button>
+
+          <button class="filterBtn px-3 py-2 rounded-md bg-ndf-gold hover:bg-white border border-white/10 ring-soft text-xs font-mono tracking-widest uppercase text-ndf-deep/85"
+                  data-filter="adversaries" data-i18n="f_adversaries">Adversaries</button>
+        </div>
+
+        <div class="md:ml-auto w-full md:w-[360px]">
+          <input id="q" type="search"
+            class="w-full px-4 py-2 rounded-md bg-white/5 border border-white/12 ring-soft text-ndf-paper/85 placeholder:text-ndf-paper/40 focus:outline-none focus:ring-2 focus:ring-ndf-gold/35"
+            data-i18n-placeholder="ph_search"
+            placeholder="Search a character..."
+          />
+        </div>
+      </div>
+    </section>
+
+    <p class="reveal mb-5 text-sm md:text-base text-ndf-paper/60 text-center font-light tracking-wide"
+      data-i18n="click_hint">
+      Click on the character you want to learn more about.
+    </p>
+
+
+    <section class="mx-auto max-w-7xl px-6 pb-16">
+      <div id="grid" class="reveal grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5"></div>
+      <p class="mt-8 text-xs leading-relaxed text-ndf-paper/55 max-w-4xl" data-i18n="note"></p>
+    </section>
+
+    <!-- Footer (L2) -->
+    <section class="mx-auto max-w-7xl px-6 pb-16">
+      <div class="reveal delay-450 mt-10 rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/55" data-i18n="footer_line">
+          For industry presentation purposes. © 2026 NDF5 Productions Inc. All rights reserved.
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="modal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0"></div>
+
+    <div class="relative w-full min-h-[100dvh] flex items-start md:items-center justify-center overflow-y-auto
+            p-5 md:p-10 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+16px)]">
+      <div class="w-full max-w-4xl bg-ndf-ink rounded-2xl shadow-soft overflow-hidden border border-white/10 ring-soft
+            max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-32px)]
+            min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-32px)]
+            md:min-h-0 md:max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-32px)]
+            flex flex-col">
+
+        <!-- Header (tighter) -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-white/10">
+          <div class="min-w-0">
+            <div class="text-xs font-mono tracking-widest uppercase text-ndf-gold" id="mGroup"></div>
+            <div class="mt-0.5 font-serif italic text-2xl md:text-3xl leading-tight truncate text-ndf-paper" id="mName"></div>
+            <div class="mt-0.5 text-sm text-ndf-paper/60" id="mTitle"></div>
+          </div>
+
+          <button id="closeModal"
+            class="px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/12 ring-soft text-xs font-mono tracking-widest uppercase text-ndf-paper/75 hover:text-ndf-paper">
+            <span data-i18n="close">Close</span>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 flex flex-col md:grid md:grid-cols-2 gap-0 min-h-0">
+
+         <!-- Image (mobile: full image, no crop; md+: cinematic cover, centered) -->
+          <div class="bg-black/55 p-4 md:p-0 flex items-center justify-center">
+            <div class="w-full max-w-[360px] md:max-w-[520px] mx-auto">
+              <div class="relative overflow-hidden rounded-xl md:rounded-none bg-black/30
+                          h-[38vh] sm:h-[44vh] max-h-[520px] md:h-[560px]
+                          flex items-center justify-center">
+                <img id="mImg" alt=""
+                    class="block w-full h-full object-contain object-center" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Text (no inner scroll on mobile; only on desktop) -->
+          <div class="p-5 md:p-7">
+            <div class="overflow-visible md:overflow-y-auto md:pr-1 md:max-h-[520px]">
+
+              <div class="text-xs font-mono tracking-widest uppercase text-ndf-paper/55 mb-1" data-i18n="traits_label"></div>
+              <div id="mWords" class="text-[15px] leading-snug text-ndf-paper/80"></div>
+
+              <div class="mt-3 border-t border-white/10 pt-3">
+                <div class="text-xs font-mono tracking-widest uppercase text-ndf-paper/55 mb-1" data-i18n="line_label">Character beat</div>
+                <p id="mLine" class="text-sm leading-snug text-ndf-paper/65"></p>
+              </div>
+
+              <p class="mt-3 text-[11px] leading-relaxed text-ndf-paper/45" data-i18n="modal_note"></p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer nav (always visible, smaller buttons, tighter spacing) -->
+        <div class="px-5 pb-5 md:px-7 md:pb-7">
+          <div class="border-t border-white/10 pt-3">
+            <div class="flex gap-2">
+              <button id="prevBtn"
+                class="flex-1 px-4 py-2 md:py-3 rounded-md bg-white/5 hover:bg-white/10 border border-white/12 ring-soft text-xs font-mono tracking-widest uppercase text-ndf-paper/75 hover:text-ndf-paper"
+                data-i18n="prev"></button>
+
+             <button id="nextBtn"
+                class="flex-1 px-4 py-2 md:py-3 rounded-md bg-ndf-gold hover:brightness-110 text-ndf-deep text-xs font-mono tracking-widest uppercase transition"
+                data-i18n="next"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // GitHub raw base
+    const IMG_BASE = "https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/characters/";
+
+    // Try these extensions (in this order)
+    const EXT_TRIES = [".png",".jpg",".jpeg",".webp",".PNG",".JPG",".JPEG",".WEBP"];
+
+    // Routing (matches Timeline/Production behavior)
+    const MAIN_PAGE = "../index.html";
+    const MAIN_HASH = "#characters";
+
+    function setLinks(){
+      const backUrl = `${MAIN_PAGE}${MAIN_HASH}`;
+      const back = document.getElementById("backLink");
+      const mainTop = document.getElementById("mainLinkTop");
+
+      if (back) back.href = backUrl;
+      if (mainTop) mainTop.href = MAIN_PAGE;
+
+      if (back) {
+        back.addEventListener("click", (e) => {
+          e.preventDefault();
+          window.location.href = backUrl;
+        });
+      }
+    }
+
+    function toggleLang(){
+      lang = (lang === "en") ? "fr" : "en";
+      setStoredLang(lang);
+      applyI18n();
+    }
+    window.toggleLang = toggleLang;
+
+    function getStoredLang() {
+      return localStorage.getItem("ndf_lang") || "en";
+    }
+    function setStoredLang(v) {
+      localStorage.setItem("ndf_lang", v);
+    }
+    function buildMainUrl(hash) {
+      return `${MAIN_PAGE}?lang=${getStoredLang()}${hash || ""}`;
+    }
+
+    // Your 21 base names (must match GitHub exactly)
+ const characters = [
+  { key:"Domenico", name_en:"Domenico Drago", name_fr:"Domenico Drago", group:"family", title_en:"Don", title_fr:"Don", base:"Domenico_cut", words_en:["Familial","charismatic","strategic"], words_fr:["Familial","charismatique","stratégique"],
+    line_en:"Charismatic Don, balancing power, wealth, love, and family while facing inner-external challenges and threats.",
+    line_fr:"Don charismatique, équilibrant pouvoir, richesse, amour et la famille tout en affrontant des défis intérieurs et menaces extérieures." },
+
+  { key:"Greta", name_en:"Greta Otterra", name_fr:"Greta Otterra", group:"family", title_en:"Art Auctioneer", title_fr:"Commissaire-Priseuse", base:"Greta_cut", words_en:["Elegant","intelligent","intriguing"], words_fr:["Élégante","intelligente","intrigante"],
+    line_en:"Elegant art auctioneer, balancing family devotion and a world of intrigue with wisdom and grace.",
+    line_fr:"Commissaire-priseuse élégante, alliant dévotion familiale et univers d’intrigues avec sagesse et grâce." },
+
+  { key:"Lenny", name_en:"Lenny Abimonti", name_fr:"Lenny Abimonti", group:"family", title_en:"Chief Counsel", title_fr:"Conseiller juridique en chef", base:"Lenny_cut", words_en:["Ambitious","intense","complex"], words_fr:["Ambitieux","intense","complexe"],
+    line_en:"Ambitious Chief Counsel, sharp strategist, balancing loyalty, ego, and taste for adventure and politics.",
+    line_fr:"Chef Conseiller ambitieux, stratège affûté, oscillant entre loyauté, ego, goût du risque et ambitions politiques." },
+
+  { key:"Enzo", name_en:"Enzo Rossobounde", name_fr:"Enzo Rossobounde", group:"family", title_en:"Underboss", title_fr:"Sous-Patron", base:"Enzo_cut", words_en:["Humble","mature","ruthless"], words_fr:["Humble","mûr","implacable"],
+    line_en:"Loyal Underboss, ruthless in action, wise and human in his maturity and calm leadership.",
+    line_fr:"Sous-Patron loyal, implacable dans l’action, sage et humain, porté par un leadership calme et mature." },
+
+  { key:"DonMorticio", name_en:"Don Morticio", name_fr:"Don Morticio", group:"adversaries", title_en:"Don", title_fr:"Don", base:"Don_Morticio_cut", words_en:["Ruthless","expansive","calculated"], words_fr:["Implacable","expansif","calculateur"],
+    line_en:"Ruthless Colombian Don, heading and expanding his LocosColos in NY, brutal with calculated alliances.",
+    line_fr:"Don colombien implacable, à la tête des LocosColos à New York, brutal et maître d’alliances calculées." },
+
+  { key:"Matteo", name_en:"Matteo Fondruteu", name_fr:"Matteo Fondruteu", group:"family", title_en:"Restaurant Manager", title_fr:"Directeur De Restaurant", base:"Matteo_cut", words_en:["Athletic","charismatic","adventurous"], words_fr:["Athlétique","charismatique","audacieux"],
+    line_en:"Charismatic restaurant manager in Sicily, parkour enthusiast, and Domenico’s unknown bio son.",
+    line_fr:"Directeur de restaurant charismatique en Sicile, adepte de parkour, et fils biologique inconnu de Domenico." },
+
+  { key:"Margareta", name_en:"Margareta Otterra", name_fr:"Margareta Otterra", group:"family", title_en:"Hacker", title_fr:"Hackeuse", base:"Margareta_cut", words_en:["Striking","hacker","unpredictable"], words_fr:["Saisissante","hackeuse","imprévisible"],
+    line_en:"Strikingly beautiful, discreet hacker and young mother, navigating life with unpredictability.",
+    line_fr:"D’une beauté saisissante, hackeuse discrète et jeune mère, avançant dans la vie avec une imprévisibilité constante." },
+
+  { key:"Jacob", name_en:"Jacob Nanfice", name_fr:"Jacob Nanfice", group:"family", title_en:"Chief Financial Advisor", title_fr:"Chef Conseiller Financier", base:"Jacob_cut", words_en:["Genius","trusted","sophisticated"], words_fr:["Génial","fiable","raffiné"],
+    line_en:"Brilliant Chief Financial Advisor, mastermind behind the family’s wealth, trusted but discreet operator.",
+    line_fr:"Chef Conseiller Financier brillant, cerveau de la fortune familiale, opérateur fiable et discret." },
+
+  { key:"Filippo", name_en:"Filippo Lombardo (Drago)", name_fr:"Filippo Lombardo (Drago)", group:"family", title_en:"Art Entrepreneur", title_fr:"Entrepreneur D’Art", base:"Filippo_cut", words_en:["Artistic","generous","resilient"], words_fr:["Artistique","généreux","résilient"],
+    line_en:"Former accountant, painter, art entrepreneur, warm-hearted son of Daniele Drago, in love in Milan.",
+    line_fr:"Ancien comptable, peintre et entrepreneur d’art, fils au grand cœur de Daniele Drago, amoureux à Milan." },
+
+  { key:"Isabella", name_en:"Isabella Pearl", name_fr:"Isabella Pearl", group:"allies", title_en:"Psychologist", title_fr:"Psychologue", base:"Isabella_Pearl_cut", words_en:["Reputed","strategic","resilient"], words_fr:["Réputée","stratégique","résiliente"],
+    line_en:"Reputed psychologist with a strategic mind, aspiring for family and resilience through challenges.",
+    line_fr:"Psychologue réputée à l’esprit stratégique, aspirant à la famille et à la résilience face aux épreuves." },
+
+  { key:"Valentina", name_en:"Valentina Chandler", name_fr:"Valentina Chandler", group:"allies", title_en:"VC Managing Partner", title_fr:"Associée Directrice (Capital-Risque)", base:"Valentina_cut", words_en:["Proactive","successful","direct"], words_fr:["Proactive","performante","directe"],
+    line_en:"Proactive VC managing partner, balancing career and motherhood while supporting entertainment ventures.",
+    line_fr:"Associée directrice en capital-risque, proactive, conciliant carrière et maternité tout en soutenant des projets de divertissement." },
+
+  { key:"Giovanni", name_en:"Giovanni", name_fr:"Giovanni", group:"friends", title_en:"Sicilian Friend", title_fr:"Ami Sicilien", base:"Giovanni_cut", words_en:["Loyal","sociable","supportive"], words_fr:["Loyal","sociable","solidaire"],
+    line_en:"Loyal, street-smart friend of Matteo, offering emotional support while intrigued by criminal activity.",
+    line_fr:"Ami loyal et débrouillard de Matteo, apportant un soutien émotionnel tout en étant intrigué par l’activité criminelle." },
+
+  { key:"AgentThompson", name_en:"FBI Agent Thompson", name_fr:"Agent Thompson (FBI)", group:"adversaries", title_en:"FBI Agent", title_fr:"Agent Du FBI", base:"FBI_Agent_Thompson_cut", words_en:["Veteran","principled","feared"], words_fr:["Vétéran","intègre","redouté"],
+    line_en:"Veteran FBI investigator, sharp and principled, nearing retirement but still feared by criminals.",
+    line_fr:"Agent du FBI chevronné, lucide et intègre, proche de la retraite mais toujours redouté des criminels." },
+
+  { key:"Hiroshi", name_en:"Hiroshi Takahashi", name_fr:"Hiroshi Takahashi", group:"family", title_en:"Chief International Strategist", title_fr:"Chef Stratège International", base:"Hiroshi_cut", words_en:["Wise","strategic","adventurous"], words_fr:["Sage","stratégique","audacieux"],
+    line_en:"Family’s Chief International Strategist expanding the Family's global reach with int’l alliances.",
+    line_fr:"Chef Stratège International de la Famille, étendant son influence mondiale grâce à des alliances internationales." },
+
+  { key:"DrEmilio", name_en:"Dr. Emilio", name_fr:"Dr. Emilio", group:"allies", title_en:"Family Doctor", title_fr:"Médecin de Famille", base:"Dr_Emilio_cut", words_en:["Experienced","reliable","caring"], words_fr:["Expérimenté","fiable","bienveillant"],
+    line_en:"Longtime Drago family doctor, offering wisdom and care while facing aging challenges.",
+    line_fr:"Médecin de longue date des Drago, offrant sagesse et soins tout en affrontant les défis du vieillissement." },
+
+  { key:"Giuseppe", name_en:"Giuseppe San Pedro (Giuse)", name_fr:"Giuseppe San Pedro (Giuse)", group:"staff", title_en:"Capo", title_fr:"Capo", base:"Giuseppe_cut", words_en:["Tough","quick","reliable"], words_fr:["Dur","rapide","fiable"],
+    line_en:"Loyal Captain and bodyguard, skilled in combat and fiercely protective of the Drago Family.",
+    line_fr:"Capitaine et garde du corps loyal, expert au combat et farouchement protecteur de la Famille Drago." },
+
+  { key:"Danny", name_en:"Danny Fornecre (Big)", name_fr:"Danny Fornecre (Big)", group:"staff", title_en:"Capo", title_fr:"Capo", base:"Danny_cut", words_en:["Towering","loyal","calm"], words_fr:["Imposant","loyal","calme"],
+    line_en:"Towering, loyal Captain and bodyguard, intimidating by its size, funny guy, and calm under pressure.",
+    line_fr:"Capitaine et garde du corps imposant et loyal, intimidant par sa stature, drôle et calme sous pression." },
+
+  { key:"Nathalie", name_en:"Nathalie Bécaud", name_fr:"Nathalie Bécaud", group:"staff", title_en:"PR & Marketing Director", title_fr:"Directrice Marketing & RP", base:"Nathalie_cut", words_en:["Creative","modern","innovative"], words_fr:["Créative","moderne","innovante"],
+    line_en:"Creative PR & Marketing Director, modernizing the Family's image through social media innovation.",
+    line_fr:"Directrice Marketing & RP créative, modernisant l’image de la Famille grâce à l’innovation sur les réseaux sociaux." },
+
+  { key:"Rosa", name_en:"Rosa Agalma", name_fr:"Rosa Agalma", group:"friends", title_en:"Sicilian Lover", title_fr:"Amoureuse Sicilienne", base:"Rosa_cut", words_en:["Seductive","dreamer","independent"], words_fr:["Séduisante","rêveuse","indépendante"],
+    line_en:"Beautiful Sicilian, torn between lingering love for Matteo vs. emotional independence after heartbreak.",
+    line_fr:"Sicilienne magnifique, déchirée entre un amour persistant pour Matteo et une indépendance émotionnelle après une rupture." },
+
+  { key:"Junior", name_en:"Daniele Jr", name_fr:"Daniele Jr", group:"family", title_en:"", title_fr:"", base:"Junior_cut", words_en:["Scarred","vulnerable","seeking"], words_fr:["Marqué","vulnérable","en quête"],
+    line_en:"Illegitimate and scarred, battling addiction, seeks redemption through his chaotic Drago Family.",
+    line_fr:"Héritier illégitime et marqué, luttant contre la dépendance, cherchant la rédemption au sein du chaos de la Famille Drago." },
+
+  { key:"Scott", name_en:"Scotte Candalsa", name_fr:"Scott Candalsa", group:"adversaries", title_en:"Investigative Biographer", title_fr:"Biographe D’Investigation", base:"Scott_cut", words_en:["Investigative","ethical","persistent"], words_fr:["Investigateur","éthique","tenace"],
+    line_en:"Investigative biographer, seeking truth about Family while navigating dangerous ethical dilemmas.",
+    line_fr:"Biographe d’investigation, cherchant la vérité sur la Famille tout en naviguant des dilemmes éthiques dangereux." }
+];
+
+  // Group labels
+    const groups = {
+      en: { all:"All", family:"Family", staff:"Staff", allies:"Allies", friends:"Friends", adversaries:"Adversaries" },
+      fr: { all:"Tous", family:"Famille", staff:"Équipe", allies:"Alliés", friends:"Amis", adversaries:"Adversaires" }
+    };
+
+    const i18n = {
+      en: {
+        back_main: "Back",
+        open_main: "Main",
+        kicker: "Characters",
+        nav_back: "Back",
+        label: "Characters",
+        headline:"A large ensemble designed for long-term arcs and premium talent.",
+        p_left_1:
+          "The saga unfolds through a constellation of evolving characters whose wealth, ambitions, loyalties, and private conflicts shape the family across years and continents.",
+        p_left_2:
+          "At the center stands its don, Domenico Drago, striving to preserve identity, family, and empire as shifting power lines force difficult choices.",
+        p_right_1:
+          "Around him emerge figures driven by intellect, desire, and moral tension — reshaping the hierarchy through alliances, secrets, and reversals.",
+        p_right_2:
+          "The ensemble supports premium performances and layered relationships across films and series; the character profiles on this page remain spoiler-free.",
+        pill_1: "Public one-liners",
+        pill_2: "Gated role briefs",
+        pill_3: "No twists revealed",
+        f_all: "All",
+        f_family: "Family",
+        f_staff: "Staff",
+        f_friends: "Friends",
+        f_allies: "Allies",
+        f_adversaries: "Adversaries",
+        f_institutions: "Institutions",
+        ph_search: "Search a character...",
+        click_hint: "Click on the character you want to learn more about.",
+        note: "Note: character visuals are conceptual references only.",
+        close: "Close",
+        traits_label: "3 words",
+        line_label: "Character beat",
+        prev: "Previous",
+        next: "Next",
+        modal_note: "Visuals are conceptual references only.",
+        footer_line: "For industry presentation purposes. © 2026 NDF5 Productions Inc. All rights reserved."
+      },
+      fr: {
+        back_main: "Retour",
+        open_main: "Accueil",
+        kicker: "Personnages",
+        nav_back: "Retour",
+        label: "Personnages",
+        headline1: "À propos des personnages",
+        headline: "Une grande distribution pensée pour des arcs longs et du talent premium.",
+        p_left_1:
+          "La saga se déploie à travers une constellation de personnages dont la richesse, les ambitions, les loyautés et les conflits privés façonnent la famille à travers les années et les continents.",
+        p_left_2:
+          "Au centre se tient son don, Domenico Drago, qui tente de préserver son identité, sa famille et son empire alors que les lignes de pouvoir imposent des choix difficiles.",
+        p_right_1:
+          "Autour de lui émergent des figures portées par l’intellect, le désir et une tension morale — transformant la hiérarchie via alliances, secrets et renversements.",
+        p_right_2:
+          "La distribution soutient des performances premium et des relations complexes à travers films et séries ; les profils de personnages sur cette page restent sans révélations.",
+        pill_1: "Phrases publiques",
+        pill_2: "Fiches protégées",
+        pill_3: "Sans révélations",
+        f_all: "Tous",
+        f_family: "Famille",
+        f_staff: "Staff",
+        f_friends: "Amis",
+        f_allies: "Alliés",
+        f_adversaries: "Adversaires",
+        f_institutions: "Institutions",
+        ph_search: "Rechercher un personnage...",
+        click_hint: "Cliquez sur le personnage que vous souhaitez découvrir.",
+        note: "Note : les visuels sont des références conceptuelles uniquement.",
+        close: "Fermer",
+        traits_label: "3 mots",
+        line_label: "Description du personnage",
+        prev: "Précédent",
+        next: "Suivant",
+        modal_note: "Les visuels sont des références conceptuelles uniquement.",
+        footer_line: "À des fins de présentation à l'industrie. © 2026 NDF5 Productions Inc. Tous droits réservés."
+      }
+    };
+
+    let lang = getStoredLang();
+    let activeFilter = "all";
+    let activeIndex = 0;
+
+    function groupLabel(g){ return (lang === "en") ? groups.en[g] : groups.fr[g]; }
+    function nameOf(c){ return (lang === "en") ? c.name_en : c.name_fr; }
+    function titleOf(c){ return (lang === "en") ? (c.title_en || "") : (c.title_fr || ""); }
+    function wordsArr(c){ return (lang === "en") ? c.words_en : c.words_fr; }
+    function wordsLine(c){ return wordsArr(c).join(", "); }
+    function lineOf(c){ return (lang === "en") ? c.line_en : c.line_fr; }
+
+    function applyI18n(){
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll("[data-i18n]").forEach(el=>{
+        const k = el.getAttribute("data-i18n");
+        if (i18n[lang][k]) el.textContent = i18n[lang][k];
+      });
+
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{
+        const k = el.getAttribute("data-i18n-placeholder");
+        if (i18n[lang][k]) el.setAttribute("placeholder", i18n[lang][k]);
+      });
+
+      const lb = document.getElementById("lang-btn");
+      if (lb) lb.textContent = (lang === "en") ? "FR" : "EN";
+      renderGrid();
+    }
+
+    function passesFilter(c){ return activeFilter === "all" ? true : (c.group === activeFilter); }
+    function matchesQuery(c, q){
+      if (!q) return true;
+      const s = (nameOf(c) + " " + wordsLine(c)).toLowerCase();
+      return s.includes(q.toLowerCase());
+    }
+
+    function setGitHubImageWithFallback(imgEl, base){
+      const tries = EXT_TRIES.map(ext => IMG_BASE + base + ext);
+      let i = 0;
+
+      function tryNext(){
+        if (i >= tries.length){
+          imgEl.style.display = "none";
+          const p = imgEl.closest(".card").querySelector(".img-fallback");
+          if (p) p.classList.remove("hidden");
+          console.warn("[Characters-L2] Missing image base:", base, tries);
+          return;
+        }
+        imgEl.src = tries[i++];
+      }
+
+      imgEl.onerror = tryNext;
+      tryNext();
+    }
+
+    function renderGrid(){
+      const grid = document.getElementById("grid");
+      const q = document.getElementById("q").value.trim();
+      const list = characters.filter(c => passesFilter(c) && matchesQuery(c, q));
+
+      grid.innerHTML = list.map((c)=>{
+        const nm = nameOf(c);
+        const grp = groupLabel(c.group);
+
+        return `
+          <button class="card group text-left rounded-2xl overflow-hidden bg-ndf-ink border border-white/10 ring-soft shadow-card focus:outline-none focus:ring-2 focus:ring-ndf-gold/35"
+                  data-key="${c.key}">
+            <div class="relative aspect-[4/5] overflow-hidden">
+              <img class="card-img absolute inset-0 h-full w-full object-cover"
+                   data-base="${c.base}" alt="${nm}">
+              <div class="absolute inset-0 card-overlay"></div>
+
+              <div class="absolute left-3 right-3 bottom-3">
+                <div class="text-[10px] font-mono tracking-widest uppercase text-ndf-gold/90">${grp}</div>
+                <div class="mt-1 text-sm leading-snug text-ndf-paper/95">${nm}</div>
+
+                <div class="mt-2">
+                  <span class="inline-flex px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-[11px] text-ndf-paper/90">
+                    ${wordsLine(c)}
+                  </span>
+                </div>
+
+                <div class="img-fallback mt-3 hidden text-[11px] text-ndf-paper/70">
+                  ${lang === "en" ? "Image not found in repository." : "Image introuvable dans le dépôt."}
+                </div>
+              </div>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      grid.querySelectorAll("button.card").forEach(btn=>{
+        const img = btn.querySelector("img[data-base]");
+        setGitHubImageWithFallback(img, img.getAttribute("data-base"));
+
+        btn.addEventListener("click", ()=>{
+          const key = btn.getAttribute("data-key");
+          const idx = characters.findIndex(x=>x.key === key);
+          if (idx >= 0) openModal(idx);
+        });
+      });
+    }
+
+    function openModal(idx){
+      activeIndex = idx;
+      const c = characters[idx];
+
+      document.getElementById("mGroup").textContent = groupLabel(c.group);
+      document.getElementById("mName").textContent = nameOf(c);
+      
+      const tEl = document.getElementById("mTitle");
+      const t = titleOf(c).trim();
+
+      if (t){
+        tEl.textContent = t;
+        tEl.classList.remove("hidden");
+      } else {
+        tEl.textContent = "";
+        tEl.classList.add("hidden");
+      }
+
+      document.getElementById("mWords").textContent = wordsLine(c);
+      document.getElementById("mLine").textContent = lineOf(c);
+
+      const img = document.getElementById("mImg");
+      img.style.display = "";
+      setGitHubImageWithFallback(img, c.base);
+
+      img.style.objectFit = "contain";
+      img.style.objectPosition = "50% 50%";
+
+      img.style.transform = (characters[idx].key === "Domenico") ? "scale(1.12)" : "scale(1)";
+      img.style.transformOrigin = "center";
+
+      document.getElementById("modal").classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal(){
+      document.getElementById("modal").classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+    function nextModal(){ openModal((activeIndex + 1) % characters.length); }
+    function prevModal(){ openModal((activeIndex - 1 + characters.length) % characters.length); }
+
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if (e.isIntersecting) e.target.classList.add("on"); });
+    }, { threshold: 0.12 });
+    document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+
+    document.getElementById("q").addEventListener("input", renderGrid);
+
+    document.querySelectorAll(".filterBtn").forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    // Reset all buttons to the original (gold) look
+    document.querySelectorAll(".filterBtn").forEach(b => {
+      b.classList.remove(
+        "bg-white/10","bg-white/5",
+        "text-ndf-paper/85","text-ndf-paper/80",
+        "ring-2","ring-white/30"
+      );
+      b.classList.add("bg-ndf-gold","text-ndf-deep/85");
+    });
+
+    // Optional: keep the same colors, just add a small active ring
+    btn.classList.add("ring-2","ring-white/30");
+
+    activeFilter = btn.getAttribute("data-filter");
+    renderGrid();
+    const modalOpen = !document.getElementById("modal").classList.contains("hidden");
+    if (modalOpen && typeof activeIndex === "number") openModal(activeIndex);
+  });
+});
+
+
+    document.getElementById("closeModal").addEventListener("click", closeModal);
+    document.getElementById("nextBtn").addEventListener("click", nextModal);
+    document.getElementById("prevBtn").addEventListener("click", prevModal);
+    document.querySelector("#modal .modal-backdrop").addEventListener("click", closeModal);
+
+    document.addEventListener("keydown", (e)=>{
+      const isOpen = !document.getElementById("modal").classList.contains("hidden");
+      if (!isOpen) return;
+      if (e.key === "Escape") closeModal();
+      if (e.key === "ArrowRight") nextModal();
+      if (e.key === "ArrowLeft") prevModal();
+    });
+
+    setLinks();
+    applyI18n();
+    if (window.lucide) lucide.createIcons();
+  </script>
+</body>
+</html>
