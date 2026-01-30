@@ -103,7 +103,7 @@
   }
 
   function closeVault(){
-    window.location.href = "../Website_NDF.html";
+    window.location.href = "../index.html";
   }
 
   function handleLogin(e){
