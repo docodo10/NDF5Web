@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline | The New Drago Family | NDF5 Productions</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ndf: {
+              deep: '#0B0806',
+              paper: '#F0EFE9',
+              gold: '#C5A065',
+              red: '#8A1C1C'
+            }
+          },
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { background-color:#F0EFE9; color:#0B0806; }
+    ::selection { background:#C5A065; color:#0B0806; }
+
+    .noise-overlay{
+      position: fixed; inset: 0; pointer-events:none; z-index: 10; opacity: 0.035;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .reveal{
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 1.05s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.active{
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .delay-100{ transition-delay:100ms; }
+    .delay-200{ transition-delay:200ms; }
+    .delay-300{ transition-delay:300ms; }
+    .delay-450{ transition-delay:450ms; }
+    .delay-500{ transition-delay:500ms; }
+    .delay-650{ transition-delay:650ms; }
+
+    .card-soft{
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(11,8,6,0.10);
+      border-radius: 1rem;
+    }
+
+    .gridline{
+      background-image: linear-gradient(to right, rgba(11,8,6,0.08) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(11,8,6,0.08) 1px, transparent 1px);
+      background-size: 42px 42px;
+      opacity: 0.25;
+      mask-image: radial-gradient(ellipse at center, black 35%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 70%);
+    }
+  </style>
+</head>
+
+<body class="antialiased overflow-x-hidden">
+  <div class="noise-overlay"></div>
+
+  <!-- Top nav -->
+  <header class="sticky top-0 z-40">
+    <div class="backdrop-blur bg-ndf-paper/70 border-b border-ndf-deep/10">
+      <nav class="container mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button type="button" class="shrink-0"
+            onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            aria-label="Scroll to top"
+          >
+            <img
+              src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
+              alt="NDF5 Productions"
+              class="h-14 md:h-14 w-auto block object-contain"
+              decoding="async"
+            />
+          </button>
+
+          <div class="hidden sm:flex items-center gap-3">
+            <a id="backLink" href="#"
+              class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-ndf-deep/70 hover:text-ndf-deep transition">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+              <span data-i18n="back_main">Back</span>
+            </a>
+            <span class="text-ndf-deep/30">/</span>
+            <span class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="kicker">Timeline</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="button" onclick="toggleLang()"
+            class="bg-white/70 border border-ndf-deep/20 px-4 py-2 text-xs font-mono uppercase tracking-widest text-ndf-deep hover:bg-ndf-gold hover:border-ndf-gold hover:text-ndf-deep transition-all duration-300">
+            <span id="lang-btn">FR</span>
+          </button>
+
+          <a id="mainLinkTop" href="#"
+            class="hidden sm:flex items-center gap-2 bg-ndf-deep text-ndf-paper px-6 py-2 text-xs font-mono uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300">
+            <span data-i18n="open_main">Main</span>
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="pt-[60px]">
+    <!-- Hero -->
+    <section class="relative">
+      <div class="absolute inset-0 gridline"></div>
+
+      <div class="max-w-6xl mx-auto px-6 md:px-8 py-12 md:py-16 relative">
+        <div class="reveal">
+          <div class="text-lg font-mono uppercase tracking-[0.24em] text-ndf-deep/60" data-i18n="kicker">Timeline</div>
+          <h1 class="mt-3 font-serif text-4xl md:text-5xl tracking-tight leading-[1.05]" data-i18n="title">
+            Production and Release Timelines<br> & Key Locations
+          </h1>
+          <p class="mt-5 max-w-3xl text-sm md:text-base text-ndf-deep/70 leading-relaxed" data-i18n="sub">
+            A staged rollout designed to concentrate production, pace releases, and keep the audience anchored in a clear five-year story rhythm.
+          </p>
+
+          <div class="mt-7 flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            <!-- Make this one light on all formats -->
+            <a id="ctaToTimeline" href="#chronology"
+              class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/70 border border-ndf-deep/15 text-ndf-deep text-xs font-mono uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300">
+              <i data-lucide="calendar-days" class="w-4 h-4"></i>
+              <span data-i18n="cta_jump">Open the detailed timeline</span>
+            </a>
+
+            <a id="ctaToLocations" href="#locations"
+              class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/70 border border-ndf-deep/15 text-ndf-deep text-sm font-mono uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300">
+              <i data-lucide="map" class="w-4 h-4"></i>
+              <span data-i18n="cta_loc">Key locations</span>
+            </a>
+
+            <!-- Mobile only: repeat Back to main page (won't show on sm/md/lg) -->
+            <a id="heroBackMainMobile" href="#"
+              class="sm:hidden inline-flex self-start items-center gap-2 px-5 py-2.5 bg-white/70 border border-ndf-deep/15 text-ndf-deep text-xs font-mono uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300">
+              <i data-lucide="home" class="w-4 h-4"></i>
+              <span data-i18n="loc_btn_back">Back to main page</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chronology + detailed table -->
+    <section id="chronology" class="py-12 md:py-14 border-t border-black/5">
+      <div class="max-w-6xl mx-auto px-6 md:px-8">
+        <div class="reveal">
+          <div class="text-lg font-mono uppercase tracking-[0.24em] text-ndf-deep/60" data-i18n="c_k">Timeline Table</div>
+          <h2 class="mt-3 font-serif text-2xl md:text-3xl tracking-tight" data-i18n="c_t">
+            Production years and release cadence
+          </h2>
+          <p class="mt-4 max-w-3xl text-sm md:text-base text-ndf-deep/70 leading-relaxed" data-i18n="c_p">
+            Two concentrated production blitzes (2028, 2030) manufacture scale efficiently, followed by paced releases that keep the saga present over five consecutive years. Two-part films release in spring/summer, while the series follows each fall—creating a steady annual rhythm.
+          </p>
+        </div>
+
+        <!-- Cards by year -->
+        <div class="mt-8 grid grid-cols-1 gap-5">
+          <!-- 2028 -->
+          <div class="card-soft overflow-hidden reveal delay-100">
+            <div class="grid md:grid-cols-[140px_1fr]">
+              <div class="p-6 md:p-7 bg-black/5">
+                <div class="text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="year_label">Year</div>
+                <div class="mt-1 font-serif text-3xl" data-i18n="y2028">2028</div>
+              </div>
+              <div class="p-6 md:p-7">
+                <div class="flex flex-wrap items-center gap-3 mb-3">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-ndf-deep text-ndf-paper font-mono text-[11px] uppercase tracking-widest" data-i18n="pb1">
+                    Production Blitz 1
+                  </span>
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-ndf-paper text-ndf-deep font-mono text-[11px] uppercase tracking-widest" data-i18n="pb">
+                    Talent present
+                  </span>
+                </div>
+                  <ul class="space-y-2 text-sm md:text-base text-ndf-deep/80 leading-relaxed">
+                    <li class="flex gap-3">
+                      <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                      <span data-i18n="y2028_li1">
+                        Full-year production of Story Years 1–2 (2005–2006):<br> two two-part films plus Seasons 1–2 (6 titles)                      </span>
+                    </li>
+                    <li class="flex gap-3">
+                      <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                      <span data-i18n="y2028_li2">
+                        films and series shot in parallel</span>
+                    </li>
+                      </span>
+                    </li>
+                  </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2029 -->
+          <div class="card-soft overflow-hidden reveal delay-200">
+            <div class="grid md:grid-cols-[140px_1fr]">
+              <div class="p-6 md:p-7 bg-black/5">
+                <div class="text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="year_label">Year</div>
+                <div class="mt-1 font-serif text-3xl" data-i18n="y2029">2029</div>
+              </div>
+              <div class="p-6 md:p-7">
+                <div class="flex flex-wrap items-center gap-3 mb-3">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-black/10 font-mono text-[11px] uppercase tracking-widest text-ndf-deep/70" data-i18n="release_window">
+                    Release window
+                  </span>
+                </div>
+                <ul class="space-y-2 text-sm md:text-base text-ndf-deep/80 leading-relaxed">
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2029_li1">Release of the 2005 two-part film (2 theatrical releases)</span>
+                  </li>
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2029_li2">Release of TV Season 1</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2030 -->
+          <div class="card-soft overflow-hidden reveal delay-300">
+            <div class="grid md:grid-cols-[140px_1fr]">
+              <div class="p-6 md:p-7 bg-black/5">
+                <div class="text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="year_label">Year</div>
+                <div class="mt-1 font-serif text-3xl" data-i18n="y2030">2030</div>
+              </div>
+              <div class="p-6 md:p-7">
+                <div class="flex flex-wrap items-center gap-3 mb-3">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-ndf-deep text-ndf-paper font-mono text-[11px] uppercase tracking-widest" data-i18n="pb2">
+                    Production Blitz 2
+                  </span>
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-ndf-paper text-ndf-deep font-mono text-[11px] uppercase tracking-widest" data-i18n="pb">
+                    Talent present
+                  </span>
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-black/10 font-mono text-[11px] uppercase tracking-widest text-ndf-deep/70" data-i18n="release">
+                    Release
+                  </span>
+                </div>
+                <ul class="space-y-2 text-sm md:text-base text-ndf-deep/80 leading-relaxed">
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2030_li1">Full-year production of Story Years 3–4 (2008–2009):<br> two two-part films plus Seasons 3–4 (6 titles)</span>
+                  </li>
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2030_li2">Release of the two-part film 2006 (2 theatrical releases)</span>
+                  </li>
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2030_li3">Release of TV Season 2</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2031 -->
+          <div class="card-soft overflow-hidden reveal delay-450">
+            <div class="grid md:grid-cols-[140px_1fr]">
+              <div class="p-6 md:p-7 bg-black/5">
+                <div class="text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="year_label">Year</div>
+                <div class="mt-1 font-serif text-3xl" data-i18n="y2031">2031</div>
+              </div>
+              <div class="p-6 md:p-7">
+                <div class="flex flex-wrap items-center gap-3 mb-3">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-black/10 font-mono text-[11px] uppercase tracking-widest text-ndf-deep/70" data-i18n="release">
+                    Release
+                  </span>
+                </div>
+                <ul class="space-y-2 text-sm md:text-base text-ndf-deep/80 leading-relaxed">
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2031_li1">Release of the two-part film 2008 (2 theatrical releases)</span>
+                  </li>
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2031_li2">Release of TV Season 3</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2032 -->
+          <div class="card-soft overflow-hidden reveal delay-500">
+            <div class="grid md:grid-cols-[140px_1fr]">
+              <div class="p-6 md:p-7 bg-black/5">
+                <div class="text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="year_label">Year</div>
+                <div class="mt-1 font-serif text-3xl" data-i18n="y2032">2032</div>
+              </div>
+              <div class="p-6 md:p-7">
+                <div class="flex flex-wrap items-center gap-3 mb-3">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-black font-mono text-[11px] uppercase tracking-widest text-ndf-paper" data-i18n="ai_prod">
+                    AI production
+                  </span>
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-black/10 font-mono text-[11px] uppercase tracking-widest text-ndf-deep/70" data-i18n="release">
+                    Release
+                  </span>
+                </div>
+                <ul class="space-y-2 text-sm md:text-base text-ndf-deep/80 leading-relaxed">
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2032_li1">AI production of Story Year 5 (2044) and the final TV season (3 titles)</span>
+                  </li>
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2032_li2">Release of the two-part film 2009 (2 theatrical releases)</span>
+                  </li>
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2032_li3">Release of TV Season 4</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2033 -->
+          <div class="card-soft overflow-hidden reveal delay-650">
+            <div class="grid md:grid-cols-[140px_1fr]">
+              <div class="p-6 md:p-7 bg-black/5">
+                <div class="text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="year_label">Year</div>
+                <div class="mt-1 font-serif text-3xl" data-i18n="y2033">2033</div>
+              </div>
+              <div class="p-6 md:p-7">
+                <div class="flex flex-wrap items-center gap-3 mb-3">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-black/10 font-mono text-[11px] uppercase tracking-widest text-ndf-deep/70" data-i18n="release">
+                    Release
+                  </span>
+                </div>
+                <ul class="space-y-2 text-sm md:text-base text-ndf-deep/80 leading-relaxed">
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2033_li1">Release of the two-part film 2044 (2 theatrical releases)</span>
+                  </li>
+                  <li class="flex gap-3">
+                    <span class="mt-2 w-1.5 h-1.5 rounded-full bg-ndf-gold shrink-0"></span>
+                    <span data-i18n="y2033_li2">Release of TV Season 5</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed mapping table (the one you liked from the prior L1 detailed version) -->
+        <div class="mt-10 card-soft p-6 md:p-7 reveal">
+          <div>
+            <div class="text-lg font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="map_k">Quick map</div>
+            <h3 class="mt-2 font-serif text-xl md:text-2xl tracking-tight" data-i18n="map_t">
+              Story years, products, and planned releases
+            </h3>
+            <p class="mt-2 text-sm md:text-base text-ndf-deep/70 max-w-3xl leading-relaxed" data-i18n="map_s">
+              The saga follows a semi-historical five-year chronology set in the 2000s, with one final leap (2044) designed as a distinct capstone.
+            </p>
+          </div>
+
+          <div class="mt-5 overflow-x-auto">
+  <div class="max-w-[760px] mx-auto">
+    <table class="w-full border-separate border-spacing-0 table-fixed">
+      <colgroup>
+        <col style="width:44px">
+        <col style="width:86px">
+        <col style="width:130px">
+         <col style="width:112px">
+        <col style="width:96px">
+      </colgroup>
+
+      <thead class="bg-white/50">
+        <tr class="text-left">
+          <th class="py-2.5 px-3 text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60 border-b border-black/10"></th>
+          <th class="py-2.5 px-3 text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60 border-b border-black/10 whitespace-nowrap" data-i18n="th_story2">Story</th>
+          <th class="py-2.5 px-3 text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60 border-b border-black/10 whitespace-nowrap" data-i18n="th_content">Content</th>
+          <th class="py-2.5 px-3 text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60 border-b border-black/10 whitespace-nowrap" data-i18n="th_prod">Production</th>
+          <th class="py-2.5 px-3 text-[11px] font-mono uppercase tracking-widest text-ndf-deep/60 border-b border-black/10 whitespace-nowrap" data-i18n="th_rel2">Release</th>
+        </tr>
+      </thead>
+
+      <tbody class="text-sm md:text-base text-ndf-deep/80">
+        <!-- Blitz 1 -->
+        <tr class="bg-ndf-gold/15">
+          <td colspan="4" class="py-2.5 px-3 border-b border-black/10">
+            <div class="flex items-center">
+            <span class="inline-flex items-center px-3 py-1 rounded-full bg-black text-ndf-paper font-mono text-[11px] uppercase tracking-widest" data-i18n="pb1_tag">
+                Production Blitz 1
+            </span>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 border-b border-black/10 bg-white/40"></td>
+        </tr>
+
+        <tr class="bg-white/30">
+          <td class="py-2.5 px-3 border-b border-black/10 font-mono text-xs text-ndf-deep/60 align-top">1</td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_story_1">2005</td>
+          <td class="py-2.5 px-3 border-b border-black/10 align-top">
+            <div class="leading-snug">
+              <div class="whitespace-nowrap" data-i18n="qm_film">Film (Parts I & II)</div>
+              <div class="text-ndf-deep/60 text-xs mt-1" data-i18n="qm_series_1">Series: Season 1</div>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_prod_1">2028</td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_rel_1">2029</td>
+        </tr>
+
+        <tr>
+          <td class="py-2.5 px-3 border-b border-black/10 font-mono text-xs text-ndf-deep/60 align-top">2</td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_story_2">2006</td>
+          <td class="py-2.5 px-3 border-b border-black/10 align-top">
+            <div class="leading-snug">
+              <div class="whitespace-nowrap" data-i18n="qm_film">Film (Parts I & II)</div>
+              <div class="text-ndf-deep/60 text-xs mt-1" data-i18n="qm_series_2">Series: Season 2</div>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_prod_2">2028</td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_rel_2">2030</td>
+        </tr>
+
+        <!-- Blitz 2 -->
+        <tr class="bg-ndf-gold/15">
+          <td colspan="4" class="py-2.5 px-3 border-b border-black/10">
+            <div class="flex items-center">
+            <span class="inline-flex items-center px-3 py-1 rounded-full bg-black text-ndf-paper font-mono text-[11px] uppercase tracking-widest" data-i18n="pb2_tag">
+                Production Blitz 2
+            </span>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 border-b border-black/10 bg-white/40"></td>
+        </tr>
+
+        <tr class="bg-white/30">
+          <td class="py-2.5 px-3 border-b border-black/10 font-mono text-xs text-ndf-deep/60 align-top">3</td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_story_3">2008</td>
+          <td class="py-2.5 px-3 border-b border-black/10 align-top">
+            <div class="leading-snug">
+              <div class="whitespace-nowrap" data-i18n="qm_film">Film (Parts I & II)</div>
+              <div class="text-ndf-deep/60 text-xs mt-1" data-i18n="qm_series_3">Series: Season 3</div>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_prod_3">2030</td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_rel_3">2031</td>
+        </tr>
+
+        <tr>
+          <td class="py-2.5 px-3 border-b border-black/10 font-mono text-xs text-ndf-deep/60 align-top">4</td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_story_4">2009</td>
+          <td class="py-2.5 px-3 border-b border-black/10 align-top">
+            <div class="leading-snug">
+              <div class="whitespace-nowrap" data-i18n="qm_film">Film (Parts I & II)</div>
+              <div class="text-ndf-deep/60 text-xs mt-1" data-i18n="qm_series_4">Series: Season 4</div>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_prod_4">2030</td>
+          <td class="py-2.5 px-3 border-b border-black/10 whitespace-nowrap align-top" data-i18n="qm_rel_4">2032</td>
+        </tr>
+
+        <!-- Capstone -->
+        <tr class="bg-black/5">
+          <td colspan="4" class="py-2.5 px-3 border-b border-black/10">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="inline-flex items-center px-3 py-1 rounded-full bg-black font-mono text-[11px] uppercase tracking-widest text-ndf-paper" data-i18n="qm_cap_tag">Capstone AI produced</span>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 border-b border-black/10 bg-white/40"></td>
+        </tr>
+
+        <tr class="bg-white/30">
+          <td class="py-2.5 px-3 font-mono text-xs text-ndf-deep/60 align-top">5</td>
+          <td class="py-2.5 px-3 whitespace-nowrap align-top" data-i18n="qm_story_5">2044</td>
+          <td class="py-2.5 px-3 align-top">
+            <div class="leading-snug">
+              <div class="whitespace-nowrap" data-i18n="qm_film">Film (Parts I & II)</div>
+              <div class="text-ndf-deep/60 text-xs mt-1" data-i18n="qm_series_5">Series: Season 5</div>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 whitespace-nowrap align-top" data-i18n="qm_prod_5">2032</td>
+          <td class="py-2.5 px-3 whitespace-nowrap align-top" data-i18n="qm_rel_5">2033</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+          <div class="mt-4 text-xs text-ndf-deep/60 font-mono uppercase tracking-widest" data-i18n="map_note">
+            Two-part films are released as two movies each.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Locations -->
+    <section id="locations" class="py-12 md:py-14 border-t border-black/5">
+      <div class="max-w-6xl mx-auto px-6 md:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          <div class="lg:col-span-5 reveal">
+            <div class="text-lg font-mono uppercase tracking-[0.24em] text-ndf-deep/60" data-i18n="loc_k">Key locations</div>
+            <h2 class="mt-3 font-serif text-2xl md:text-3xl tracking-tight" data-i18n="loc_t">
+              The four key anchor locations for the family and the audience
+            </h2>
+            <p class="mt-4 text-sm md:text-base text-ndf-deep/70 leading-relaxed" data-i18n="loc_p1">
+              In a large saga, repetition is not redundancy: it is reassurance. Returning to the same four family locations creates a familiar rhythm for viewers, so each new conflict feels grounded inside a stable world.
+            </p>
+            <p class="mt-4 text-sm md:text-base text-ndf-deep/70 leading-relaxed" data-i18n="loc_p2">
+              These anchors also help production scale intelligently: sets, costumes, and visual signatures can be reused and evolved rather than rebuilt from scratch, keeping quality consistent across films and seasons.
+            </p>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+              <!-- Desktop/tablet: keep the original Back button here -->
+              <a id="locBackMain" href="#"
+                class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-ndf-deep text-ndf-paper hover:bg-ndf-gold hover:text-ndf-deep transition">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="text-xs font-mono uppercase tracking-widest" data-i18n="loc_btn_back">Back to main page</span>
+              </a>
+
+              <a id="locGoProd" href="#"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-white/70 border border-black/10 text-ndf-deep hover:bg-ndf-gold hover:text-ndf-deep transition">
+                <i data-lucide="book-open" class="w-4 h-4"></i>
+                <span class="text-xs font-mono uppercase tracking-widest" data-i18n="loc_btn_prod">Go to Production</span>
+              </a>
+
+              <!-- Mobile only: repeat Back button under Key Locations button -->
+              <a id="locBackMainMobile" href="#"
+                class="inline-flex sm:hidden items-center gap-2 px-4 py-2 bg-ndf-deep text-ndf-paper hover:bg-ndf-gold hover:text-ndf-deep transition">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="text-xs font-mono uppercase tracking-widest" data-i18n="loc_btn_back">Back to main page</span>
+              </a>
+            </div>
+
+          </div>
+
+          <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6 reveal delay-100">
+            <div class="card-soft p-6">
+              <div class="flex items-start gap-3">
+                <i data-lucide="palmtree" class="w-5 h-5 text-ndf-gold mt-0.5"></i>
+                <div>
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="loc1_k">The Drago Island</div>
+                  <div class="mt-2 font-serif text-lg tracking-tight" data-i18n="loc1_t">The mythic networking</div>
+                  <p class="mt-2 text-sm text-ndf-deep/70 leading-relaxed" data-i18n="loc1_p">
+                    A controlled paradise where legacy is performed, entertained, and threatened.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-soft p-6">
+              <div class="flex items-start gap-3">
+                <i data-lucide="sun" class="w-5 h-5 text-ndf-gold mt-0.5"></i>
+                <div>
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="loc2_k">Dimansion (Santa Barbara)</div>
+                  <div class="mt-2 font-serif text-lg tracking-tight" data-i18n="loc2_t">The bright mask of power</div>
+                  <p class="mt-2 text-sm text-ndf-deep/70 leading-relaxed" data-i18n="loc2_p">
+                    A sunlit elegance where wealth, desire, and image collide.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-soft p-6">
+              <div class="flex items-start gap-3">
+                <i data-lucide="briefcase" class="w-5 h-5 text-ndf-gold mt-0.5"></i>
+                <div>
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="loc3_k">The Grande Paolo</div>
+                  <div class="mt-2 font-serif text-lg tracking-tight" data-i18n="loc3_t">The engine behind the Family</div>
+                  <p class="mt-2 text-sm text-ndf-deep/70 leading-relaxed" data-i18n="loc3_p">
+                    The office where strategy, finance, and secrets become leverage and fortune.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-soft p-6">
+              <div class="flex items-start gap-3">
+                <i data-lucide="castle" class="w-5 h-5 text-ndf-gold mt-0.5"></i>
+                <div>
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="loc4_k">New York Drago Castle</div>
+                  <div class="mt-2 font-serif text-lg tracking-tight" data-i18n="loc4_t">The pressure chamber</div>
+                  <p class="mt-2 text-sm text-ndf-deep/70 leading-relaxed" data-i18n="loc4_p">
+                    A stronghold where strategy, crime, and politics intersect within the city's heartbeat.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer (same style as Story L2) -->
+        <div class="reveal delay-450 mt-10 rounded-2xl border border-ndf-deep/10 bg-white/60 p-6">
+          <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="footer_line">
+            For industry presentation purposes.<br>© 2026 NDF5 Productions Inc. All rights reserved.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- i18n dictionary -->
+  <script>
+    const i18n = {
+      en: {
+        back_main: "Back",
+        open_main: "Main",
+
+        kicker: "Timeline",
+        title: "Production and Release Timelines<br> & Key Locations",
+        sub: "A staged rollout designed to concentrate production, pace releases, and keep the audience anchored in a clear five-year story rhythm.",
+        cta_jump: "Open the detailed timeline",
+        cta_loc: "Key locations",
+
+        c_k: "Timeline Table",
+        c_t: "Production years and release cadence",
+        c_p: "Two concentrated production blitzes (2028, 2030) manufacture scale efficiently, followed by paced releases that keep the saga present over five consecutive years. Two-part films release in spring/summer, while the series follows each fall—creating a steady annual rhythm.",
+
+        year_label: "Year",
+        pb: "Talent present",
+        pb1: "Production Blitz 1",
+        pb2: "Production Blitz 2",
+        pb1_tag: "Production Blitz 1",
+        pb2_tag: "Production Blitz 2",
+        release_window: "Release window",
+        ai_prod: "AI production",
+        release: "Release",
+
+        y2028: "2028",
+        y2028_li1: "Full-year production of Story Years 1–2 (2005–2006):<br> two two-part films plus Seasons 1–2 (6 titles)",
+        y2028_li2: "films and series shot in parallel with primary talent present",
+
+        y2029: "2029",
+        y2029_li1: "Release of the two-part film 2005 (2 theatrical releases)",
+        y2029_li2: "Release of TV Season 1",
+
+        y2030: "2030",
+        y2030_li1: "Full-year production of Story Years 3–4 (2008–2009):<br> two two-part films plus Seasons 3–4 (6 titles)",
+        y2030_li2: "Release of the two-part film 2006 (2 theatrical releases)",
+        y2030_li3: "Release of TV Season 2",
+
+        y2031: "2031",
+        y2031_li1: "Release of the two-part film 2008 (2 theatrical releases)",
+        y2031_li2: "Release of TV Season 3",
+        y2032: "2032",
+        y2032_li1: "AI production of Story Year 5 (2044) and the final TV season (3 titles)",
+        y2032_li2: "Release of the two-part film 2009 (2 theatrical releases)",
+        y2032_li3: "Release of TV Season 4",
+
+        y2033: "2033",
+        y2033_li1: "Release of the two-part film 2044 (2 theatrical releases)",
+        y2033_li2: "Release of TV Season 5",
+
+        map_k: "Quick map",
+        map_t: "Story years, products, and planned releases",
+        map_s: "The saga follows a semi-historical five-year chronology set in the 2000s, with one final leap (2044) designed as a distinct capstone.",
+        th_story2: "Story",
+        th_content: "Content",
+        th_prod: "Production",
+        th_rel2: "Release",
+
+        pb_tag: "Production Blitz",
+        qm_cap_tag: "Capstone AI produced",
+        qm_cap: "row 5 · story year 2044",
+        qm_story_1: "2005",
+        qm_story_2: "2006",
+        qm_story_3: "2008",
+        qm_story_4: "2009",
+        qm_story_5: "2044",
+
+        qm_pb1: "Blitz 1 · 2005–2006",
+        qm_pb2: "Blitz 2 · 2008–2009",
+        qm_cap_desc: "2044 · final leap",
+
+        qm_film: "Film (Parts I & II)",
+        qm_series_1: "Series: Season 1",
+        qm_series_2: "Series: Season 2",
+        qm_series_3: "Series: Season 3",
+        qm_series_4: "Series: Season 4",
+        qm_series_5: "Series: Season 5",
+
+        qm_prod_1: "2028",
+        qm_prod_2: "2028",
+        qm_prod_3: "2030",
+        qm_prod_4: "2030",
+        qm_prod_5: "2032",
+
+        qm_rel_1: "2029",
+        qm_rel_2: "2030",
+        qm_rel_3: "2031",
+        qm_rel_4: "2032",
+        qm_rel_5: "2033",
+        map_note: "Two-part films are released as two movies each.",
+
+        loc_k: "Key locations",
+        loc_t: "The four key anchor locations for the Family and the audience",
+        loc_p1: "In a large saga, repetition is not redundancy: it is reassurance. Returning to the same four family locations creates a familiar rhythm for viewers, so each new conflict feels grounded inside a stable world.",
+        loc_p2: "These anchors also help production scale intelligently: sets, costumes, and visual signatures can be reused and evolved rather than rebuilt from scratch, keeping quality consistent across films and seasons.",
+        loc_btn_back: "Back to main page",
+        loc_btn_prod: "Go to Production",
+
+        loc1_k: "The Drago Island (TDI)",
+        loc1_t: "The mythic networking",
+        loc1_p: "A controlled paradise where legacy is performed, entertained, and threatened.",
+
+        loc2_k: "Dimansion (Santa Barbara)",
+        loc2_t: "The bright mask of power",
+        loc2_p: "A sunlit elegance where wealth, desire, and image collide.",
+
+        loc3_k: "The Grande Paolo (TGP)",
+        loc3_t: "The engine behind the Family",
+        loc3_p: "The office where strategy, finance, and secrets become leverage and fortune.",
+
+        loc4_k: "New York Drago Castle (NYDC)",
+        loc4_t: "The pressure chamber",
+        loc4_p: "A stronghold where strategy, crime, and politics intersect within the city's heartbeat.",
+
+        footer_line: "For industry presentation purposes.<br>© 2026 NDF5 Productions Inc. All rights reserved."
+      },
+
+      fr: {
+        back_main: "Retour",
+        open_main: "Accueil",
+
+        kicker: "Chronologie",
+        title: "Chronologie de Production et Sorties<br> & Lieux Clés",
+        sub: "Un déploiement par étapes qui concentre la production, cadence les sorties et maintient le public ancré dans un rythme clair sur cinq ans.",
+        cta_jump: "Ouvrir la chronologie détaillée",
+        cta_loc: "Lieux clés",
+
+        c_k: "Tableau chronologique",
+        c_t: "Années de production et cadence de sorties",
+        c_p: "Deux blitz de production concentrés (2028, 2030) fabriquent l’échelle efficacement, suivis de sorties rythmées qui maintiennent la saga présente sur cinq années consécutives. Les films en deux parties sortent au printemps/été, tandis que la série suit chaque automne—créant un rythme annuel régulier.",
+
+        year_label: "Année",
+        pb: "Talent présent",
+        pb1: "Blitz de production 1",
+        pb2: "Blitz de production 2",
+        pb1_tag: "Blitz de production 1",
+        pb2_tag: "Blitz de production 2",
+        release_window: "Période de sorties",
+        ai_prod: "Production IA",
+        release: "Sortie",
+
+        y2028: "2028",
+        y2028_li1: "Année complète de production des Années récits 1–2 (2005–2006) :<br> deux films en deux parties plus Saisons 1–2 (6 titres)",
+        y2028_li2: "films et séries tournés en parallèle avec le talent principal présent",
+
+        y2029: "2029",
+        y2029_li1: "Sortie du film 2005 en deux parties (2 sorties cinéma, printemps/été)",
+        y2029_li2: "Sortie de la Saison 1, automne",
+
+        y2030: "2030",
+        y2030_li1: "Année complète de production des Années récits 3–4 (2008–2009) : deux films en deux parties plus Saisons 3–4 (6 titres)",
+        y2030_li2: "Sortie du film 2006 en deux parties (2 sorties cinéma, printemps/été)",
+        y2030_li3: "Sortie de la Saison 2, automne",
+
+        y2031: "2031",
+        y2031_li1: "Sortie du film 2008 en deux parties (2 sorties cinéma, printemps/été)",
+        y2031_li2: "Sortie de la Saison 3, automne",
+
+        y2032: "2032",
+        y2032_li1: "Production IA de l’Année récit 5 (2044) et de la dernière saison (3 titres)",
+        y2032_li2: "Sortie du film 2009 en deux parties (2 sorties cinéma, printemps/été)",
+        y2032_li3: "Sortie de la Saison 4, automne",
+
+        y2033: "2033",
+        y2033_li1: "Sortie du film 2044 en deux parties (2 sorties cinéma, printemps/été)",
+        y2033_li2: "Sortie de la Saison 5, automne",
+
+        map_k: "Repère rapide",
+        map_t: "Années du récit, contenus et sorties prévues",
+        map_s: "La saga suit une chronologie semi-historique sur cinq ans située dans les années 2000, avec un saut final (2044) pensé comme un épilogue distinct.",
+        th_story2: "Récit",
+        th_content: "Contenu",
+        th_prod: "Production",
+        th_rel2: "Sortie",
+
+        pb_tag: "Blitz de production",
+        qm_cap_tag: "Épilogue IA produit",
+        qm_cap: "ligne 5 · année du récit 2044",
+
+        qm_story_1: "2005",
+        qm_story_2: "2006",
+        qm_story_3: "2008",
+        qm_story_4: "2009",
+        qm_story_5: "2044",
+
+        qm_pb1: "Blitz 1 · 2005–2006",
+        qm_pb2: "Blitz 2 · 2008–2009",
+        qm_cap_desc: "2044 · saut final",
+
+        qm_film: "Film (Parties I & II)",
+        qm_series_1: "Série : Saison 1",
+        qm_series_2: "Série : Saison 2",
+        qm_series_3: "Série : Saison 3",
+        qm_series_4: "Série : Saison 4",
+        qm_series_5: "Série : Saison 5",
+
+        qm_prod_1: "2028",
+        qm_prod_2: "2028",
+        qm_prod_3: "2030",
+        qm_prod_4: "2030",
+        qm_prod_5: "2032",
+
+        qm_rel_1: "2029",
+        qm_rel_2: "2030",
+        qm_rel_3: "2031",
+        qm_rel_4: "2032",
+        qm_rel_5: "2033",
+        map_note: "Les films en deux parties sortent comme deux films distincts.",
+
+        loc_k: "Lieux clés",
+        loc_t: "Les quatre repères rassurants de la Famille et du public",
+        loc_p1: "Dans une grande saga, la répétition n’est pas de la redondance : c’est de la reassurance. Revenir aux mêmes quatre lieux familiaux crée un rythme familier, ce qui ancre chaque nouveau conflit dans un monde stable.",
+        loc_p2: "Ces ancrages soutiennent aussi l’échelle de production : décors, costumes et signatures visuelles peuvent être réutilisés et faire évoluer le monde, au lieu de tout reconstruire à chaque fois.",
+        loc_btn_back: "Retour à la page principale",
+        loc_btn_prod: "Aller à la Production",
+
+        loc1_k: "L'Ile Drago (l'ID)",
+        loc1_t: "La réseautage mythique",
+        loc1_p: "Un paradis contrôlé où l’héritage se joue, s'entretient et se menace.",
+
+        loc2_k: "Dimansion (Santa Barbara)",
+        loc2_t: "Le masque lumineux du pouvoir",
+        loc2_p: "Une élégance en plein soleil où richesse, désir et image s’entrechoquent.",
+
+        loc3_k: "The Grande Paolo (TGP)",
+        loc3_t: "La machine derrière la Famille",
+        loc3_p: "Le bureau où stratégie, finance et secrets deviennent levier et fortune.",
+
+        loc4_k: "Château des Drago à NY (CDNY)",
+        loc4_t: "La chambre de pression",
+        loc4_p: "Un lieu de décision où les enjeux politiques et criminels se jouent dans les battements de coeur de la ville.",
+
+        footer_line: "À des fins de présentation à l’industrie.<br>© 2026 NDF5 Productions Inc. Tous droits réservés."
+      }
+    };
+  </script>
+
+  <!-- Behavior
+    <!-- Behavior -->
+  <script>
+    // --------
+    // Routing
+    // --------
+    const MAIN_PAGE = "../index.html";
+
+    function currentLang() {
+      return localStorage.getItem("ndf_lang") || "en";
+    }
+
+    function buildUrl(hash) {
+      const lang = currentLang();
+      // Works even if MAIN_PAGE ignores ?lang= (localStorage still drives language)
+      return `${MAIN_PAGE}?lang=${lang}${hash || ""}`;
+    }
+
+    function setLinks() {
+      const back = document.getElementById("backLink");
+      const mainTop = document.getElementById("mainLinkTop");
+      const locBack = document.getElementById("locBackMain");
+      const locBackMobile = document.getElementById("locBackMainMobile");
+      const heroBackMobile = document.getElementById("heroBackMainMobile");
+      const locProd = document.getElementById("locGoProd");
+
+      const backUrl = buildUrl("#timeline");
+      const prodUrl = buildUrl("#production");
+      const mainUrl = buildUrl("");
+
+      if (back) back.href = backUrl;
+      if (mainTop) mainTop.href = mainUrl;
+      if (locBack) locBack.href = backUrl;
+      if (locBackMobile) locBackMobile.href = backUrl;
+      if (heroBackMobile) heroBackMobile.href = backUrl;
+      if (locProd) locProd.href = prodUrl;
+
+      // Make Back always work (no history guessing)
+      if (back) {
+        back.addEventListener("click", (e) => {
+          e.preventDefault();
+          window.location.href = backUrl;
+        });
+      }
+      if (locBack) {
+        locBack.addEventListener("click", (e) => {
+          e.preventDefault();
+          window.location.href = backUrl;
+        });
+      }
+      if (locBackMobile) {
+        locBackMobile.addEventListener("click", (e) => {
+          e.preventDefault();
+          window.location.href = backUrl;
+        });
+      }
+      if (heroBackMobile) {
+        heroBackMobile.addEventListener("click", (e) => {
+          e.preventDefault();
+          window.location.href = backUrl;
+        });
+      }
+    
+    }
+
+    // --------
+    // Language
+    // --------
+    let lang = currentLang();
+
+    function applyI18n() {
+      lang = currentLang();
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        const key = el.getAttribute("data-i18n");
+        const val = i18n?.[lang]?.[key];
+        if (typeof val === "string") el.innerHTML = val;
+      });
+
+      const btn = document.getElementById("lang-btn");
+      if (btn) btn.innerText = (lang === "en") ? "FR" : "EN";
+
+      // Update links after language changes (keeps ?lang= coherent)
+      setLinks();
+    }
+
+    function toggleLang() {
+      const next = (currentLang() === "en") ? "fr" : "en";
+      localStorage.setItem("ndf_lang", next);
+      applyI18n();
+    }
+    window.toggleLang = toggleLang;
+
+    // --------
+    // Reveal + icons
+    // --------
+    function initReveal() {
+      const els = document.querySelectorAll(".reveal");
+      if (!("IntersectionObserver" in window)) {
+        els.forEach(el => el.classList.add("active"));
+        return;
+      }
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("active"); });
+      }, { threshold: 0.15 });
+      els.forEach(el => io.observe(el));
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setLinks();
+      applyI18n();
+      initReveal();
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
+
