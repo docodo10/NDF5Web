@@ -6,7 +6,7 @@
   toggle system directly in the DOM.
 -->
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth no-js">
 
 <head>
     <meta charset="UTF-8" />
@@ -95,6 +95,12 @@
         .reveal.active {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        /* Fail-safe: if JS is blocked/fails, do not hide content */
+        .no-js .reveal {
+            opacity: 1 !important;
+            transform: none !important;
         }
 
         .delay-100 {
@@ -786,30 +792,27 @@
 
 <section id="mels" class="scroll-mt-28">
                             <div class="reveal card-soft p-7 md:p-8">
-                                <div class="kicker" data-i18n="sec_mels_k">Infrastructure partner</div>
+                                <div class="kicker" data-i18n="sec_mels_k">Infrastructure</div>
                                 <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep"
                                     data-i18n="sec_mels_h">MELS (Montréal)</h2>
 
                                 <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed"
                                     data-i18n="sec_mels_p1"></p>
 
-                                <p class="mt-3 text-base md:text-lg text-ndf-deep/80 leading-relaxed"
-                                    data-i18n="sec_mels_p2"></p>
-
-                                <div class="mt-6 grid md:grid-cols-2 gap-4">
-                                    <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                                <div class="mt-6 grid sm:grid-cols-2 gap-4">
+                                    <div class="h-full rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
                                         <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
                                             <i data-lucide="building-2" class="w-4 h-4"></i>
-                                            <span data-i18n="sec_mels_b1_h">Studio campus</span>
+                                            <span data-i18n="sec_mels_b1_h">Production campus</span>
                                         </div>
                                         <ul class="mt-3 space-y-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed list-disc pl-5"
                                             data-i18n="sec_mels_b1_ul"></ul>
                                     </div>
 
-                                    <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                                    <div class="h-full rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
                                         <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
                                             <i data-lucide="tv" class="w-4 h-4"></i>
-                                            <span data-i18n="sec_mels_b2_h">Virtual production (LED wall)</span>
+                                            <span data-i18n="sec_mels_b2_h">Virtual production</span>
                                         </div>
                                         <ul class="mt-3 space-y-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed list-disc pl-5"
                                             data-i18n="sec_mels_b2_ul"></ul>
@@ -826,8 +829,8 @@
                                 </div>
 
                                 <div class="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                    <div class="text-sm md:text-base text-ndf-deep/75 leading-relaxed"
-                                         data-i18n="sec_mels_owner"></div>
+                                    <p class="text-sm md:text-base text-ndf-deep/70 leading-relaxed"
+                                       data-i18n="sec_mels_owner"></p>
 
                                     <a class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-ndf-deep/10 bg-ndf-gold/20 hover:bg-ndf-gold/30 text-sm text-ndf-deep/90"
                                        href="https://www.mels-studios.com/en/" target="_blank" rel="noopener">
@@ -1126,7 +1129,7 @@
                 sec5_b2_p: "Incentive programs can materially reduce net spend, improving the risk-adjusted profile for studio and financing partners.",
 
                 sec5_b3_h: "Industry gateway",
-                sec5_b3_p: "The Quebec Film and Television Council (QFTC) helps position Québec as a world-class production hub and supports international productions with ecosystem navigation, partners, and practical resources.",
+                sec5_b3_p: "The Quebec Film and Television Council (QFTC) supports Québec’s film and television ecosystem and helps international productions navigate partners, services, and local resources.",
                 sec5_b3_link: "Website",
                 sec5_b4_h: "CAD advantage",
                 sec5_b4_p: "Provides roughly a ~25% discount (varies with exchange rate).",
@@ -1144,23 +1147,19 @@
                 sec6_cta2: "Contact",
 
                 footer_line: "For industry presentation purposes.<br>© 2026 NDF5 Productions Inc. All rights reserved."
-                sec5_b1_link: "See MELS section",
                 toc_mels: "MELS (Montréal)",
-                sec3_h: "Alignment and incentive design",
-                sec_mels_k: "Infrastructure partner",
+                sec5_b1_link: "See MELS section",
+                sec_mels_k: "Infrastructure",
                 sec_mels_h: "MELS (Montréal)",
-                sec_mels_p1: "MELS is a large, integrated production campus near downtown Montréal, combining soundstages, equipment rentals, virtual production, and picture & sound post services—built for high-volume, premium delivery.",
-                sec_mels_p2: "For NDF, MELS is positioned as the Montréal execution backbone within a studio-led package—supporting schedule certainty, integrated services, and scale when producing multiple premium titles under one plan.",
-                sec_mels_b1_h: "Studio campus",
-                sec_mels_b1_ul: "<li>20 purpose-built stages (10k–37k sq ft), designed for feature-scale production</li><li>On-site camera, grip, and lighting rentals for unit efficiency</li><li>Integrated picture &amp; sound post, localization, and delivery pipelines</li>",
+                sec_mels_p1: "MELS is a major Montréal production campus combining soundstages, equipment rentals, virtual production, and picture & sound post pipelines—built for premium, high-volume delivery.",
+                sec_mels_b1_h: "Production campus",
+                sec_mels_b1_ul: "<li>20 soundstages (10,000–37,000 sq ft) designed for feature-scale production</li><li>On-site rentals (camera, grip, lighting) to keep units efficient</li><li>Integrated post services (sound &amp; image), localization, and delivery support</li>",
                 sec_mels_b2_h: "Virtual production (LED wall)",
-                sec_mels_b2_ul: "<li>Permanent virtual-production capability (LED volume / wall) to expand scope efficiently</li><li>Designed for in-camera environments and faster iteration on premium scenes</li>",
+                sec_mels_b2_ul: "<li>Permanent LED volume / virtual production capability to expand scope efficiently</li><li>Supports in-camera environments and premium set-pieces with faster iteration</li>",
                 sec_mels_cred_h: "Selected credits",
                 sec_mels_cred_p: "Referenced in NDF materials: Transformers: Rise of the Beasts (2023).",
-                sec_mels_owner: "Owned by Québécor (public company; approx. ~$12B market cap).",
+                sec_mels_owner: "Owned by Québécor (public company).",
                 sec_mels_link: "MELS website",
-                sec3_callout_h: "Stakeholder logic",
-                sec3_callout_p: "The project is built to be attractive to partners who think in lifetime value terms: a scalable franchise with multiple releases and sustained engagement, rather than a single swing.",
 },
 
             fr: {
@@ -1266,7 +1265,7 @@
                 sec5_b2_p: "Les programmes d’incitatifs peuvent réduire le coût net de façon significative, améliorant le profil risque-rendement pour les studios et partenaires financiers.",
 
                 sec5_b3_h: "Porte d’entrée",
-                sec5_b3_p: "Le Bureau du cinéma et de la télévision du Québec (BCTQ) facilite l’accès à l’écosystème — partenaires, services et navigation locale — pour les productions internationales.",
+                sec5_b3_p: "Le Bureau du cinéma et de la télévision du Québec (BCTQ) soutient l’écosystème et aide les productions internationales à naviguer les partenaires, services et ressources locales.",
                 sec5_b3_link: "Site web",
                 sec5_b4_h: "Avantage CAD",
                 sec5_b4_p: "Offre environ ~25 % de rabais (selon le taux de change).",
@@ -1281,27 +1280,20 @@
                 sec6_cta2: "Contact",
 
                 footer_line: "Pour fins de présentation à l’industrie.<br>© 2026 NDF5 Productions Inc. Tous droits réservés."
-                sec5_b1_link: "Voir la section MELS",
                 toc_mels: "MELS (Montréal)",
-                sec3_h: "Alignement et design des incitatifs",
-                sec6_k: "Prochaines étapes",
-                sec6_h: "Prochaines étapes",
-                sec6_p: "Le cadre de financement se raffine selon les exigences de chaque partenaire. La prochaine étape est une discussion ciblée pour aligner la stratégie de distribution, les contrôles prêteurs et l’empreinte de production.",
-                sec5_k: "Implantation",
-                sec_mels_k: "Partenaire d’infrastructure",
+                sec5_b1_link: "Voir la section MELS",
+                sec_mels_k: "Infrastructure",
                 sec_mels_h: "MELS (Montréal)",
-                sec_mels_p1: "MELS est un campus de production intégré près du centre-ville de Montréal, réunissant plateaux, location d’équipements, production virtuelle et services de postproduction image & son — conçu pour une livraison premium à grand volume.",
-                sec_mels_p2: "Pour NFD, MELS est positionné comme colonne vertébrale d’exécution à Montréal au sein d’un package piloté par le studio — afin de sécuriser l’échéancier, regrouper les services et soutenir l’échelle d’une production multi-titres.",
-                sec_mels_b1_h: "Campus de plateaux",
-                sec_mels_b1_ul: "<li>20 plateaux conçus pour la production (10k–37k pi²)</li><li>Location sur place (caméra, grip, éclairage) pour l’efficience des unités</li><li>Postproduction image &amp; son, localisation et pipelines de livraison intégrés</li>",
+                sec_mels_p1: "MELS est un campus de production majeur à Montréal réunissant plateaux, location d’équipements, production virtuelle et pipelines de postproduction image & son — conçu pour une livraison premium à grand volume.",
+                sec_mels_b1_h: "Campus de production",
+                sec_mels_b1_ul: "<li>20 plateaux (10 000 à 37 000 pi²) conçus pour la production</li><li>Location sur place (caméra, grip, éclairage) pour l’efficience des unités</li><li>Services de postproduction (image &amp; son), localisation et livraison</li>",
                 sec_mels_b2_h: "Production virtuelle (mur LED)",
-                sec_mels_b2_ul: "<li>Capacité permanente de production virtuelle (volume / mur LED) pour accroître le scope efficacement</li><li>Conçu pour des environnements en caméra et des itérations plus rapides</li>",
+                sec_mels_b2_ul: "<li>Capacité permanente de production virtuelle (volume/mur LED) pour accroître le scope efficacement</li><li>Soutient des environnements en caméra et des itérations plus rapides</li>",
                 sec_mels_cred_h: "Crédits (sélection)",
                 sec_mels_cred_p: "Référence dans les documents NFD : Transformers: Rise of the Beasts (2023).",
-                sec_mels_owner: "Propriété de Québécor (société publique ; env. ~12 G$ de capitalisation).",
+                sec_mels_owner: "Propriété de Québécor (société publique).",
                 sec_mels_link: "Site MELS",
-                sec3_callout_h: "Logique des parties",
-                sec3_callout_p: "Le projet est conçu pour des partenaires qui raisonnent en valeur à long terme : une franchise scalable avec plusieurs sorties et un engagement soutenu, plutôt qu’un pari unique.",
+                sec5_k: "Implantation",
 }
         };
 
@@ -1347,34 +1339,53 @@
             applyI18n();
         }
 
-        // -----------------------
-        // Reveal on scroll
+                // -----------------------
+        // Reveal on scroll (fail-safe)
         // -----------------------
         /*
-          IntersectionObserver
-          Watches for elements with class ".reveal" entering the viewport.
-          When they do, adds the "active" class to trigger the CSS transition.
+          IntersectionObserver watches elements with class ".reveal".
+          Fail-safe: if unavailable (or if anything goes wrong), reveal everything.
         */
-        const io = new IntersectionObserver((entries) => {
-            entries.forEach(e => {
-                if (e.isIntersecting) e.target.classList.add("active");
-            });
-        }, { threshold: 0.12 });
+        let io = null;
 
         function bindReveal() {
-            document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+            const nodes = Array.from(document.querySelectorAll(".reveal"));
+            // If no JS (or observer unavailable), keep content visible
+            if (!("IntersectionObserver" in window)) {
+                nodes.forEach(el => el.classList.add("active"));
+                return;
+            }
+
+            try {
+                io = new IntersectionObserver((entries) => {
+                    entries.forEach(e => {
+                        if (e.isIntersecting) e.target.classList.add("active");
+                    });
+                }, { threshold: 0.12 });
+
+                nodes.forEach(el => io.observe(el));
+            } catch (err) {
+                // If observer fails for any reason, show content
+                nodes.forEach(el => el.classList.add("active"));
+            }
         }
 
         // -----------------------
         // Init
         // -----------------------
         window.addEventListener("DOMContentLoaded", () => {
-            setLinks();
-            bindReveal();
-            applyI18n();
-            if (window.lucide) lucide.createIcons();
+            try {
+                document.documentElement.classList.remove("no-js");
+                setLinks();
+                bindReveal();
+                applyI18n();
+                if (window.lucide) lucide.createIcons();
+            } catch (e) {
+                // Fail-safe: make sure content is visible
+                document.querySelectorAll(".reveal").forEach(el => el.classList.add("active"));
+            }
         });
-    </script>
+</script>
 </body>
 
 </html>
