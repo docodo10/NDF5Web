@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Business & Finance | The New Drago Family | NDF5 Productions</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400&display=swap"
+    rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ndf: {
+              paper: "#F0EFE9",
+              deep: "#0B0806",
+              gold: "#C5A065",
+              red: "#B10E0E",
+              twilight: "#1C1A18"
+            }
+          },
+          fontFamily: {
+            sans: ["Manrope", "system-ui", "sans-serif"],
+            serif: ["Playfair Display", "serif"],
+            mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #F0EFE9;
+      color: #0B0806;
+    }
+
+    ::selection {
+      background: #C5A065;
+      color: #0B0806;
+    }
+
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 1.05s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .delay-100 {
+      transition-delay: 100ms;
+    }
+
+    .delay-200 {
+      transition-delay: 200ms;
+    }
+
+    .delay-300 {
+      transition-delay: 300ms;
+    }
+
+    .delay-450 {
+      transition-delay: 450ms;
+    }
+
+    .delay-500 {
+      transition-delay: 500ms;
+    }
+
+    .delay-650 {
+      transition-delay: 650ms;
+    }
+
+    .card-soft {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(11, 8, 6, 0.10);
+      border-radius: 1rem;
+    }
+
+    .gridline {
+      background-image:
+        linear-gradient(to right, rgba(11, 8, 6, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(11, 8, 6, 0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-position: center;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      padding: .6rem .75rem;
+      border-radius: .8rem;
+      border: 1px solid rgba(11, 8, 6, 0.10);
+      background: rgba(255, 255, 255, 0.55);
+      transition: all .22s ease;
+      font-size: .9rem;
+      color: rgba(11, 8, 6, 0.82);
+    }
+
+    .toc-link:hover {
+      background: rgba(197, 160, 101, 0.20);
+      border-color: rgba(197, 160, 101, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .kicker {
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      font-size: .72rem;
+      color: rgba(11, 8, 6, 0.55);
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      padding: .85rem 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      border-radius: .95rem;
+      transition: all .25s ease;
+      border: 1px solid rgba(11, 8, 6, 0.20);
+      background: rgba(255, 255, 255, 0.70);
+      color: #0B0806;
+    }
+
+    .btn-primary:hover {
+      background: #C5A065;
+      border-color: #C5A065;
+      color: #0B0806;
+      transform: translateY(-1px);
+    }
+
+    .btn-dark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      padding: .85rem 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      border-radius: .95rem;
+      transition: all .25s ease;
+      border: 1px solid rgba(11, 8, 6, 0.22);
+      background: #0B0806;
+      color: #F0EFE9;
+    }
+
+    .btn-dark:hover {
+      background: rgba(11, 8, 6, 0.92);
+      transform: translateY(-1px);
+    }
+  </style>
+
+  <style>
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 9999px;
+      padding: .3rem .75rem;
+      border: 1px solid rgba(11, 8, 6, 0.15);
+      background: rgba(195, 194, 194, 0.6);
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-size: .68rem;
+      color: rgba(11, 8, 6, 0.72);
+    }
+
+    .mini-row {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      color: rgba(11, 8, 6, 0.70);
+      font-size: .86rem;
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      padding: .85rem 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      border-radius: .95rem;
+      transition: all .25s ease;
+      border: 1px solid rgba(11, 8, 6, 0.18);
+      background: rgba(255, 255, 255, 0.55);
+      color: #0B0806;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(197, 160, 101, 0.20);
+      border-color: rgba(197, 160, 101, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .fin-card {
+      border-radius: 1rem;
+      border: 1px solid rgba(11, 8, 6, 0.10);
+      background: rgba(255, 255, 255, 0.55);
+      padding: 1.25rem;
+    }
+
+    .fin-head {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: .82rem;
+      color: rgba(11, 8, 6, 0.70);
+    }
+
+    .fin-p {
+      margin-top: .75rem;
+      color: rgba(11, 8, 6, 0.75);
+      line-height: 1.6;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .fin-p {
+        font-size: .95rem;
+      }
+
+      .mini-row {
+        font-size: .82rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="noise-overlay"></div>
+
+
+  <header class="sticky top-0 z-40">
+    <div class="backdrop-blur bg-ndf-paper/70 border-b border-ndf-deep/10">
+      <nav class="container mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
+
+        <div class="flex items-center gap-4">
+          <button type="button" class="shrink-0" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            aria-label="Scroll to top">
+            <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
+              alt="NDF5 Productions" class="h-14 md:h-14 w-auto block object-contain" decoding="async" />
+          </button>
+
+          <div class="hidden sm:flex items-center gap-3">
+            <a id="backLink" href="#"
+              class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-ndf-deep/70 hover:text-ndf-deep transition">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+              <span data-i18n="back_main">Back</span>
+            </a>
+            <span class="text-ndf-deep/30">/</span>
+            <span class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="kicker">Business &amp;
+              Finance</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="button" onclick="toggleLang()"
+            class="bg-white/70 border border-ndf-deep/20 px-4 py-2 text-xs font-mono uppercase tracking-widest text-ndf-deep/70 hover:text-ndf-deep hover:border-ndf-deep/30 transition ">
+            <span id="langLabel">FR</span>
+          </button>
+
+          <a id="mainLinkTop" href="#"
+            class="hidden sm:inline-flex items-center gap-2 bg-ndf-deep text-ndf-paper px-4 py-2 text-xs font-mono uppercase tracking-widest hover:bg-ndf-deep/90 transition">
+            <i data-lucide="home" class="w-4 h-4"></i>
+            <span data-i18n="open_main">Main</span>
+          </a>
+        </div>
+
+      </nav>
+    </div>
+  </header>
+
+  <main class="pb-20">
+    <!-- HERO -->
+    <section class="pt-10 md:pt-14">
+      <div class="container mx-auto max-w-6xl px-6 md:px-12">
+        <div class="reveal card-soft p-7 md:p-9">
+          <div class="grid md:grid-cols-12 gap-8 items-start">
+
+            <div class="md:col-span-7">
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="kicker_top">The New
+                Drago Family</div>
+              <h1 class="mt-3 text-4xl md:text-5xl font-serif italic text-ndf-deep" data-i18n="title">Business &amp;
+                Finance</h1>
+              <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="subtitle">
+                A financing architecture built to support a long-form franchise: align incentives, protect creative
+                quality, and manage execution risk.
+              </p>
+
+              <div class="mt-6 flex text-center flex-wrap gap-2">
+                <span class="pill" data-i18n="pill_align">Aligned incentives</span>
+                <span class="pill" data-i18n="pill_windows">Multiple revenue windows</span>
+                <span class="pill" data-i18n="pill_risk">Risk-managed structure</span>
+              </div>
+
+              <div class="mt-8 grid sm:grid-cols-3 gap-4">
+                <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-4">
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m1_k">Commercial
+                    focus</div>
+                  <div class="text-base md:text-lg text-ndf-deep" data-i18n="m1_v">Franchise value over single-title
+                    outcomes</div>
+                </div>
+                <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-4">
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m2_k">Aligned
+                    incentives</div>
+                  <div class="text-base md:text-lg text-ndf-deep" data-i18n="m2_v">Each stakeholder contributes and
+                    earns a fair share—tied to income</div>
+                </div>
+                <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-4">
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m3_k">Execution
+                    safeguards</div>
+                  <div class="text-base md:text-lg text-ndf-deep" data-i18n="m3_v">Controls designed for lenders,
+                    partners, and delivery</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-5">
+              <div
+                class="rounded-3xl border border-ndf-deep/10 bg-gradient-to-br from-white/70 to-ndf-paper/40 p-6 md:p-7">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <div class="kicker" data-i18n="hero_box_k">Framework</div>
+                    <div class="mt-2 text-xl font-serif italic text-ndf-deep" data-i18n="hero_box_h">Built for
+                      partnership</div>
+                  </div>
+                  <i data-lucide="layers" class="w-6 h-6 text-ndf-deep/60"></i>
+                </div>
+
+                <p class="mt-4 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="hero_box_p">
+                  The objective is to structure a studio-friendly, bankable package that supports quality production
+                  while keeping capital efficiency and downside protections in view.
+                </p>
+
+                <div class="mt-6 grid gap-3">
+                  <div class="mini-row">
+                    <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                    <span data-i18n="hero_box_b1">Multiple capital sources, staged by risk</span>
+                  </div>
+                  <div class="mini-row">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    <span data-i18n="hero_box_b2">Completion and cost controls where appropriate</span>
+                  </div>
+                  <div class="mini-row">
+                    <i data-lucide="handshake" class="w-4 h-4"></i>
+                    <span data-i18n="hero_box_b3">Profit-sharing to align stakeholders</span>
+                  </div>
+                </div>
+
+                <div class="mt-7 flex flex-wrap gap-2">
+                  <a href="#next"
+                    class="btn-primary bg-ndf-gold/40 hover:bg-ndf-gold hover:border-ndf-gold hover:text-ndf-deep"
+                    data-i18n="cta_primary">Next steps</a>
+                  <a id="backLink2" href="#"
+                    class="btn-ghost bg-black text-white hover:bg-ndf-gold hover:border-ndf-gold hover:text-ndf-deep"
+                    data-i18n="cta_back">Back to section</a>
+                </div>
+
+                <div class="mt-5 text-[11px] leading-relaxed text-ndf-deep/55 font-mono uppercase tracking-widest"
+                  data-i18n="hero_note">
+                  This page is a high-level overview. Detailed budgets, forecasts, and legal structures are shared in a
+                  controlled context.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOC + CONTENT -->
+    <section class="pt-12 md:pt-14">
+      <div class="container mx-auto max-w-6xl px-6 md:px-12">
+        <div class="grid lg:grid-cols-12 gap-8 items-start">
+
+          <aside class="lg:col-span-4">
+            <div class="reveal card-soft p-6 md:p-7 sticky top-28">
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="toc">On this page
+              </div>
+              <div class="mt-4 space-y-2">
+                <a class="toc-link bg-ndf-gold/20 hover:bg-ndf-gold/70" href="#overview">
+                  <span data-i18n="toc_1">Business logic</span>
+                  <i data-lucide="chevron-right" class="w-4 h-4 opacity-70"></i>
+                </a>
+                <a class="toc-link bg-ndf-gold/20 hover:bg-ndf-gold/70" href="#pillars">
+                  <span data-i18n="toc_2">Four-pillar financing</span>
+                  <i data-lucide="chevron-right" class="w-4 h-4 opacity-70"></i>
+                </a>
+                <a class="toc-link bg-ndf-gold/20 hover:bg-ndf-gold/70" href="#alignment">
+                  <span data-i18n="toc_3">Alignment design</span>
+                  <i data-lucide="chevron-right" class="w-4 h-4 opacity-70"></i>
+                </a>
+                <a class="toc-link bg-ndf-gold/20 hover:bg-ndf-gold/70" href="#risk">
+                  <span data-i18n="toc_4">Risk management</span>
+                  <i data-lucide="chevron-right" class="w-4 h-4 opacity-70"></i>
+                </a>
+                <a class="toc-link bg-ndf-gold/20 hover:bg-ndf-gold/70" href="#canada">
+                  <span data-i18n="toc_5">Canada advantage</span>
+                  <i data-lucide="chevron-right" class="w-4 h-4 opacity-70"></i>
+                </a>
+                <a class="toc-link bg-ndf-gold/20 hover:bg-ndf-gold/70" href="#next">
+                  <span data-i18n="toc_6">Next steps</span>
+                  <i data-lucide="chevron-right" class="w-4 h-4 opacity-70"></i>
+                </a>
+              </div>
+
+              <div class="mt-6 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                  <i data-lucide="info" class="w-4 h-4"></i>
+                  <span data-i18n="toc_note_h">Note</span>
+                </div>
+                <p class="mt-3 text-sm text-ndf-deep/75 leading-relaxed" data-i18n="toc_note_p">
+                  Terms and structures evolve with partners, jurisdiction, and distribution choices. This overview stays
+                  intentionally non-binding.
+                </p>
+              </div>
+
+            </div>
+          </aside>
+
+          <div class="lg:col-span-8 space-y-8">
+
+            <!-- SECTION 1 -->
+            <section id="overview" class="scroll-mt-28">
+              <div class="reveal card-soft p-7 md:p-8">
+                <div class="kicker" data-i18n="sec1_k">Overview</div>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec1_h">Business logic
+                </h2>
+                <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec1_p">
+                  The New Drago Family unites A-list ensemble talent with premium production execution to deliver an
+                  original storyline
+                  that explores the duality of the criminal mind—how wealth and success can blind judgment, distort
+                  loyalty, and quietly normalize wrongdoing in our society.
+                  NDF is designed to be financed and commercialized as a franchise asset: multiple premium titles
+                  produced within a unified plan,
+                  with revenues and audience engagement recurring over several years.
+                </p>
+
+                <div class="mt-6 grid sm:grid-cols-2 gap-4">
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="layers" class="w-4 h-4"></i>
+                      <span data-i18n="scale_h1">Scope per production blitz</span>
+                    </div>
+                    <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="scale_p1">
+                      Six premium titles produced in one concentrated year (films + series seasons).
+                    </p>
+                  </div>
+
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="banknote" class="w-4 h-4"></i>
+                      <span data-i18n="scale_h2">Indicative scale (PB1)</span>
+                    </div>
+                    <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="scale_p2">
+                      Major production and distribution budgets are structured to support six releases within a single
+                      coordinated two-year cycle.
+                    </p>
+                  </div>
+                </div>
+
+
+                <div class="mt-6 grid md:grid-cols-2 gap-4">
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="target" class="w-4 h-4"></i>
+                      <span data-i18n="sec1_b1_h">Value thesis</span>
+                    </div>
+                    <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec1_b1_p">
+                      Long-form franchises can compound value through theatrical, streaming, home entertainment, and
+                      ancillary windows—while deepening audience retention with annual releases.
+                    </p>
+                  </div>
+
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="coins" class="w-4 h-4"></i>
+                      <span data-i18n="sec1_b2_h">Capital efficiency</span>
+                    </div>
+                    <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec1_b2_p">
+                      The production-blitz approach concentrates spend, reduces reset costs, and allows strategic reuse
+                      of premium assets—supporting consistent quality while controlling unit cost.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-6 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                  <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    <span data-i18n="sec1_callout_h">Guiding principle</span>
+                  </div>
+                  <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec1_callout_p">
+                    Maximize early revenues (streaming, sponsorship, tax incentives) while postponing early
+                    disbursements when possible—exchanging with Talent timing for upside participation and alignment.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <!-- SECTION 2 -->
+            <section id="pillars" class="scroll-mt-28">
+              <div class="reveal card-soft p-7 md:p-8">
+                <div class="kicker" data-i18n="sec2_k">Financing</div>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec2_h">Four-pillar
+                  financing strategy</h2>
+                <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec2_p">
+                  The base structure targets four complementary pillars, designed to reduce reliance on any single
+                  source while improving bankability and partner alignment.
+                </p>
+
+                <div class="mt-6 grid md:grid-cols-2 gap-4">
+                  <div class="fin-card">
+                    <div class="fin-head">
+                      <i data-lucide="clapperboard" class="w-5 h-5"></i>
+                      <span data-i18n="p1_h">1. U.S. studio participation</span>
+                    </div>
+                    <p class="fin-p" data-i18n="p1_p">
+                      A studio anchor supports production leadership, distribution strategy, and credibility with
+                      lenders and global partners.
+                    </p>
+                  </div>
+
+                  <div class="fin-card">
+                    <div class="fin-head">
+                      <i data-lucide="landmark" class="w-5 h-5"></i>
+                      <span data-i18n="p2_h">2. Senior debt and production lending</span>
+                    </div>
+                    <p class="fin-p" data-i18n="p2_p">
+                      Senior facilities can be structured around contracted revenues and eligible incentives, with
+                      controls tailored to delivery requirements.
+                    </p>
+                  </div>
+
+                  <div class="fin-card">
+                    <div class="fin-head">
+                      <i data-lucide="map-pin" class="w-5 h-5"></i>
+                      <span data-i18n="p3_h">3. Canada spend optimization</span>
+                    </div>
+                    <p class="fin-p" data-i18n="p3_p">
+                      Concentrating substantial spend in Canada helps unlock meaningful incentive support while
+                      leveraging world-class crews and infrastructure.
+                    </p>
+                  </div>
+
+                  <div class="fin-card">
+                    <div class="fin-head">
+                      <i data-lucide="handshake" class="w-5 h-5"></i>
+                      <span data-i18n="p4_h">4. Sponsors and strategic partners</span>
+                    </div>
+                    <p class="fin-p" data-i18n="p4_p">
+                      Brand partners and cross-media collaborations can contribute cash, in-kind value, or marketing
+                      leverage—without compromising creative integrity.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-6 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                  <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                    <i data-lucide="workflow" class="w-4 h-4"></i>
+                    <span data-i18n="sec2_bridge_h">Producer-studio structure</span>
+                  </div>
+                  <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec2_bridge_p1">
+                    <!-- i18n will populate this -->
+                  </p>
+                  <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec2_bridge_p2">
+                    <!-- i18n will populate this -->
+                  </p>
+                  <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec2_bridge_p3">
+                    <!-- i18n will populate this -->
+                  </p>
+                </div>
+
+                <div class="mt-6 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                  <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span data-i18n="sec2_extra_h">Optional complements</span>
+                  </div>
+                  <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec2_extra_p">
+                    Depending on distribution choices, the structure may also include pre-sales, territory-based minimum
+                    guarantees, or streamer-linked advances—always assessed against long-term franchise value.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <!-- SECTION 3 -->
+            <section id="alignment" class="scroll-mt-28">
+              <div class="reveal card-soft p-7 md:p-8">
+                <div class="kicker" data-i18n="sec3_k">Alignment</div>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec3_h">Alignment and
+                  incentive design</h2>
+                <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec3_p">
+                  The model aims to align stakeholders through a balance of cash compensation, deferred timing, and
+                  performance-based upside—so the franchise can protect quality while managing early cash burn.
+                </p>
+
+                <div class="mt-6 grid md:grid-cols-2 gap-4">
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                      <span data-i18n="sec3_b1_h">Cash timing</span>
+                    </div>
+                    <ul class="mt-3 space-y-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed list-disc pl-5">
+                      <li data-i18n="sec3_b1_l1">Favor staged payments that match production milestones.</li>
+                      <li data-i18n="sec3_b1_l2">Postpone early disbursements when feasible, without compromising
+                        delivery.</li>
+                      <li data-i18n="sec3_b1_l3">Use escrow or reserves to protect critical obligations (payroll,
+                        delivery).</li>
+                    </ul>
+                  </div>
+
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="trending-up" class="w-4 h-4"></i>
+                      <span data-i18n="sec3_b2_h">Upside sharing</span>
+                    </div>
+                    <ul class="mt-3 space-y-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed list-disc pl-5">
+                      <li data-i18n="sec3_b2_l1">Offer meaningful participation to key stakeholders in exchange for
+                        risk-taking and flexibility.</li>
+                      <li data-i18n="sec3_b2_l2">Keep the waterfall transparent and governed by established
+                        collection-account practices.</li>
+                      <li data-i18n="sec3_b2_l3">Preserve franchise optionality (sequels, seasons, spin-offs) in partner
+                        negotiations.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="mt-6 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                  <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                    <i data-lucide="equal" class="w-4 h-4"></i>
+                    <span data-i18n="sec3_callout_h">Stakeholder logic</span>
+                  </div>
+                  <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec3_callout_p">
+                    The project is built to be attractive to partners who think in lifetime value terms: a scalable
+                    franchise with multiple releases and sustained engagement, rather than a single swing.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <!-- SECTION 4 -->
+            <section id="risk" class="scroll-mt-28">
+              <div class="reveal card-soft p-7 md:p-8">
+                <div class="kicker" data-i18n="sec4_k">Risk</div>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec4_h">Risk management
+                  and delivery assurance</h2>
+                <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec4_p">
+                  A bankable package requires credible execution controls: delivery-focused protection, disciplined cost
+                  reporting, and clear remedies if risks materialize.
+                </p>
+
+                <div class="mt-6 grid md:grid-cols-2 gap-4">
+                  <div class="fin-card">
+                    <div class="fin-head">
+                      <i data-lucide="shield" class="w-5 h-5"></i>
+                      <span data-i18n="r1_h">Completion protection</span>
+                    </div>
+                    <p class="fin-p" data-i18n="r1_p">
+                      Where appropriate, completion bonds and stepped contingency structures can protect delivery to
+                      approved specs—focused on completion, not commercial performance.
+                    </p>
+                  </div>
+
+                  <div class="fin-card">
+                    <div class="fin-head">
+                      <i data-lucide="wallet" class="w-5 h-5"></i>
+                      <span data-i18n="r2_h">Controlled disbursement</span>
+                    </div>
+                    <p class="fin-p" data-i18n="r2_p">
+                      Collection-account and escrow mechanisms can provide transparency, dual authorization, and
+                      predictable payment flows for key obligations.
+                    </p>
+                  </div>
+
+                  <div class="fin-card">
+                    <div class="fin-head">
+                      <i data-lucide="file-check" class="w-5 h-5"></i>
+                      <span data-i18n="r3_h">Reporting frequency</span>
+                    </div>
+                    <p class="fin-p" data-i18n="r3_p">
+                      Weekly cost reports, schedule tracking, and variance explanations are part of professional
+                      lender-grade governance.
+                    </p>
+                  </div>
+
+                  <div class="fin-card">
+                    <div class="fin-head">
+                      <i data-lucide="briefcase" class="w-5 h-5"></i>
+                      <span data-i18n="r4_h">Insurance stack</span>
+                    </div>
+                    <p class="fin-p" data-i18n="r4_p">
+                      Standard production insurance (cast, extra expense, E&amp;O, etc.) supports continuity and reduces
+                      operational exposure.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- SECTION 5 -->
+            <section id="canada" class="scroll-mt-28">
+              <div class="reveal card-soft p-7 md:p-8">
+                <div class="kicker" data-i18n="sec5_k">Footprint</div>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec5_h">Canada
+                  advantage</h2>
+                <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec5_p">
+                  Montréal can operate as an incentive-rich hub combining stages, crews, and post pipelines—at<span
+                    class="text-bold"> MELS Studios</span>—supporting both cost efficiency and production reliability.
+                </p>
+
+                <div class="mt-6 grid md:grid-cols-2 gap-4">
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="building-2" class="w-4 h-4"></i>
+                      <span data-i18n="sec5_b1_h">Infrastructure</span>
+                    </div>
+                    <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_b1_p">
+                      Access to experienced crews, soundstages, equipment, and an integrated post environment supports
+                      schedule certainty at scale.
+                    </p>
+                  </div>
+
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="percent" class="w-4 h-4"></i>
+                      <span data-i18n="sec5_b2_h">Incentives</span>
+                    </div>
+                    <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_b2_p">
+                      Incentive programs can materially reduce net spend, improving the risk-adjusted profile for studio
+                      and financing partners.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-6 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                  <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                    <i data-lucide="megaphone" class="w-4 h-4"></i>
+                    <span data-i18n="sec5_callout_h">Brand signal</span>
+                  </div>
+                  <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_callout_p">
+                    An anchored Montréal footprint strengthens industry credibility through established local partners
+                    and a recognizable production home base.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <!-- SECTION 6 -->
+            <section id="next" class="scroll-mt-28">
+              <div class="reveal card-soft p-7 md:p-8">
+                <div class="kicker" data-i18n="sec6_k">Next</div>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec6_h">Next steps</h2>
+                <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec6_p">
+                  The financing framework is refined with each partner’s requirements. The next step is a targeted
+                  discussion to match distribution strategy, lender controls, and production footprint.
+                </p>
+
+                <div class="mt-6 grid sm:grid-cols-2 gap-4">
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="message-square" class="w-4 h-4"></i>
+                      <span data-i18n="sec6_b1_h">Discuss the structure</span>
+                    </div>
+                    <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec6_b1_p">
+                      Align on studio role, financing appetite, and the path to bankable agreements.
+                    </p>
+                  </div>
+
+                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                      <i data-lucide="file-text" class="w-4 h-4"></i>
+                      <span data-i18n="sec6_b2_h">Share detailed materials</span>
+                    </div>
+                    <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec6_b2_p">
+                      Detailed budgets, forecasts, and legal drafts are shared under appropriate confidentiality and
+                      review.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-7 flex flex-wrap gap-2">
+                  <!-- Button 1: Gold by default, turns white on hover, links to Vault -->
+                  <a href="../Vault-L2/Vault-L2.html"
+                    class="btn-primary bg-ndf-gold text-ndf-deep hover:bg-white hover:text-ndf-deep hover:border-white"
+                    data-i18n="sec6_cta1">
+                    Request the finance deck
+                  </a>
+
+                  <!-- Button 2: Ghost by default, turns gold on hover -->
+                  <a href="#contact" class="btn-ghost hover:bg-ndf-gold hover:text-ndf-deep hover:border-ndf-gold"
+                    data-i18n="sec6_cta2">
+                    Contact
+                  </a>
+                </div>
+
+
+                <div class="reveal delay-450 mt-10 rounded-2xl border border-ndf-deep/10 bg-white/60 p-6">
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="footer_line">
+                    For industry presentation purposes.<br>© 2026 NDF5 Productions Inc. All rights reserved.
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // -----------------------
+    // Routing (update if needed)
+    // -----------------------
+    const MAIN_PAGE = "../index.html";
+    const MAIN_HASH = "#business";
+
+    function setLinks() {
+      const url = `${MAIN_PAGE}${MAIN_HASH}`;
+      const back = document.getElementById("backLink");
+      const back2 = document.getElementById("backLink2");
+      const mainTop = document.getElementById("mainLinkTop");
+
+      if (back) back.href = url;
+      if (back2) back2.href = url;
+      if (mainTop) mainTop.href = MAIN_PAGE;
+    }
+
+    // -----------------------
+    // Translations
+    // -----------------------
+    const i18n = {
+      en: {
+        back_main: "Back",
+        open_main: "Main",
+
+        kicker: "Business & Finance",
+        kicker_top: "The New Drago Family",
+        title: "Business & Finance",
+        subtitle: "A financing architecture built to support a long-form franchise: align incentives, protect creative quality, and manage execution risk.",
+
+        pill_align: "Aligned incentives",
+        pill_windows: "Multiple revenue windows",
+        pill_risk: "Risk-managed structure",
+
+        m1_k: "Commercial focus",
+        m1_v: "Franchise value over single-title outcomes",
+        m2_k: "Aligned incentives",
+        m2_v: "Each stakeholder contributes and earns a fair share—tied to income",
+        m3_k: "Execution safeguards",
+        m3_v: "Controls designed for lenders, partners, and delivery",
+
+        hero_box_k: "Framework",
+        hero_box_h: "Built for partnership",
+        hero_box_p: "The objective is to structure a studio-friendly, bankable package that supports quality production while keeping capital efficiency and downside protections in view.",
+        hero_box_b1: "Multiple capital sources, staged by risk",
+        hero_box_b2: "Completion and cost controls where appropriate",
+        hero_box_b3: "Profit-sharing to align stakeholders",
+        cta_primary: "Next steps",
+        cta_back: "Back to section",
+        hero_note: "This page is a high-level overview. Detailed budgets, forecasts, and legal structures are shared in a controlled context.",
+
+        toc: "On this page",
+        toc_1: "Business logic",
+        toc_2: "Four-pillar financing",
+        toc_3: "Alignment design",
+        toc_4: "Risk management",
+        toc_5: "Canada advantage",
+        toc_6: "Next steps",
+
+        toc_note_h: "Note",
+        toc_note_p: "Terms and structures evolve with partners, jurisdiction, and distribution choices. This overview stays intentionally non-binding.",
+
+        sec1_k: "Overview",
+        sec1_h: "Business logic",
+        sec1_p: "The New Drago Family unites A-list ensemble talent with premium production execution to deliver an original storyline that explores the duality of the criminal mind—how wealth and success can blind judgment, distort loyalty, and quietly normalize wrongdoing in our society. NDF is designed to be financed and commercialized as a franchise asset: multiple premium titles produced within a unified plan, with revenues and audience engagement recurring over several years.",
+
+        scale_h1: "Scope per production blitz",
+        scale_p1: "Six premium titles produced in one concentrated year (films + series seasons).",
+        scale_h2: "Indicative scale (PB1)",
+        scale_p2: "Major production and distribution budgets are structured to support six releases within a single coordinated two-year cycle.",
+
+        sec1_b1_h: "Value thesis",
+        sec1_b1_p: "Long-form franchises can compound value through theatrical, streaming, home entertainment, and ancillary windows—while deepening audience retention with annual releases.",
+        sec1_b2_h: "Capital efficiency",
+        sec1_b2_p: "The production-blitz approach concentrates spend, reduces reset costs, and allows strategic reuse of premium assets—supporting consistent quality while controlling unit cost.",
+        sec1_callout_h: "Guiding principle",
+        sec1_callout_p: "Maximize early revenues (streaming, sponsorship, tax incentives) while deferring early disbursements when feasible—partly trading adjusted talent payment timing for upside participation and alignment.",
+
+        sec2_k: "Financing",
+        sec2_h: "Four-pillar financing strategy",
+        sec2_p: "The base structure targets four complementary pillars, designed to reduce reliance on any single source while improving bankability and partner alignment.",
+        p1_h: "1. U.S. studio participation",
+        p1_p: "A studio anchor supports production leadership, distribution strategy, and credibility with lenders and global partners.",
+        p2_h: "2. Senior debt and production lending",
+        p2_p: "Senior facilities can be structured around contracted revenues and eligible incentives, with controls tailored to delivery requirements.",
+        p3_h: "3. Canada spend optimization",
+        p3_p: "Concentrating substantial spend in Canada helps unlock meaningful incentive support while leveraging world-class crews and infrastructure.",
+        p4_h: "4. Sponsors and strategic partners",
+        p4_p: "Brand partners and cross-media collaborations can contribute cash, in-kind value, or marketing leverage—without compromising creative integrity.",
+        sec2_extra_h: "Optional complements",
+        sec2_extra_p: "Depending on distribution choices, the structure may also include pre-sales, territory-based minimum guarantees, or streamer-linked advances—always assessed against long-term franchise value.",
+        sec2_bridge_h: "Producer-studio structure",
+        sec2_bridge_p1: "NDF is built on a studio-grade producer structure designed for a U.S. anchor producer and a Hollywood studio partner to lead packaging, creative oversight, distribution strategy, global commercialization, and supporting U.S. physical production units in California and New York and, where advantageous, finishing postproduction in the U.S.",
+        sec2_bridge_p2: "In parallel, the Canadian execution is structured for scale in Montréal through a Canada-based production vehicle, whether studio-created or partner-led, supported by an experienced local producer team that runs day-to-day production, secures and administers incentives, and maintains lender-ready reporting and controls.",
+        sec2_bridge_p3: "This division of roles preserves premium creative ambition while matching risk to the parties best positioned to carry it, with a single integrated budget and unified governance across creative and delivery.",
+
+        sec3_k: "Alignment",
+        sec3_h: "Alignment and incentive design",
+        sec3_p: "The model aims to align stakeholders through a balance of cash compensation, deferred timing, and performance-based upside—so the franchise can protect quality while managing early cash burn.",
+        sec3_b1_h: "Cash timing",
+        sec3_b1_l1: "Favor staged payments that match production milestones.",
+        sec3_b1_l2: "Postpone early disbursements when feasible, without compromising delivery.",
+        sec3_b1_l3: "Use escrow or reserves to protect critical obligations (payroll, delivery).",
+        sec3_b2_h: "Upside sharing",
+        sec3_b2_l1: "Offer meaningful participation to key stakeholders in exchange for risk-taking and flexibility.",
+        sec3_b2_l2: "Keep the waterfall transparent and governed by established collection-account practices.",
+        sec3_b2_l3: "Preserve franchise optionality (sequels, seasons, spin-offs) in partner negotiations.",
+        sec3_callout_h: "Stakeholder logic",
+        sec3_callout_p: "The project is built to be attractive to partners who think in lifetime value terms: a scalable franchise with multiple releases and sustained engagement, rather than a single swing.",
+
+        sec4_k: "Risk",
+        sec4_h: "Risk management and delivery assurance",
+        sec4_p: "A bankable package requires credible execution controls: delivery-focused protection, disciplined cost reporting, and clear remedies if risks materialize.",
+        r1_h: "Completion protection",
+        r1_p: "Where appropriate, completion bonds and stepped contingency structures can protect delivery to approved specs—focused on completion, not commercial performance.",
+        r2_h: "Controlled disbursement",
+        r2_p: "Collection-account and escrow mechanisms can provide transparency, dual authorization, and predictable payment flows for key obligations.",
+        r3_h: "Reporting frequency",
+        r3_p: "Weekly cost reports, schedule tracking, and variance explanations are part of professional lender-grade governance.",
+        r4_h: "Insurance stack",
+        r4_p: "Standard production insurance (cast, extra expense, E&O, etc.) supports continuity and reduces operational exposure.",
+
+        sec5_k: "Footprint",
+        sec5_h: "Canada advantage",
+        sec5_p: 'Montréal can operate as an incentive-rich hub combining stages, crews, and post pipelines—at <span class="font-bold">MELS Studios</span>—supporting both cost efficiency and production reliability.',
+        sec5_b1_h: "Infrastructure",
+        sec5_b1_p: "Access to experienced crews, soundstages, equipment, and an integrated post environment supports schedule certainty at scale.",
+        sec5_b2_h: "Incentives",
+        sec5_b2_p: "Incentive programs can materially reduce net spend, improving the risk-adjusted profile for studio and financing partners.",
+        sec5_callout_h: "Brand signal",
+        sec5_callout_p: "An anchored Montréal production footprint strengthens industry credibility through established, widely recognized local partners.",
+
+        sec6_k: "Next",
+        sec6_h: "Next steps",
+        sec6_p: "The financing framework is refined with each partner’s requirements. The next step is a targeted discussion to match distribution strategy, lender controls, and production footprint.",
+        sec6_b1_h: "Discuss the structure",
+        sec6_b1_p: "Align on studio role, financing appetite, and the path to bankable agreements.",
+        sec6_b2_h: "Share detailed materials",
+        sec6_b2_p: "Detailed budgets, forecasts, and legal drafts are shared under appropriate confidentiality and review.",
+        sec6_cta1: "Request the finance deck",
+        sec6_cta2: "Contact",
+
+        footer_line: "For industry presentation purposes.<br>© 2026 NDF5 Productions Inc. All rights reserved."
+      },
+
+      fr: {
+        back_main: "Retour",
+        open_main: "Accueil",
+
+        kicker: "Affaires & Finances",
+        kicker_top: "La Nouvelle Famille Drago",
+        title: "Affaires & Finances",
+        subtitle: "Une architecture de financement pensée pour une franchise long format : aligner les intérêts, protéger la qualité créative et gérer le risque d’exécution.",
+
+        pill_align: "Intérêts alignés",
+        pill_windows: "Revenus multi-sources",
+        pill_risk: "Structure sécurisée",
+
+        m1_k: "Vision commerciale",
+        m1_v: "Valeur de franchise plutôt qu’un seul titre",
+        m2_k: "Intérêts alignés",
+        m2_v: "Chaque partenaire contribue et reçoit une juste part, liée aux revenus.",
+        m3_k: "Garde-fous d’exécution",
+        m3_v: "Contrôles adaptés aux partenaires et aux livrables",
+
+        hero_box_k: "Cadre",
+        hero_box_h: "Conçu pour le partenariat",
+        hero_box_p: "L’objectif est de structurer un montage finançable et favorable au studio, qui soutient la qualité de production tout en gardant l’efficacité du capital et les protections de baisse à l’esprit.",
+        hero_box_b1: "Sources de financement multiples, étagées par risque",
+        hero_box_b2: "Contrôles de réalisation et de coûts au besoin",
+        hero_box_b3: "Partage des profits pour aligner les parties",
+        cta_primary: "Prochaines étapes",
+        cta_back: "Retour à la section",
+        hero_note: "Cette page est un aperçu de haut niveau. Les budgets, prévisions et structures juridiques détaillés sont partagés dans un cadre contrôlé.",
+
+        toc: "Sur cette page",
+        toc_1: "Logique d’affaires",
+        toc_2: "Financement en 4 piliers",
+        toc_3: "Intérêts alignés",
+        toc_4: "Gestion des risques",
+        toc_5: "Avantage Canada",
+        toc_6: "Prochaines étapes",
+
+        toc_note_h: "Note",
+        toc_note_p: "Les termes et structures évoluent selon les partenaires, les juridictions et les choix de distribution. Cet aperçu reste volontairement non engageant.",
+
+        sec1_k: "Aperçu",
+        sec1_h: "Logique d’affaires",
+        sec1_p: "La Nouvelle Famille Drago réunit des talents de premier plan et une exécution de production premium pour livrer une histoire originale explorant la dualité de l’esprit criminel — comment la richesse et le succès peuvent aveugler le jugement, distordre la loyauté et normaliser silencieusement les méfaits dans notre société. La NFD est conçue pour être financée et commercialisée comme un actif de franchise : plusieurs titres premium produits dans un plan unifié, avec des revenus et un engagement du public récurrents sur plusieurs années.",
+
+        scale_h1: "Portée par blitz de production",
+        scale_p1: "Six contenus premium produits sur une année concentrée (films + saisons de séries).",
+        scale_h2: "Échelle indicative (PB1)",
+        scale_p2: "Des budgets majeurs de production et de distribution sont structurés pour soutenir six sorties dans un cycle coordonné de deux ans.",
+
+        sec1_b1_h: "Une approche de valeur",
+        sec1_b1_p: "Les franchises long format peuvent cumuler de la valeur via le cinéma, le streaming, le home entertainment et les revenus annexes, tout en renforçant la rétention grâce à des sorties annuelles.",
+        sec1_b2_h: "Efficience du capital",
+        sec1_b2_p: "L’approche en production blitz concentre les dépenses, réduit les coûts de redémarrage et permet la réutilisation stratégique d’actifs premium — pour une qualité cohérente avec un coût unitaire contrôlé.",
+        sec1_callout_h: "Principe directeur",
+        sec1_callout_p: "Maximiser les revenus précoces (streaming, commandites, incitatifs fiscaux) tout en reportant les décaissements initiaux lorsque c’est possible — en échangeant en partie le timing des paiements aux talents contre une participation importante aux profits.",
+
+        sec2_k: "Financement",
+        sec2_h: "Stratégie de financement en quatre piliers",
+        sec2_p: "La structure de base vise quatre piliers complémentaires, afin de réduire la dépendance à une seule source tout en améliorant la bancabilité et l’alignement des partenaires.",
+        p1_h: "1. Participation d’un studio américain",
+        p1_p: "Un studio d’ancrage soutient le leadership de production, la stratégie de distribution et la crédibilité auprès des prêteurs et partenaires mondiaux.",
+        p2_h: "2. Dette senior et financement de production",
+        p2_p: "Des facilités senior peuvent être structurées sur des revenus contractés et des incitatifs admissibles, avec des contrôles adaptés aux exigences de livraison.",
+        p3_h: "3. Optimisation des dépenses au Canada",
+        p3_p: "Concentrer une part importante des dépenses au Canada permet de mobiliser des incitatifs significatifs, tout en s’appuyant sur des équipes et infrastructures de niveau mondial.",
+        p4_h: "4. Commanditaires et partenaires stratégiques",
+        p4_p: "Des partenaires de marque et collaborations cross-média peuvent apporter du cash, de l’in-kind ou un levier marketing — sans compromettre l’intégrité créative.",
+        sec2_extra_h: "Compléments possibles",
+        sec2_extra_p: "Selon les choix de distribution, la structure peut aussi inclure des préventes, des MG par territoire ou des avances liées à un streamer — toujours évaluées à l’aune de la valeur long terme de la franchise.",
+        sec2_bridge_h: "Structure producteur-studio",
+        sec2_bridge_p1: "NFD repose sur une structure producteur-studio de calibre studio, pensée pour qu’un producteur d’ancrage américain et un studio hollywoodien pilotent le packaging, la supervision créative, la stratégie de distribution et la commercialisation mondiale, tout en soutenant des unités de production physique en Californie et à New York et, lorsque pertinent, une partie de la postproduction finale aux États-Unis.",
+        sec2_bridge_p2: "En parallèle, l’exécution canadienne est structurée à grande échelle à Montréal via une société de production canadienne, qu’il soit créé par le studio ou piloté par un partenaire, appuyé par une équipe de producteurs locaux expérimentés qui assure la gestion quotidienne de la production, l’obtention et l’administration des incitatifs, ainsi qu’un reporting et des contrôles de niveau prêteur.",
+        sec2_bridge_p3: "Cette répartition des rôles préserve l’ambition créative premium tout en alignant le risque sur les parties les mieux placées pour le porter, avec un budget intégré unique et une gouvernance unifiée entre le créatif et la livraison.",
+
+        sec3_k: "Alignement",
+        sec3_h: "Alignement des intérêts et incitatifs",
+        sec3_p: "Le modèle vise à aligner les parties via un équilibre entre rémunération cash, report de timing et participation à la performance — afin de protéger la qualité tout en gérant la trésorerie initiale.",
+        sec3_b1_h: "Cédule des sorties de fonds",
+        sec3_b1_l1: "Privilégier des paiements échelonnés selon les jalons de production.",
+        sec3_b1_l2: "Reporter certains décaissements initiaux lorsque c’est faisable, sans compromettre la livraison.",
+        sec3_b1_l3: "Utiliser des réserves, escrow ou mécanismes de protection pour les obligations critiques (paie, livraison).",
+        sec3_b2_h: "Partage de la profitabilité",
+        sec3_b2_l1: "Participation significative aux parties clés en échange de prise de risque et flexibilité.",
+        sec3_b2_l2: "Maintenir un ordre de déboursés transparent, gouverné par des pratiques reconnues.",
+        sec3_b2_l3: "Préserver l’optionalité de la franchise (suites, saisons, dérivés) dans les négociations.",
+        sec3_callout_h: "Logique parties prenantes",
+        sec3_callout_p: "Le projet est conçu pour des partenaires qui raisonnent en valeur de cycle de vie : une franchise évolutive avec sorties multiples et engagement durable, plutôt qu’un seul pari.",
+
+        sec4_k: "Risques",
+        sec4_h: "Gestion des risques et assurance de livraison",
+        sec4_p: "Un montage bancable exige des contrôles crédibles : protections orientées delivery, suivi rigoureux des coûts et remèdes clairs en cas de risque.",
+        r1_h: "Protection de réalisation",
+        r1_p: "Au besoin, des cautions de réalisations et une structure de contingence étagée peuvent protéger la livraison aux specs approuvées — axée sur la réalisation, pas sur la performance commerciale.",
+        r2_h: "Décaissement contrôlé",
+        r2_p: "Les mécanismes de comptes séquestres et de comptes de recouvrement peuvent offrir transparence, double autorisation et flux de paiement prévisibles pour les obligations clés.",
+        r3_h: "Fréquence des rapports",
+        r3_p: "Des rapports hebdomadaires (coûts, échéancier, écarts) font partie d’une gouvernance de niveau prêteur.",
+        r4_h: "Assurances",
+        r4_p: "La pile d’assurances standard (distribution, dépenses supplémentaires, E&O, etc.) soutient la continuité et réduit l’exposition opérationnelle.",
+
+        sec5_k: "Implantation",
+        sec5_h: "Avantage Canada",
+        sec5_p: 'Montréal peut agir comme un hub riche en incitatifs, combinant plateaux, équipes et pipelines de postproduction—chez<span class="font-bold"> MELS Studios</span>—au service de l’efficacité des coûts et de la fiabilité de production.',
+        sec5_b1_h: "Infrastructures",
+        sec5_b1_p: "Accès à des équipes expérimentées, à des plateaux, à l’équipement et à un environnement de post intégré, ce qui soutient la certitude d’échéancier à grande échelle.",
+        sec5_b2_h: "Incitatifs",
+        sec5_b2_p: "Les programmes d’incitatifs peuvent réduire matériellement la dépense nette, améliorant le profil risque/rendement pour le studio et les partenaires financiers.",
+        sec5_callout_h: "Signal de marque",
+        sec5_callout_p: "Une production ancrée à Montréal renforce la crédibilité auprès de l’industrie grâce à des partenaires locaux établis et reconnus.",
+
+        sec6_b1_h: "Discuter de la structure",
+        sec6_b1_p: "S’aligner sur le rôle du studio, l’appétit de financement et le chemin vers des ententes bancaires.",
+        sec6_b2_h: "Partager les documents détaillés",
+        sec6_b2_p: "Les budgets, prévisions et brouillons juridiques détaillés se partagent sous confidentialité et revue appropriées.",
+        sec6_cta1: "Demander le deck finance",
+        sec6_cta2: "Contact",
+
+        footer_line: "Pour fins de présentation à l’industrie.<br>© 2026 NDF5 Productions Inc. Tous droits réservés."
+      }
+    };
+
+    // -----------------------
+    // Language + UI wiring
+    // -----------------------
+    let currentLang = "en";
+
+    function applyI18n() {
+      document.documentElement.lang = currentLang;
+      document.getElementById("langLabel").textContent = currentLang === "en" ? "FR" : "EN";
+
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        const str = i18n[currentLang][key];
+        if (typeof str === "string") el.innerHTML = str;
+      });
+
+      // Re-render icons after DOM text swaps
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === "en" ? "fr" : "en";
+      applyI18n();
+    }
+
+    // -----------------------
+    // Reveal on scroll
+    // -----------------------
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add("active");
+      });
+    }, { threshold: 0.12 });
+
+    function bindReveal() {
+      document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+    }
+
+    // -----------------------
+    // Init
+    // -----------------------
+    window.addEventListener("DOMContentLoaded", () => {
+      setLinks();
+      bindReveal();
+      applyI18n();
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>
