@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +11,9 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -39,34 +42,66 @@
   </script>
 
   <style>
-    body { background: #F0EFE9; color: #0B0806; }
-    ::selection { background: #C5A065; color: #0B0806; }
+    body {
+      background: #F0EFE9;
+      color: #0B0806;
+    }
 
-    .noise-overlay{
-      position: fixed; inset: 0;
-      pointer-events: none; z-index: 10;
+    ::selection {
+      background: #C5A065;
+      color: #0B0806;
+    }
+
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
       opacity: 0.03;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
 
-    .reveal { opacity: 0; transform: translateY(12px); transition: all 900ms cubic-bezier(0.16, 1, 0.3, 1); }
-    .reveal.active { opacity: 1; transform: translateY(0); }
-    .delay-100 { transition-delay: 100ms; }
-    .delay-200 { transition-delay: 200ms; }
-    .delay-300 { transition-delay: 300ms; }
-    .delay-450 { transition-delay: 450ms; }
-    .delay-600 { transition-delay: 600ms; }
+    .reveal {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all 900ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .delay-100 {
+      transition-delay: 100ms;
+    }
+
+    .delay-200 {
+      transition-delay: 200ms;
+    }
+
+    .delay-300 {
+      transition-delay: 300ms;
+    }
+
+    .delay-450 {
+      transition-delay: 450ms;
+    }
+
+    .delay-600 {
+      transition-delay: 600ms;
+    }
 
     .hero-grid {
       background-image:
-        radial-gradient(circle at 18% 15%, rgba(197,160,101,0.22), transparent 44%),
-        radial-gradient(circle at 82% 30%, rgba(15,23,36,0.12), transparent 46%),
-        radial-gradient(circle at 50% 95%, rgba(197,160,101,0.12), transparent 48%),
-        linear-gradient(180deg, rgba(255,255,255,0.65), rgba(240,239,233,1));
+        radial-gradient(circle at 18% 15%, rgba(197, 160, 101, 0.22), transparent 44%),
+        radial-gradient(circle at 82% 30%, rgba(15, 23, 36, 0.12), transparent 46%),
+        radial-gradient(circle at 50% 95%, rgba(197, 160, 101, 0.12), transparent 48%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(240, 239, 233, 1));
     }
 
     .hairline {
-      background: linear-gradient(90deg, transparent, rgba(11,8,6,0.20), transparent);
+      background: linear-gradient(90deg, transparent, rgba(11, 8, 6, 0.20), transparent);
       height: 1px;
     }
   </style>
@@ -76,50 +111,45 @@
   <div class="noise-overlay"></div>
 
   <header class="sticky top-0 z-40">
-  <div class="backdrop-blur bg-ndf-paper/70 border-b border-ndf-deep/10">
-    <nav class="mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
+    <div class="backdrop-blur bg-ndf-paper/70 border-b border-ndf-deep/10">
+      <nav class="mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
 
-      <div class="flex items-center gap-4">
-        <button type="button" class="shrink-0"
-          onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
-          aria-label="Scroll to top">
-          <img
-            src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
-            alt="NDF5 Productions"
-            class="h-14 md:h-14 w-auto block object-contain"
-            decoding="async"
-          />
-        </button>
+        <div class="flex items-center gap-4">
+          <button type="button" class="shrink-0" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            aria-label="Scroll to top">
+            <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
+              alt="NDF5 Productions" class="h-14 md:h-14 w-auto block object-contain" decoding="async" />
+          </button>
 
-        <div class="hidden sm:flex items-center gap-3">
-          <a id="backLink" href="#"
-            class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-ndf-deep/70 hover:text-ndf-deep transition">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-            <span data-i18n="back_main">Back</span>
-          </a>
-          <span class="text-ndf-deep/30">/</span>
-          <span class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="kicker">Saga</span>
+          <div class="hidden sm:flex items-center gap-3">
+            <a id="backLink" href="#"
+              class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-ndf-deep/70 hover:text-ndf-deep transition">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+              <span data-i18n="back_main">Back</span>
+            </a>
+            <span class="text-ndf-deep/30">/</span>
+            <span class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="kicker">Saga</span>
+          </div>
         </div>
-      </div>
 
-      <div class="flex items-center gap-3">
-        <button type="button" onclick="toggleLang()"
-          class="bg-white/70 border border-ndf-deep/20 px-4 py-2 text-xs font-mono uppercase tracking-widest text-ndf-deep hover:bg-ndf-gold hover:border-ndf-gold hover:text-ndf-deep transition-all duration-300">
-          <span id="lang-btn">FR</span>
-        </button>
+        <div class="flex items-center gap-3">
+          <button type="button" onclick="toggleLang()"
+            class="bg-white/70 border border-ndf-deep/20 px-4 py-2 text-xs font-mono uppercase tracking-widest text-ndf-deep hover:bg-ndf-gold hover:border-ndf-gold hover:text-ndf-deep transition-all duration-300">
+            <span id="lang-btn">FR</span>
+          </button>
 
-        <a id="mainLinkTop" href="#"
-          class="hidden sm:flex items-center gap-2 bg-ndf-deep text-ndf-paper px-6 py-2 text-xs font-mono uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300">
-          <span data-i18n="open_main">Main</span>
-          <i data-lucide="external-link" class="w-4 h-4"></i>
-        </a>
-      </div>
+          <a id="mainLinkTop" href="#"
+            class="hidden sm:flex items-center gap-2 bg-ndf-deep text-ndf-paper px-6 py-2 text-xs font-mono uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300">
+            <span data-i18n="open_main">Main</span>
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </div>
 
-    </nav>
-  </div>
-</header>
+      </nav>
+    </div>
+  </header>
 
-   <!-- Hero (no images) -->
+  <!-- Hero (no images) -->
   <header class="pt-10 md:pt-12">
     <div class="container mx-auto max-w-6xl px-6 md:px-12">
       <div class="hero-grid relative overflow-hidden rounded-2xl shadow-soft border border-ndf-deep/10">
@@ -137,22 +167,26 @@
               About the Saga
             </h1>
 
-            <p class="reveal delay-200 text-base md:text-lg text-ndf-deep/80 leading-relaxed max-w-3xl" data-i18n="subtitle">
+            <p class="reveal delay-200 text-base md:text-lg text-ndf-deep/80 leading-relaxed max-w-3xl"
+              data-i18n="subtitle">
               A long-form crime-family franchise built for prestige, commercial scale, and financial disciple.
             </p>
 
             <div class="reveal delay-300 mt-2 flex flex-wrap gap-2">
-              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
+              <span
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
                 <i data-lucide="sun" class="w-4 h-4 text-ndf-gold"></i>
                 <span data-i18n="pill_tone">Sunlit Noir</span>
               </span>
 
-              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
+              <span
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
                 <i data-lucide="layers" class="w-4 h-4"></i>
                 <span data-i18n="pill_format">Hybrid film + series</span>
               </span>
 
-              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
+              <span
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
                 <i data-lucide="calendar" class="w-4 h-4"></i>
                 <span data-i18n="pill_span">5-year saga</span>
               </span>
@@ -160,30 +194,35 @@
 
             <div class="reveal delay-450 mt-7 grid sm:grid-cols-3 gap-3">
               <div class="rounded-2xl bg-ndf-deep text-ndf-paper border border-black/10 p-5">
-                <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/70" data-i18n="m1_k">Structure</div>
-                <div class="mt-2 text-sm leading-snug text-ndf-paper/90" data-i18n="m1_v">5 two-part films + 5 TV seasons</div>
+                <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/70" data-i18n="m1_k">Structure
+                </div>
+                <div class="mt-2 text-sm leading-snug text-ndf-paper/90" data-i18n="m1_v">5 two-part films + 5 TV
+                  seasons</div>
               </div>
               <div class="rounded-2xl bg-white/70 border border-ndf-deep/10 p-5">
                 <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m2_k">Scale</div>
-                <div class="mt-2 text-sm leading-snug text-ndf-deep/85" data-i18n="m2_v">15 releases, up to 70 hours, over 5 years</div>
+                <div class="mt-2 text-sm leading-snug text-ndf-deep/85" data-i18n="m2_v">15 releases, up to 70 hours,
+                  over 5 years</div>
               </div>
               <div class="rounded-2xl bg-white/70 border border-ndf-deep/10 p-5">
-                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m3_k">Production logic</div>
-                <div class="mt-2 text-sm leading-snug text-ndf-deep/85" data-i18n="m3_v">Blitz model (2 yrs) + economies of scale</div>
+                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m3_k">Production
+                  logic</div>
+                <div class="mt-2 text-sm leading-snug text-ndf-deep/85" data-i18n="m3_v">Blitz model (2 yrs: 2028 &
+                  2030) + economies of scale</div>
               </div>
             </div>
 
             <!-- Rectangular buttons (match home page) -->
             <div class="reveal delay-600 mt-7 flex flex-wrap gap-3">
               <a href="#overview"
-                 class="bg-ndf-gold text-ndf-deep px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all duration-300"
-                 data-i18n="cta_start">
+                class="bg-ndf-gold text-ndf-deep px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all duration-300"
+                data-i18n="cta_start">
                 Start
               </a>
 
               <a id="ctaBackHero" href="#"
-                 class="bg-ndf-deep text-ndf-paper px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300"
-                 data-i18n="cta_back_saga">
+                class="bg-ndf-deep text-ndf-paper px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300"
+                data-i18n="cta_back_saga">
                 Back to Saga section
               </a>
             </div>
@@ -198,21 +237,28 @@
         <aside class="md:col-span-4 lg:col-span-3">
           <div class="md:sticky md:top-28">
             <div class="rounded-2xl border border-ndf-deep/10 bg-white/60 backdrop-blur p-5">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="toc">On this page</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="toc">On this page
+              </div>
               <div class="mt-4 flex flex-col gap-2 text-sm">
                 <a href="#overview" class="hover:text-ndf-gold transition-colors" data-i18n="toc_1">Overview</a>
-                <a href="#characters" class="hover:text-ndf-gold transition-colors" data-i18n="toc_2">Characters and stakes</a>
+                <a href="#characters" class="hover:text-ndf-gold transition-colors" data-i18n="toc_2">Characters and
+                  stakes</a>
                 <a href="#tone" class="hover:text-ndf-gold transition-colors" data-i18n="toc_3">Tone: Sunlit Noir</a>
-                <a href="#format" class="hover:text-ndf-gold transition-colors" data-i18n="toc_4">Format and directors</a>
-                <a href="#production" class="hover:text-ndf-gold transition-colors" data-i18n="toc_5">Production logic</a>
+                <a href="#format" class="hover:text-ndf-gold transition-colors" data-i18n="toc_4">Format and
+                  directors</a>
+                <a href="#production" class="hover:text-ndf-gold transition-colors" data-i18n="toc_5">Production
+                  logic</a>
                 <a href="#next" class="hover:text-ndf-gold transition-colors" data-i18n="toc_6">Next steps</a>
               </div>
             </div>
 
             <div class="mt-4 rounded-2xl border border-ndf-deep/10 bg-ndf-deep text-ndf-paper p-5">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/70" data-i18n="side_k">Positioning</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/70" data-i18n="side_k">Positioning
+              </div>
               <div class="mt-3 text-sm leading-relaxed text-ndf-paper/90" data-i18n="side_p">
-                Prestige crime-family franchise with modern — finance, cyber, and political layers — designed to evolve across years.
+                Prestige crime-family franchise with modern — finance, cyber-attack, psychological and political layers
+                — designed to evolve
+                across years.
               </div>
               <div class="mt-4 flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-ndf-paper/70">
                 <i data-lucide="sparkles" class="w-4 h-4 text-ndf-gold"></i>
@@ -226,14 +272,19 @@
         <main class="md:col-span-8 lg:col-span-9">
           <!-- Overview -->
           <section id="overview" class="scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="ov_h">Overview</h2>
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="ov_h">
+              Overview</h2>
 
             <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="ov_p">
-              The New Drago Family is a five-year franchise saga, an Italian-American crime-family drama set between the Caribbean, Santa Barbara, New York, Italy, and Montreal. It follows one of the most powerful families of its time and the people orbiting them as they navigate love, loyalty, crime, finance, and power in the 2000s and beyond.
+              The New Drago Family is a five-year franchise saga, an Italian-American crime-family drama set between the
+              Caribbean, Santa Barbara, New York, Italy, and Montreal. It follows one of the most powerful families of
+              its time and the people orbiting them as they navigate love, loyalty, crime, finance, and power in the
+              2000s and beyond.
             </p>
 
             <p class="reveal delay-300 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="ov_p2">
-              The storyline is built on a semi-historical five-year chronology set in the 2000s: as the family succeeds, the pressure rises — and success itself brings challenges that threaten the family’s own existence.
+              The storyline is built on a semi-historical five-year chronology set in the 2000s: as the family succeeds,
+              the pressure rises — and success itself brings challenges that threaten the family’s own existence.
             </p>
 
             <div class="reveal delay-300 mt-7 grid md:grid-cols-2 gap-4">
@@ -241,7 +292,8 @@
                 <div class="flex items-start gap-3">
                   <i data-lucide="target" class="w-5 h-5 text-ndf-gold mt-[2px]"></i>
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ov_b1_h">Audience promise</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ov_b1_h">
+                      Audience promise</div>
                     <div class="mt-2 text-sm md:text-base text-ndf-deep/85 leading-relaxed" data-i18n="ov_b1_p">
                       A cinematic, sunlit world where glamour is real and consequences are darker.
                     </div>
@@ -253,7 +305,8 @@
                 <div class="flex items-start gap-3">
                   <i data-lucide="shield-check" class="w-5 h-5 text-ndf-gold mt-[2px]"></i>
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ov_b2_h">Franchise logic</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ov_b2_h">
+                      Franchise logic</div>
                     <div class="mt-2 text-sm md:text-base text-ndf-deep/85 leading-relaxed" data-i18n="ov_b2_p">
                       Recurring sets, evolving storylines, and a structure engineered for scale.
                     </div>
@@ -266,27 +319,35 @@
           <div class="mt-12 hairline"></div>
 
           <!-- Characters -->
-          <section id="characters" class="mt-12 scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="ch_h">Characters and stakes</h2>
+          <section id="png" class="mt-12 scroll-mt-28">
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="ch_h">
+              Characters and stakes</h2>
             <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="ch_p">
-              At its heart stands Don Domenico Drago: charismatic, feared by his enemies, and deeply human. Around him gravitate Lenny Abimonti, his brilliant consigliere whose intellect slowly outgrows his conscience; Margareta Otterra, the wise art expert who becomes an emotional compass as she navigates between art, love, and danger; and a vivid ensemble of heirs, allies, and rivals. Across the saga, these characters rise, fall, and reinvent themselves — discovering the cost of belonging.
+              At its heart stands Don Domenico Drago: charismatic, feared by his enemies, and deeply human. Around him
+              gravitate Lenny Abimonti, his brilliant consigliere whose intellect slowly outgrows his conscience;
+              Margareta Otterra, the wise art expert who becomes an emotional compass as she navigates between art,
+              love, and danger; and a vivid ensemble of heirs, allies, and rivals. Across the saga, these characters
+              rise, fall, and reinvent themselves — discovering the cost of belonging.
             </p>
 
             <div class="reveal delay-300 mt-7 grid lg:grid-cols-3 gap-4">
               <div class="rounded-2xl border border-ndf-deep/10 bg-ndf-paper p-6">
-                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ch_c1_h">Power</div>
+                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ch_c1_h">Power
+                </div>
                 <p class="mt-2 text-sm text-ndf-deep/85 leading-relaxed" data-i18n="ch_c1_p">
                   The empire expands, and every gain creates a new vulnerability.
                 </p>
               </div>
               <div class="rounded-2xl border border-ndf-deep/10 bg-ndf-paper p-6">
-                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ch_c2_h">Identity</div>
+                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ch_c2_h">Identity
+                </div>
                 <p class="mt-2 text-sm text-ndf-deep/85 leading-relaxed" data-i18n="ch_c2_p">
                   Love and loyalty collide with ambition, secrecy, and legacy pressure.
                 </p>
               </div>
               <div class="rounded-2xl border border-ndf-deep/10 bg-ndf-paper p-6">
-                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ch_c3_h">Consequence</div>
+                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="ch_c3_h">
+                  Consequence</div>
                 <p class="mt-2 text-sm text-ndf-deep/85 leading-relaxed" data-i18n="ch_c3_p">
                   Financial crime, violence, and politics leave permanent marks.
                 </p>
@@ -298,9 +359,13 @@
 
           <!-- Tone -->
           <section id="tone" class="mt-12 scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="tn_h">Tone: Sunlit Noir</h2>
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="tn_h">
+              Tone: Sunlit Noir</h2>
             <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="tn_p">
-              The saga’s world is “sunlit noir” reflecting the duality of the criminal mind: bright, glamorous settings where luxury looks real and the shadows feel sharper. Under sunlit beauty unfolds a wide spectrum of crimes, from elegant financial manipulations to brutal violence. Beauty and danger coexist, and success always carries a cost.
+              The saga’s world is “sunlit noir” reflecting the duality of the criminal mind: bright, glamorous settings
+              where luxury looks real and the shadows feel sharper. Under sunlit beauty unfolds a wide spectrum of
+              crimes, from elegant financial manipulations to brutal violence. Beauty and danger coexist, and success
+              always carries a cost.
             </p>
 
             <div class="reveal delay-300 mt-7 rounded-2xl border border-ndf-deep/10 bg-white/70 p-6">
@@ -317,20 +382,26 @@
 
           <!-- Format -->
           <section id="format" class="mt-12 scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fm_h">Format and directors</h2>
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fm_h">
+              Format and directors</h2>
             <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="fm_p">
-              The franchise is built as a complete structure: five two-part films and five TV seasons, for up to seventy hours of interconnected content. The films deliver major milestones and theatrical impact; the series explores intimate character evolution and the family ecosystem in greater depth. Two directors and showrunners share the vision to keep the duality in the look and rhythm evolving across the five-year arc.
+              The franchise is built as a complete structure: five two-part films and five TV seasons, for up to seventy
+              hours of interconnected content. The films deliver major milestones and theatrical impact; the series
+              explores intimate character evolution and the family ecosystem in greater depth. Two directors and
+              showrunners share the vision to keep the duality in the look and rhythm evolving across the five-year arc.
             </p>
 
             <div class="reveal delay-300 mt-7 grid md:grid-cols-2 gap-4">
               <div class="rounded-2xl border border-ndf-deep/10 bg-ndf-deep text-ndf-paper p-6">
-                <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/70" data-i18n="fm_b1_h">Films</div>
+                <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/70" data-i18n="fm_b1_h">Films
+                </div>
                 <div class="mt-2 text-sm md:text-base text-ndf-paper/90 leading-relaxed" data-i18n="fm_b1_p">
                   Event-level milestones designed for theatrical scale and impact.
                 </div>
               </div>
               <div class="rounded-2xl border border-ndf-deep/10 bg-white/70 p-6">
-                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fm_b2_h">Series</div>
+                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fm_b2_h">Series
+                </div>
                 <div class="mt-2 text-sm md:text-base text-ndf-deep/85 leading-relaxed" data-i18n="fm_b2_p">
                   Psychological depth, relationships, and long-term consequence.
                 </div>
@@ -342,9 +413,13 @@
 
           <!-- Production -->
           <section id="production" class="mt-12 scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="pr_h">Production logic</h2>
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="pr_h">
+              Production logic</h2>
             <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="pr_p">
-              Behind the scenes, the saga is engineered to achieve high-end quality while remaining financially intelligent. Recurring locations and durable story assets allow sets, costumes, and visuals to be reused and evolved rather than rebuilt from scratch. Each production blitz concentrates filming into a single intense year, generating efficiencies while maximizing creative consistency across multiple releases.
+              Behind the scenes, the saga is engineered to achieve high-end quality while remaining financially
+              intelligent. Recurring locations and durable story assets allow sets, costumes, and visuals to be reused
+              and evolved rather than rebuilt from scratch. Each production blitz concentrates filming into a single
+              intense year, generating efficiencies while maximizing creative consistency across multiple releases.
             </p>
 
             <div class="reveal delay-300 mt-7 grid lg:grid-cols-3 gap-4">
@@ -352,7 +427,8 @@
                 <div class="flex items-start gap-3">
                   <i data-lucide="repeat" class="w-5 h-5 text-ndf-gold mt-[2px]"></i>
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="pr_c1_h">Reuse</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="pr_c1_h">Reuse
+                    </div>
                     <div class="mt-2 text-sm text-ndf-deep/85 leading-relaxed" data-i18n="pr_c1_p">
                       Recurring iconic places and evolving assets across years.
                     </div>
@@ -363,7 +439,8 @@
                 <div class="flex items-start gap-3">
                   <i data-lucide="blocks" class="w-5 h-5 text-ndf-gold mt-[2px]"></i>
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="pr_c2_h">Blitz model</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="pr_c2_h">Blitz
+                      model</div>
                     <div class="mt-2 text-sm text-ndf-deep/85 leading-relaxed" data-i18n="pr_c2_p">
                       Concentrated production for coherence and cost control.
                     </div>
@@ -374,7 +451,8 @@
                 <div class="flex items-start gap-3">
                   <i data-lucide="banknote" class="w-5 h-5 text-ndf-gold mt-[2px]"></i>
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="pr_c3_h">Economies</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="pr_c3_h">
+                      Economies</div>
                     <div class="mt-2 text-sm text-ndf-deep/85 leading-relaxed" data-i18n="pr_c3_p">
                       Infrastructure and incentives support premium execution.
                     </div>
@@ -388,33 +466,35 @@
 
           <!-- Next -->
           <section id="next" class="mt-12 pb-20 scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="nx_h">Next steps</h2>
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="nx_h">Next
+              steps</h2>
             <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="nx_p">
-              Continue exploring the project on the main site: story overview, timeline of production, characters, and business elements.
+              Continue exploring the project on the main site: story overview, timeline of production, characters, and
+              business elements.
             </p>
 
             <div class="reveal delay-300 mt-7 flex flex-wrap gap-3">
               <a id="goStory" href="#"
-                 class="bg-ndf-deep text-ndf-paper px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300"
-                 data-i18n="nx_story">
+                class="bg-ndf-deep text-ndf-paper px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300"
+                data-i18n="nx_story">
                 Go to Story
               </a>
 
               <a id="goTimeline" href="#"
-                 class="bg-ndf-deep text-ndf-paper px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300"
-                 data-i18n="nx_timeline">
+                class="bg-ndf-deep text-ndf-paper px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300"
+                data-i18n="nx_timeline">
                 Go to Timeline
               </a>
 
               <a id="goCharacters" href="#"
-                 class="bg-ndf-deep text-ndf-paper px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300"
-                 data-i18n="nx_characters">
+                class="bg-ndf-deep text-ndf-paper px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300"
+                data-i18n="nx_characters">
                 Go to Characters
               </a>
 
               <a id="backLinkCard" href="#"
-                 class="bg-ndf-gold text-ndf-deep px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all duration-300"
-                 data-i18n="nx_back">
+                class="bg-ndf-gold text-ndf-deep px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all duration-300"
+                data-i18n="nx_back">
                 Back to Saga section
               </a>
             </div>
@@ -422,8 +502,8 @@
 
           <footer class="pb-16">
             <div class="border-t border-ndf-deep/10 pt-10 text-center">
-              <div class="mt-2 text-xs text-ndf-deep/60" 
-              data-i18n="footer_line">For industry presentation purposes.<br>© 2026 NDF5 Productions Inc. All rights reserved.</div>
+              <div class="mt-2 text-xs text-ndf-deep/60" data-i18n="footer_line">For industry presentation
+                purposes.<br>© 2026 NDF5 Productions Inc. All rights reserved.</div>
             </div>
           </footer>
         </main>
@@ -452,7 +532,7 @@
         m2_k: "Scale",
         m2_v: "15 releases, up to 70 hours, over 5 years",
         m3_k: "Production logic",
-        m3_v: "Blitz model (2 yrs) + economies of scale",
+        m3_v: "Blitz model (2 yrs: 2028 & 2030) + economies of scale",
 
         cta_start: "Start",
         cta_back_saga: "Back to Saga section",
@@ -466,7 +546,7 @@
         toc_6: "Next steps",
 
         side_k: "Positioning",
-        side_p: "Prestige crime-family franchise with modern — finance, cyber, and political layers — designed to evolve across years.",
+        side_p: "Prestige crime-family franchise with modern — finance, cyber-attack, psychological and political layers — designed to evolve across years.",
         side_tag: "Industry-facing presentation",
 
         ov_h: "Overview",
@@ -536,7 +616,7 @@
         m2_k: "Échelle",
         m2_v: "15 sorties, jusqu’à 70 heures, sur 5 ans",
         m3_k: "Logique prod",
-        m3_v: "Modèle blitz (2 ans) + économies d’échelle",
+        m3_v: "Modèle blitz (2 ans: 2028 & 2030) + économies d’échelle",
 
         cta_start: "Commencer",
         cta_back_saga: "Retour à la section Saga",
@@ -550,7 +630,7 @@
         toc_6: "Étapes suivantes",
 
         side_k: "Positionnement",
-        side_p: "Franchise criminelle de prestige avec des couches modernes finance, cyber et politique — conçue pour évoluer au fil des années.",
+        side_p: "Franchise criminelle de prestige avec des couches modernes — finance, cyber-attaque, psychologie et politique — conçue pour évoluer au fil des années.",
         side_tag: "Présentation pour l’industrie",
 
         ov_h: "Aperçu",
@@ -702,12 +782,11 @@
         lucide.createIcons();
       } catch (e) {
         showAllRevealAsFallback();
-        try { lucide.createIcons(); } catch (_) {}
+        try { lucide.createIcons(); } catch (_) { }
         console.error(e);
       }
     });
   </script>
 </body>
+
 </html>
-
-
