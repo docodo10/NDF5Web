@@ -1361,6 +1361,33 @@
         </div>
       </div>
 
+
+      <!-- Legal Disclaimer (visible, bilingual) -->
+      <div class="mt-16 pt-10 border-t border-white/5">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-8 md:gap-12 items-start">
+
+          <!-- Title (left on desktop) -->
+          <div class="md:w-72 md:text-left text-white/50">
+            <p class="text-sm font-mono uppercase tracking-widest text-ndf-gold" data-i18n="footer_disclaimer_title">
+              Disclaimer &amp; Forward-Looking Statements
+            </p>
+          </div>
+
+          <!-- Text -->
+          <div class="md:flex-1 text-sm leading-relaxed text-neutral-300 text-white/50">
+            <div class="space-y-3">
+              <p data-i18n="footer_disclaimer_p1"></p>
+              <p data-i18n="footer_disclaimer_p2"></p>
+              <p data-i18n="footer_disclaimer_p3"></p>
+              <p data-i18n="footer_disclaimer_p4"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extra breathing room before the bottom bar -->
+        <div class="h-12"></div>
+      </div>
+
       <!-- Bottom bar -->
       <div
         class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/5 text-xs text-neutral-600 uppercase tracking-widest font-mono">
@@ -1370,7 +1397,6 @@
           <span data-i18n="footer_status">Status: Pre-Production</span>
         </div>
       </div>
-    </div>
   </footer>
 
   <script>
@@ -1641,12 +1667,17 @@
         footer_legal_privacy: "Privacy Policy",
         footer_rights: "© 2026 NDF5 Productions Inc. All rights reserved.",
         footer_status: "Status: Pre-Production",
+        footer_disclaimer_label: `Disclaimer`,
+        footer_disclaimer_title: `Disclaimer & Forward-Looking Statements`,
+        footer_disclaimer_p1: `This website presents a work of fiction. Names, characters, organizations, events, and institutions are fictional or used in a fictionalized manner. Any resemblance to actual persons, living or deceased, or real entities is coincidental and unintended.`,
+        footer_disclaimer_p2: `Concept imagery is illustrative and does not imply endorsement, attachment, participation, or approval by any individual or entity unless formally announced.`,
+        footer_disclaimer_p3: `Certain sections may include industry information, financial modeling, and forward-looking statements based on current assumptions and subject to risks and uncertainties. Actual results may differ materially.`,
+        footer_disclaimer_p4: `Nothing herein constitutes an offer to sell or a solicitation of an offer to buy any securities or investment interests. This material has not been reviewed or approved by any securities regulatory authority.`,
 
         // --- AUTH MODAL ---
         auth_title: "Restricted Access",
         auth_sub: "Authorized Partners Only",
-        auth_btn: "Authenticate",
-        footer_tagline: "Join the Drago world."
+        auth_btn: "Authenticate"
       },
 
       fr: {
@@ -1820,7 +1851,7 @@
         contact_more_hint: "Collaboration, représentation, affaires et investisseurs.",
 
         // --- PIED DE PAGE (ajoute ces clés) ---
-        footer_tagline: "Joingnez le monde des Drago.",
+        footer_tagline: "Joignez le monde des Drago.",
         footer_portal: "Accéder au portail investisseurs",
         footer_producer_title: "Producteur",
         footer_producer_text: "NDF5 Productions Inc.<br>Montréal, Québec, Canada",
@@ -1830,12 +1861,17 @@
         footer_legal_privacy: "Politique de confidentialité",
         footer_rights: "© 2026 NDF5 Productions Inc. Tous droits réservés.",
         footer_status: "Statut : Préproduction",
+        footer_disclaimer_label: `Avertissement`,
+        footer_disclaimer_title: `Avertissement et déclarations prospectives`,
+        footer_disclaimer_p1: `Ce site web présente une œuvre de fiction. Les noms, personnages, organisations, événements et institutions sont fictifs ou utilisés de manière fictive. Toute ressemblance avec des personnes réelles, vivantes ou décédées, ou avec des entités existantes serait purement fortuite et non intentionnelle.`,
+        footer_disclaimer_p2: `Les visuels conceptuels sont fournis à titre illustratif uniquement et n’impliquent aucune approbation, association, participation ou validation de la part d’une personne ou entité, sauf annonce officielle.`,
+        footer_disclaimer_p3: `Certaines sections peuvent contenir des informations sectorielles, des modélisations financières et des déclarations prospectives fondées sur des hypothèses actuelles et soumises à des risques et incertitudes. Les résultats réels peuvent différer substantiellement.`,
+        footer_disclaimer_p4: `Aucun élément du présent site ne constitue une offre de vente ni une sollicitation d’offre d’achat de titres ou d’intérêts financiers. Ce document n’a fait l’objet d’aucune approbation par une autorité en valeurs mobilières.`,
 
         // --- MODAL D'AUTHENTIFICATION ---
         auth_title: "Accès Restreint",
         auth_sub: "Partenaires Autorisés",
-        auth_btn: "Authentifier",
-        footer_tagline: "Joingnez le monde des Drago."
+        auth_btn: "Authentifier"
       }
     };
 
