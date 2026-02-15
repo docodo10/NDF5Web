@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +11,9 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -39,56 +42,91 @@
   </script>
 
   <style>
-    body { background: #F0EFE9; color: #0B0806; }
-    ::selection { background: #C5A065; color: #0B0806; }
+    body {
+      background: #F0EFE9;
+      color: #0B0806;
+    }
 
-    .noise-overlay{
-      position: fixed; inset: 0;
-      pointer-events: none; z-index: 10;
+    ::selection {
+      background: #C5A065;
+      color: #0B0806;
+    }
+
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
       opacity: 0.03;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
 
-    .reveal { opacity: 0; transform: translateY(12px); transition: all 900ms cubic-bezier(0.16, 1, 0.3, 1); }
-    .reveal.active { opacity: 1; transform: translateY(0); }
-    .delay-100 { transition-delay: 100ms; }
-    .delay-200 { transition-delay: 200ms; }
-    .delay-300 { transition-delay: 300ms; }
-    .delay-450 { transition-delay: 450ms; }
-    .delay-600 { transition-delay: 600ms; }
+    .reveal {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all 900ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .delay-100 {
+      transition-delay: 100ms;
+    }
+
+    .delay-200 {
+      transition-delay: 200ms;
+    }
+
+    .delay-300 {
+      transition-delay: 300ms;
+    }
+
+    .delay-450 {
+      transition-delay: 450ms;
+    }
+
+    .delay-600 {
+      transition-delay: 600ms;
+    }
 
     .hero-grid {
       background-image:
-        radial-gradient(circle at 18% 15%, rgba(197,160,101,0.22), transparent 44%),
-        radial-gradient(circle at 82% 30%, rgba(15,23,36,0.12), transparent 46%),
-        radial-gradient(circle at 50% 95%, rgba(197,160,101,0.12), transparent 48%),
-        linear-gradient(180deg, rgba(255,255,255,0.65), rgba(240,239,233,1));
+        radial-gradient(circle at 18% 15%, rgba(197, 160, 101, 0.22), transparent 44%),
+        radial-gradient(circle at 82% 30%, rgba(15, 23, 36, 0.12), transparent 46%),
+        radial-gradient(circle at 50% 95%, rgba(197, 160, 101, 0.12), transparent 48%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(240, 239, 233, 1));
     }
 
     .hairline {
-      background: linear-gradient(90deg, transparent, rgba(11,8,6,0.20), transparent);
+      background: linear-gradient(90deg, transparent, rgba(11, 8, 6, 0.20), transparent);
       height: 1px;
     }
-  
+
     .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.85rem;
-    border-radius: 9999px;
-    background: rgba(11,8,6,0.08);          /* light charcoal */
-    border: 1px solid rgba(11,8,6,0.20);     /* clearer ring */
-    color: rgba(11,8,6,0.78);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.85rem;
+      border-radius: 9999px;
+      background: rgba(11, 8, 6, 0.08);
+      /* light charcoal */
+      border: 1px solid rgba(11, 8, 6, 0.20);
+      /* clearer ring */
+      color: rgba(11, 8, 6, 0.78);
     }
 
-    .chip svg { color: rgba(197,160,101,0.95); }
+    .chip svg {
+      color: rgba(197, 160, 101, 0.95);
+    }
 
     .chip--dark {
-    background: rgba(255,255,255,0.10);
-    border: 1px solid rgba(255,255,255,0.18);
-    color: rgba(240,239,233,0.85);
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: rgba(240, 239, 233, 0.85);
     }
-
   </style>
 </head>
 
@@ -96,49 +134,44 @@
   <div class="noise-overlay"></div>
 
   <header class="sticky top-0 z-40">
-  <div class="backdrop-blur bg-ndf-paper/70 border-b border-ndf-deep/10">
-    <nav class="mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
+    <div class="backdrop-blur bg-ndf-paper/70 border-b border-ndf-deep/10">
+      <nav class="mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
 
-      <div class="flex items-center gap-4">
-        <button type="button" class="shrink-0"
-          onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
-          aria-label="Scroll to top">
-          <img
-            src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
-            alt="NDF5 Productions"
-            class="h-14 md:h-14 w-auto block object-contain"
-            decoding="async"
-          />
-        </button>
+        <div class="flex items-center gap-4">
+          <button type="button" class="shrink-0" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            aria-label="Scroll to top">
+            <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
+              alt="NDF5 Productions" class="h-14 md:h-14 w-auto block object-contain" decoding="async" />
+          </button>
 
-        <div class="hidden sm:flex items-center gap-3">
-          <a id="backLink" href="#"
-            class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-ndf-deep/70 hover:text-ndf-deep transition">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-            <span data-i18n="back_main">Back</span>
-          </a>
-          <span class="text-ndf-deep/30">/</span>
-          <span class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="kicker">Story</span>
+          <div class="hidden sm:flex items-center gap-3">
+            <a id="backLink" href="#"
+              class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-ndf-deep/70 hover:text-ndf-deep transition">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+              <span data-i18n="back_main">Back</span>
+            </a>
+            <span class="text-ndf-deep/30">/</span>
+            <span class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="kicker">Story</span>
+          </div>
         </div>
-      </div>
 
-      <div class="flex items-center gap-3">
-        <button type="button" onclick="toggleLang()"
-          class="bg-white/70 border border-ndf-deep/20 px-4 py-2 text-xs font-mono uppercase tracking-widest text-ndf-deep hover:bg-ndf-gold hover:border-ndf-gold hover:text-ndf-deep transition-all duration-300">
-          <span id="lang-btn">FR</span>
-        </button>
+        <div class="flex items-center gap-3">
+          <button type="button" onclick="toggleLang()"
+            class="bg-white/70 border border-ndf-deep/20 px-4 py-2 text-xs font-mono uppercase tracking-widest text-ndf-deep hover:bg-ndf-gold hover:border-ndf-gold hover:text-ndf-deep transition-all duration-300">
+            <span id="lang-btn">FR</span>
+          </button>
 
-        <a id="mainLinkTop" href="#"
-          class="hidden sm:flex items-center gap-2 bg-ndf-deep text-ndf-paper px-6 py-2 text-xs font-mono uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300">
-          <span data-i18n="open_main">Main</span>
-          <i data-lucide="external-link" class="w-4 h-4"></i>
-        </a>
-      </div>
+          <a id="mainLinkTop" href="#"
+            class="hidden sm:flex items-center gap-2 bg-ndf-deep text-ndf-paper px-6 py-2 text-xs font-mono uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300">
+            <span data-i18n="open_main">Main</span>
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </div>
 
-    </nav>
-  </div>
-</header>
-   
+      </nav>
+    </div>
+  </header>
+
 
   <!-- Hero (text-forward like Saga-L2) -->
   <header class="pt-10 md:pt-12">
@@ -153,7 +186,7 @@
           <div class="reveal flex flex-col gap-4">
             <div class="flex flex-wrap items-center gap-3">
               <h2 class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="story_title">
-              The New Drago Family
+                The New Drago Family
               </h2>
             </div>
 
@@ -161,22 +194,26 @@
               Story Overview
             </h1>
 
-            <p class="reveal delay-200 text-base md:text-lg text-ndf-deep/80 leading-relaxed max-w-3xl" data-i18n="subtitle">
+            <p class="reveal delay-200 text-base md:text-lg text-ndf-deep/80 leading-relaxed max-w-3xl"
+              data-i18n="subtitle">
               A five-year annual crime-family chronology set in the 2000s, driven by secrets, power, and moral erosion.
             </p>
 
             <div class="reveal delay-300 mt-2 flex flex-wrap gap-2">
-              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
+              <span
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
                 <i data-lucide="layers" class="w-4 h-4"></i>
                 <span data-i18n="pill_triangle">A three-force triangle</span>
               </span>
 
-              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
+              <span
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
                 <i data-lucide="calendar" class="w-4 h-4"></i>
                 <span data-i18n="pill_years">FS1–FS5 (2005–2044)</span>
               </span>
 
-              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
+              <span
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 border border-ndf-deep/10 text-xs font-mono uppercase tracking-widest text-ndf-deep/80">
                 <i data-lucide="sparkles" class="w-4 h-4 text-ndf-gold"></i>
                 <span data-i18n="pill_hook">Year-end: outcomes + questions</span>
               </span>
@@ -185,31 +222,35 @@
             <div class="reveal delay-450 mt-7 grid sm:grid-cols-3 gap-3">
               <div class="rounded-2xl bg-ndf-deep text-ndf-paper border border-black/10 p-5">
                 <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/70" data-i18n="m1_k">Core</div>
-                <div class="mt-2 text-sm leading-snug text-ndf-paper/90" data-i18n="m1_v">Wealth, power, love, ambition</div>
+                <div class="mt-2 text-sm leading-snug text-ndf-paper/90" data-i18n="m1_v">Wealth, power, love, ambition
+                </div>
               </div>
               <div class="rounded-2xl bg-white/70 border border-ndf-deep/10 p-5">
                 <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m2_k">Engine</div>
-                <div class="mt-2 text-sm leading-snug text-ndf-deep/85" data-i18n="m2_v">Secrets and shocking twists</div>
+                <div class="mt-2 text-sm leading-snug text-ndf-deep/85" data-i18n="m2_v">Secrets and shocking twists
+                </div>
               </div>
               <div class="rounded-2xl bg-white/70 border border-ndf-deep/10 p-5">
-                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m3_k">Destination</div>
-                <div class="mt-2 text-sm leading-snug text-ndf-deep/85" data-i18n="m3_v">From Drago Island to the summit of American society</div>
+                <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m3_k">Destination
+                </div>
+                <div class="mt-2 text-sm leading-snug text-ndf-deep/85" data-i18n="m3_v">From Drago Island to the summit
+                  of American society</div>
               </div>
             </div>
 
             <!-- Rectangular buttons -->
             <div class="reveal delay-600 mt-7 flex flex-wrap gap-3">
-            <a href="#premise"
+              <a href="#premise"
                 class="bg-ndf-gold text-ndf-deep px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all duration-300"
                 data-i18n="cta_start">
                 Start
-            </a>
+              </a>
 
-            <a id="ctaBackHero" href="#"
+              <a id="ctaBackHero" href="#"
                 class="bg-ndf-deep text-ndf-paper px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold hover:text-ndf-deep transition-all duration-300"
                 data-i18n="cta_back_story">
                 Back to Story section
-            </a>
+              </a>
             </div>
           </div>
         </div>
@@ -222,7 +263,8 @@
         <aside class="md:col-span-4 lg:col-span-3">
           <div class="md:sticky md:top-28">
             <div class="rounded-2xl border border-ndf-deep/10 bg-white/60 backdrop-blur p-5">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="toc">On this page</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="toc">On this page
+              </div>
               <div class="mt-4 flex flex-col gap-2 text-sm">
                 <a href="#premise" class="hover:text-ndf-gold transition-colors" data-i18n="toc_1">Premise</a>
                 <a href="#triangle" class="hover:text-ndf-gold transition-colors" data-i18n="toc_2">The triangle</a>
@@ -248,25 +290,31 @@
         <main class="md:col-span-8 lg:col-span-9">
           <!-- Premise -->
           <section id="premise" class="scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="pr_h">Premise</h2>
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="pr_h">
+              Premise</h2>
 
-            <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="pr_p1"></p>
+            <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="pr_p1">
+            </p>
 
-            <p class="reveal delay-300 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="pr_p2"></p>
+            <p class="reveal delay-300 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="pr_p2">
+            </p>
 
-            <p class="reveal delay-450 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="pr_p3"></p>
+            <p class="reveal delay-450 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="pr_p3">
+            </p>
           </section>
 
           <!-- Triangle -->
           <section id="triangle" class="mt-12 scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="tr_h">The triangle</h2>
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="tr_h">The
+              triangle</h2>
 
             <div class="reveal delay-200 mt-6 grid md:grid-cols-3 gap-4">
               <div class="rounded-2xl border border-ndf-deep/10 bg-white/70 p-6">
                 <div class="flex items-start gap-3">
                   <i data-lucide="crown" class="w-5 h-5 text-ndf-gold mt-[2px]"></i>
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="tr_c1_h">Domenico</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="tr_c1_h">
+                      Domenico</div>
                     <div class="mt-2 text-sm md:text-base text-ndf-deep/85 leading-relaxed" data-i18n="tr_c1_p"></div>
                   </div>
                 </div>
@@ -276,7 +324,8 @@
                 <div class="flex items-start gap-3">
                   <i data-lucide="brain" class="w-5 h-5 text-ndf-gold mt-[2px]"></i>
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="tr_c2_h">Lenny</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="tr_c2_h">Lenny
+                    </div>
                     <div class="mt-2 text-sm md:text-base text-ndf-deep/85 leading-relaxed" data-i18n="tr_c2_p"></div>
                   </div>
                 </div>
@@ -286,7 +335,8 @@
                 <div class="flex items-start gap-3">
                   <i data-lucide="palette" class="w-5 h-5 text-ndf-gold mt-[2px]"></i>
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="tr_c3_h">Greta</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="tr_c3_h">Greta
+                    </div>
                     <div class="mt-2 text-sm md:text-base text-ndf-deep/85 leading-relaxed" data-i18n="tr_c3_p"></div>
                   </div>
                 </div>
@@ -296,10 +346,11 @@
 
           <!-- Chapters -->
           <section id="chapters" class="mt-12 scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="ch_h">FS1–FS5</h2>
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="ch_h">
+              FS1–FS5</h2>
             <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="ch_p"></p>
             <p class="reveal delay-300 mt-3 text-xs font-mono uppercase tracking-widest text-ndf-deep/60">
-            <span data-i18n="fs_note"></span>
+              <span data-i18n="fs_note"></span>
             </p>
 
             <div class="reveal delay-300 mt-7 grid lg:grid-cols-2 gap-4">
@@ -307,8 +358,10 @@
               <div class="rounded-2xl border border-ndf-deep/10 bg-white/70 p-6">
                 <div class="flex items-start justify-between gap-4">
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fs1_k">FS1</div>
-                    <div class="mt-2 text-xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fs1_h">2005</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fs1_k">FS1
+                    </div>
+                    <div class="mt-2 text-xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fs1_h">2005
+                    </div>
                   </div>
                   <span class="chip text-[10px] font-mono uppercase tracking-widest">
                     <i data-lucide="map-pin" class="w-4 h-4"></i>
@@ -322,8 +375,10 @@
               <div class="rounded-2xl border border-ndf-deep/10 bg-white/70 p-6">
                 <div class="flex items-start justify-between gap-4">
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fs2_k">FS2</div>
-                    <div class="mt-2 text-xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fs2_h">2006</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fs2_k">FS2
+                    </div>
+                    <div class="mt-2 text-xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fs2_h">2006
+                    </div>
                   </div>
                   <span class="chip text-[10px] font-mono uppercase tracking-widest">
                     <i data-lucide="map-pin" class="w-4 h-4"></i>
@@ -337,8 +392,10 @@
               <div class="rounded-2xl border border-ndf-deep/10 bg-white/70 p-6">
                 <div class="flex items-start justify-between gap-4">
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fs3_k">FS3</div>
-                    <div class="mt-2 text-xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fs3_h">2008</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fs3_k">FS3
+                    </div>
+                    <div class="mt-2 text-xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fs3_h">2008
+                    </div>
                   </div>
                   <span class="chip text-[10px] font-mono uppercase tracking-widest">
                     <i data-lucide="map-pin" class="w-4 h-4"></i>
@@ -352,8 +409,10 @@
               <div class="rounded-2xl border border-ndf-deep/10 bg-white/70 p-6">
                 <div class="flex items-start justify-between gap-4">
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fs4_k">FS4</div>
-                    <div class="mt-2 text-xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fs4_h">2009</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="fs4_k">FS4
+                    </div>
+                    <div class="mt-2 text-xl font-serif italic tracking-tight text-ndf-deep" data-i18n="fs4_h">2009
+                    </div>
                   </div>
                   <span class="chip text-[10px] font-mono uppercase tracking-widest">
                     <i data-lucide="map-pin" class="w-4 h-4"></i>
@@ -367,8 +426,10 @@
               <div class="lg:col-span-2 rounded-2xl border border-ndf-deep/10 bg-ndf-deep text-ndf-paper p-7">
                 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div>
-                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/70" data-i18n="fs5_k">FS5</div>
-                    <div class="mt-2 text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-paper" data-i18n="fs5_h">2044</div>
+                    <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/70" data-i18n="fs5_k">FS5
+                    </div>
+                    <div class="mt-2 text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-paper"
+                      data-i18n="fs5_h">2044</div>
                   </div>
                   <span class="chip chip--dark text-[10px] font-mono uppercase tracking-widest">
                     <i data-lucide="cpu" class="w-4 h-4"></i>
@@ -382,30 +443,28 @@
 
           <!-- Next steps -->
           <section id="next" class="mt-12 pb-16 scroll-mt-28">
-            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="nx_h">Next steps</h2>
+            <h2 class="reveal text-2xl md:text-3xl font-serif italic tracking-tight text-ndf-deep" data-i18n="nx_h">Next
+              steps</h2>
             <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-deep/85 leading-relaxed" data-i18n="nx_p"></p>
 
             <div class="reveal delay-300 mt-7 flex flex-wrap gap-3">
-            <a id="goCharacters"
+              <a id="goCharacters"
                 class="bg-ndf-gold text-ndf-deep px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all duration-300"
-                href="#"
-                data-i18n="nx_characters">
+                href="#" data-i18n="nx_characters">
                 Characters
-            </a>
+              </a>
 
-            <a id="goTimeline"
+              <a id="goTimeline"
                 class="bg-ndf-gold text-ndf-deep px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all duration-300"
-                href="#"
-                data-i18n="nx_timeline">
+                href="#" data-i18n="nx_timeline">
                 Timeline
-            </a>
+              </a>
 
-            <a id="goProduction"
+              <a id="goProduction"
                 class="bg-ndf-gold text-ndf-deep px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all duration-300"
-                href="#"
-                data-i18n="nx_production">
+                href="#" data-i18n="nx_production">
                 Production
-            </a>
+              </a>
             </div>
 
             <div class="reveal delay-450 mt-10 rounded-2xl border border-ndf-deep/10 bg-white/60 p-6">
@@ -477,7 +536,7 @@
         fs2_k: "FS2",
         fs2_h: "2006",
         fs2_tag: "Aftermath",
-        fs2_p: "The Drago family reels from deep personal and financial losses. As loyalties are tested and secrets simmer, bold moves are made to reclaim what was taken. But with the future uncertain, confronted with a storm, can a fractured family hold onto its legacy?",
+        fs2_p: "The Drago family reels from deep personal and financial losses. As loyalties are tested and secrets simmer, bold moves are made to reclaim what was taken. But with the future uncertain, confronted with a storm, can a devastated family hold onto its legacy?",
         fs3_k: "FS3",
         fs3_h: "2008",
         fs3_tag: "Shift",
@@ -556,7 +615,7 @@
         fs2_k: "FS2",
         fs2_h: "2006",
         fs2_tag: "Après-coup",
-        fs2_p: "La famille Drago encaisse de lourdes pertes personnelles et financières. Tandis que les loyautés sont mises à l’épreuve et que les secrets mijotent, des gestes audacieux sont posés pour reprendre ce qui a été volé. Mais l’avenir reste incertain; face à la tempête, une famille fracturée peut-elle préserver son héritage?",
+        fs2_p: "La famille Drago encaisse de lourdes pertes personnelles et financières. Tandis que les loyautés sont mises à l’épreuve et que les secrets mijotent, des gestes audacieux sont posés pour reprendre ce qui a été volé. Mais l’avenir reste incertain; face à la tempête, une famille dévastée peut-elle préserver son héritage?",
         fs3_k: "FS3",
         fs3_h: "2008",
         fs3_tag: "Bascule",
@@ -597,27 +656,27 @@
     }
 
     function wireMainLinks() {
-  const langParam = `?lang=${currentLang}`;
+      const langParam = `?lang=${currentLang}`;
 
-  // Top nav
-  const backTop = document.getElementById("backLink");
-  const mainTop = document.getElementById("mainLinkTop");
-  if (backTop) backTop.href = `${MAIN_PAGE}${langParam}#story`;
-  if (mainTop) mainTop.href = `${MAIN_PAGE}${langParam}`;
+      // Top nav
+      const backTop = document.getElementById("backLink");
+      const mainTop = document.getElementById("mainLinkTop");
+      if (backTop) backTop.href = `${MAIN_PAGE}${langParam}#story`;
+      if (mainTop) mainTop.href = `${MAIN_PAGE}${langParam}`;
 
-  // Hero back button
-  const ctaBackHero = document.getElementById("ctaBackHero");
-  if (ctaBackHero) ctaBackHero.href = `${MAIN_PAGE}${langParam}#story`;
+      // Hero back button
+      const ctaBackHero = document.getElementById("ctaBackHero");
+      if (ctaBackHero) ctaBackHero.href = `${MAIN_PAGE}${langParam}#story`;
 
-  // Bottom next-section buttons (keep)
-  const goCharacters = document.getElementById("goCharacters");
-  const goTimeline = document.getElementById("goTimeline");
-  const goProduction = document.getElementById("goProduction");
+      // Bottom next-section buttons (keep)
+      const goCharacters = document.getElementById("goCharacters");
+      const goTimeline = document.getElementById("goTimeline");
+      const goProduction = document.getElementById("goProduction");
 
-  if (goCharacters) goCharacters.href = `${MAIN_PAGE}${langParam}#characters`;
-  if (goTimeline) goTimeline.href = `${MAIN_PAGE}${langParam}#timeline`;
-  if (goProduction) goProduction.href = `${MAIN_PAGE}${langParam}#production`;
-}
+      if (goCharacters) goCharacters.href = `${MAIN_PAGE}${langParam}#characters`;
+      if (goTimeline) goTimeline.href = `${MAIN_PAGE}${langParam}#timeline`;
+      if (goProduction) goProduction.href = `${MAIN_PAGE}${langParam}#production`;
+    }
 
     function applyI18n() {
       document.documentElement.lang = currentLang;
@@ -674,11 +733,11 @@
         lucide.createIcons();
       } catch (e) {
         showAllRevealAsFallback();
-        try { lucide.createIcons(); } catch (_) {}
+        try { lucide.createIcons(); } catch (_) { }
         console.error(e);
       }
     });
   </script>
 </body>
-</html>
 
+</html>
