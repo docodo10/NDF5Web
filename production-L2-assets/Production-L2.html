@@ -1,5 +1,14 @@
+<!--
+  FILE: Production-L2_test.html
+  DESCRIPTION: Production page for the "The New Drago Family" website.
+  CONTAINS:
+    - HTML structure for the Production Blitz 1 presentation.
+    - Embedded CSS for page-specific styling (Hero, Reveal animations, etc.).
+    - Embedded JS for Internationalization (i18n) and scroll animations.
+-->
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,9 +19,12 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400&display=swap"
+    rel="stylesheet">
 
   <script>
+    // Configure Tailwind with custom NDF brand colors and fonts
     tailwind.config = {
       theme: {
         extend: {
@@ -39,128 +51,176 @@
   </script>
 
   <style>
-    body { background-color:#F0EFE9; color:#0B0806; }
-    ::selection { background:#C5A065; color:#0B0806; }
-
-    .noise-overlay{
-      position: fixed; inset: 0; pointer-events:none; z-index: 10; opacity: 0.035;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    body {
+      background-color: #F0EFE9;
+      color: #0B0806;
     }
 
-    .reveal{
+    ::selection {
+      background: #C5A065;
+      color: #0B0806;
+    }
+
+    /* Adds a subtle film grain texture over the entire viewport */
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Scroll-triggered animation class. Elements fade in and slide up when .active is added by JS */
+    .reveal {
       opacity: 0;
       transform: translateY(10px);
       transition: all 1.05s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .reveal.active{ opacity: 1; transform: translateY(0); }
 
-    .delay-100{ transition-delay:100ms; }
-    .delay-200{ transition-delay:200ms; }
-    .delay-300{ transition-delay:300ms; }
-    .delay-450{ transition-delay:450ms; }
-    .delay-500{ transition-delay:500ms; }
-    .delay-650{ transition-delay:650ms; }
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-    .card-soft{
-      background: rgba(255,255,255,0.72);
-      border: 1px solid rgba(11,8,6,0.10);
+    .delay-100 {
+      transition-delay: 100ms;
+    }
+
+    .delay-200 {
+      transition-delay: 200ms;
+    }
+
+    .delay-300 {
+      transition-delay: 300ms;
+    }
+
+    .delay-450 {
+      transition-delay: 450ms;
+    }
+
+    .delay-500 {
+      transition-delay: 500ms;
+    }
+
+    .delay-650 {
+      transition-delay: 650ms;
+    }
+
+    .card-soft {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(11, 8, 6, 0.10);
       border-radius: 1rem;
     }
 
-    .gridline{
+    .gridline {
       background-image:
-        linear-gradient(to right, rgba(11,8,6,0.08) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(11,8,6,0.08) 1px, transparent 1px);
+        linear-gradient(to right, rgba(11, 8, 6, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(11, 8, 6, 0.08) 1px, transparent 1px);
       background-size: 44px 44px;
     }
 
-    .hero-grid{
+    .hero-grid {
       background:
-        radial-gradient(900px 500px at 15% 10%, rgba(197,160,101,0.18), transparent 55%),
-        radial-gradient(800px 420px at 85% 25%, rgba(19,32,43,0.10), transparent 60%),
-        linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.62));
+        radial-gradient(900px 500px at 15% 10%, rgba(197, 160, 101, 0.18), transparent 55%),
+        radial-gradient(800px 420px at 85% 25%, rgba(19, 32, 43, 0.10), transparent 60%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.62));
     }
 
-    .btn-primary{
-      display:inline-flex; align-items:center; justify-content:center; gap:.55rem;
-      padding:.85rem 1.2rem;
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      padding: .85rem 1.2rem;
       font-family: 'JetBrains Mono', monospace;
       font-size: .78rem;
       letter-spacing: .12em;
       text-transform: uppercase;
       border-radius: .45rem;
       transition: all .25s ease;
-      border: 1px solid rgba(11,8,6,0.20);
-      background:#C5A065;
-      border-color:#C5A065;
-      color:#0B0806;
+      border: 1px solid rgba(11, 8, 6, 0.20);
+      background: #C5A065;
+      border-color: #C5A065;
+      color: #0B0806;
     }
-    .btn-primary:hover{
-      background: rgba(255,255,255,0.80);
-      border-color: rgba(11,8,6,0.22);
-      color:#0B0806;
+
+    .btn-primary:hover {
+      background: rgba(255, 255, 255, 0.80);
+      border-color: rgba(11, 8, 6, 0.22);
+      color: #0B0806;
       transform: translateY(-1px);
     }
 
-    .btn-dark{
-      display:inline-flex; align-items:center; justify-content:center; gap:.55rem;
-      padding:.85rem 1.2rem;
+    .btn-dark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      padding: .85rem 1.2rem;
       font-family: 'JetBrains Mono', monospace;
       font-size: .78rem;
       letter-spacing: .12em;
       text-transform: uppercase;
       border-radius: .45rem;
       transition: all .25s ease;
-      border: 1px solid rgba(11,8,6,0.20);
-      background:#0B0806;
-      color:#F0EFE9;
+      border: 1px solid rgba(11, 8, 6, 0.20);
+      background: #0B0806;
+      color: #F0EFE9;
     }
-    .btn-dark:hover{
-      background:#C5A065;
-      border-color:#C5A065;
-      color:#0B0806;
+
+    .btn-dark:hover {
+      background: #C5A065;
+      border-color: #C5A065;
+      color: #0B0806;
       transform: translateY(-1px);
     }
 
-    .pill{
-      display:inline-flex; align-items:center; gap:.5rem;
-      border: 1px solid rgba(11,8,6,0.14);
-      background: rgba(255,255,255,0.65);
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      border: 1px solid rgba(11, 8, 6, 0.14);
+      background: rgba(255, 255, 255, 0.65);
       border-radius: 999px;
       padding: .42rem .75rem;
       font-size: .72rem;
-      color: rgba(11,8,6,0.78);
+      color: rgba(11, 8, 6, 0.78);
       line-height: 1;
       white-space: nowrap;
     }
 
-    .toc-link{
-      display:flex; align-items:center; justify-content:space-between; gap:.75rem;
-      padding:.6rem .75rem;
+    .toc-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      padding: .6rem .75rem;
       border-radius: .8rem;
-      border: 1px solid rgba(11,8,6,0.10);
-      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(11, 8, 6, 0.10);
+      background: rgba(255, 255, 255, 0.55);
       transition: all .22s ease;
       font-size: .9rem;
-      color: rgba(11,8,6,0.82);
+      color: rgba(11, 8, 6, 0.82);
     }
-    .toc-link:hover{
-      background: rgba(197,160,101,0.20);
-      border-color: rgba(197,160,101,0.55);
+
+    .toc-link:hover {
+      background: rgba(197, 160, 101, 0.20);
+      border-color: rgba(197, 160, 101, 0.55);
       transform: translateY(-1px);
     }
 
-    .kicker{
-      font-family:'JetBrains Mono', monospace;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      font-size:.72rem;
-      color: rgba(11,8,6,0.60);
+    .kicker {
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      font-size: .72rem;
+      color: rgba(11, 8, 6, 0.60);
     }
 
-    .hairline{
-      height:1px;
-      background: linear-gradient(90deg, rgba(11,8,6,0.00), rgba(11,8,6,0.16), rgba(11,8,6,0.00));
+    .hairline {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(11, 8, 6, 0.00), rgba(11, 8, 6, 0.16), rgba(11, 8, 6, 0.00));
     }
   </style>
 </head>
@@ -173,16 +233,10 @@
       <nav class="container mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
 
         <div class="flex items-center gap-4">
-          <button type="button" class="shrink-0"
-            onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
-            aria-label="Scroll to top"
-          >
-            <img
-              src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
-              alt="NDF5 Productions"
-              class="h-14 md:h-14 w-auto block object-contain"
-              decoding="async"
-            />
+          <button type="button" class="shrink-0" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            aria-label="Scroll to top">
+            <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
+              alt="NDF5 Productions" class="h-14 md:h-14 w-auto block object-contain" decoding="async" />
           </button>
 
           <div class="hidden sm:flex items-center gap-3">
@@ -192,7 +246,8 @@
               <span data-i18n="back_main">Back</span>
             </a>
             <span class="text-ndf-deep/30">/</span>
-            <span class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="kicker">Production</span>
+            <span class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60"
+              data-i18n="kicker">Production</span>
           </div>
         </div>
 
@@ -224,7 +279,7 @@
               <div class="kicker" data-i18n="kicker_top">The New Drago Family</div>
 
               <h1 class="reveal delay-100 text-4xl md:text-6xl font-serif italic tracking-tight text-ndf-deep"
-                  data-i18n="title">
+                data-i18n="title">
                 Production Blitz 1<br>planned for January 2028
               </h1>
               <p class="reveal delay-200 max-w-3xl text-base md:text-lg text-ndf-deep/80 leading-relaxed"
@@ -232,11 +287,15 @@
                 PB1 delivers 2 two-part films and 2 premium series seasons (6 releases / next 2 years).
               </p>
 
-                            <div class="reveal mt-10 delay-300 flex flex-wrap gap-2 pt-1">
-                <span class="pill"><i data-lucide="map" class="w-4 h-4"></i><span data-i18n="pill_hub">Montréal production hub</span></span>
-                <span class="pill"><i data-lucide="clapperboard" class="w-4 h-4"></i><span data-i18n="pill_sets">Reusable premium sets</span></span>
-                <span class="pill"><i data-lucide="clapperboard" class="w-4 h-4"></i><span data-i18n="pill_parallel">Film &amp; Series parallel shooting</span></span>
-                <span class="pill"><i data-lucide="sparkles" class="w-4 h-4"></i><span data-i18n="pill_consistency">Consistency across the saga</span></span>
+              <div class="reveal mt-10 delay-300 flex flex-wrap gap-2 pt-1">
+                <span class="pill"><i data-lucide="map" class="w-4 h-4"></i><span data-i18n="pill_hub">Montréal
+                    production hub</span></span>
+                <span class="pill"><i data-lucide="clapperboard" class="w-4 h-4"></i><span
+                    data-i18n="pill_sets">Reusable premium sets</span></span>
+                <span class="pill"><i data-lucide="clapperboard" class="w-4 h-4"></i><span
+                    data-i18n="pill_parallel">Film &amp; Series parallel shooting</span></span>
+                <span class="pill"><i data-lucide="sparkles" class="w-4 h-4"></i><span
+                    data-i18n="pill_consistency">Consistency across the saga</span></span>
               </div>
 
               <div class="reveal delay-450 flex flex-wrap gap-3 pt-2">
@@ -257,16 +316,22 @@
         <div class="reveal delay-500 mt-8 card-soft p-6 md:p-7">
           <div class="grid md:grid-cols-3 gap-6">
             <div class="space-y-2">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m1_k">Production philosophy</div>
-              <div class="text-base md:text-lg text-ndf-deep" data-i18n="m1_v">Premium quality, built by disciplined efficiency — writing-led and psychologically rich</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m1_k">Production
+                philosophy</div>
+              <div class="text-base md:text-lg text-ndf-deep" data-i18n="m1_v">Premium quality, built by disciplined
+                efficiency — writing-led and psychologically rich</div>
             </div>
             <div class="space-y-2">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m2_k">Production plan</div>
-              <div class="text-base md:text-lg text-ndf-deep" data-i18n="m2_v">2 blitzes, 4 reusable anchor locations<br> Film &amp; Series in parallel<br> 2 directors/showrunners</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m2_k">Production plan
+              </div>
+              <div class="text-base md:text-lg text-ndf-deep" data-i18n="m2_v">2 blitzes, 4 reusable anchor
+                locations<br> Film &amp; Series in parallel<br> 2 directors/showrunners</div>
             </div>
             <div class="space-y-2">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m3_k">Authenticity</div>
-              <div class="text-base md:text-lg text-ndf-deep" data-i18n="m3_v">Montréal base, plus real-world location units abroad</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="m3_k">Authenticity
+              </div>
+              <div class="text-base md:text-lg text-ndf-deep" data-i18n="m3_v">Montréal base, plus real-world location
+                units abroad</div>
             </div>
           </div>
         </div>
@@ -280,21 +345,30 @@
 
           <aside class="lg:col-span-3">
             <div class="reveal sticky top-28 rounded-2xl border border-ndf-deep/10 bg-white/65 p-6">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="toc">On this page</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="toc">On this page
+              </div>
               <div class="mt-4 flex flex-col gap-3 text-sm">
-              <a href="#philosophy" class="hover:text-ndf-gold transition-colors" data-i18n="toc_1">Production philosophy</a>
-              <a href="#structure" class="hover:text-ndf-gold transition-colors" data-i18n="toc_structure">Franchise production structure</a>
-              <a href="#hub" class="hover:text-ndf-gold transition-colors" data-i18n="toc_2">Montréal hub and pipeline</a>
-              <a href="#sets" class="hover:text-ndf-gold transition-colors" data-i18n="toc_3">Reusable world-building</a>
-              <a href="#locations" class="hover:text-ndf-gold transition-colors" data-i18n="toc_4">Authentic locations</a>
-              <a href="#quality" class="hover:text-ndf-gold transition-colors" data-i18n="toc_5">Consistency and quality control</a>
-              <a href="#readiness" class="hover:text-ndf-gold transition-colors" data-i18n="toc_6">Production readiness</a>
-            </div>
+                <a href="#philosophy" class="hover:text-ndf-gold transition-colors" data-i18n="toc_1">Production
+                  philosophy</a>
+                <a href="#structure" class="hover:text-ndf-gold transition-colors" data-i18n="toc_structure">Franchise
+                  production structure</a>
+                <a href="#hub" class="hover:text-ndf-gold transition-colors" data-i18n="toc_2">Montréal hub and
+                  pipeline</a>
+                <a href="#sets" class="hover:text-ndf-gold transition-colors" data-i18n="toc_3">Reusable
+                  world-building</a>
+                <a href="#locations" class="hover:text-ndf-gold transition-colors" data-i18n="toc_4">Authentic
+                  locations</a>
+                <a href="#quality" class="hover:text-ndf-gold transition-colors" data-i18n="toc_5">Consistency and
+                  quality control</a>
+                <a href="#readiness" class="hover:text-ndf-gold transition-colors" data-i18n="toc_6">Production
+                  readiness</a>
+              </div>
 
-            <div class="mt-6">
+              <div class="mt-6">
                 <div class="hairline"></div>
                 <div class="mt-5 text-sm text-ndf-deep/75 leading-relaxed" data-i18n="side_note">
-                  This page focuses on production design and execution logic. Business and financing are presented separately.
+                  This page focuses on production design and execution logic. Business and financing are presented
+                  separately.
                 </div>
               </div>
             </div>
@@ -305,16 +379,19 @@
             <section id="philosophy" class="scroll-mt-28">
               <div class="reveal card-soft p-7 md:p-8">
                 <div class="kicker" data-i18n="sec1_k">Foundation</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec1_h">Production philosophy</h2>
-                <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec1_p">Built to focus on what matters most.</p>
-                 <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec1_h">Production
+                  philosophy</h2>
+                <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec1_p">Built to focus
+                  on what matters most.</p>
+                <div class="mt-6 grid md:grid-cols-2 gap-4">
                   <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
                     <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
                       <i data-lucide="pen-tool" class="w-4 h-4"></i>
                       <span data-i18n="sec1_b1_h">Writing and characters</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec1_b1_p">
-                      Strong writing and psychologically rich characters guide decisions in casting, staging, coverage, and editorial rhythm.
+                      Strong writing and psychologically rich characters guide decisions in casting, staging, coverage,
+                      and editorial rhythm.
                     </p>
                   </div>
 
@@ -324,7 +401,8 @@
                       <span data-i18n="sec1_b2_h">Beauty, wealth, danger</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec1_b2_p">
-                      A visual style that balances sunlit elegance with darker consequences, supported by consistent color logic and art direction.
+                      A visual style that balances sunlit elegance with darker consequences, supported by consistent
+                      color logic and art direction.
                     </p>
                   </div>
 
@@ -334,7 +412,8 @@
                       <span data-i18n="sec1_b3_h">Sound and memory</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec1_b3_p">
-                      A sound and music landscape designed to support emotion, recall, and continuity across the saga’s entries.
+                      A sound and music landscape designed to support emotion, recall, and continuity across the saga’s
+                      entries.
                     </p>
                   </div>
 
@@ -344,7 +423,8 @@
                       <span data-i18n="sec1_b4_h">Consistency</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec1_b4_p">
-                      Clear standards for tone, craft, and delivery so the audience experience remains premium across both film and series formats.
+                      Clear standards for tone, craft, and delivery so the audience experience remains premium across
+                      both film and series formats.
                     </p>
                   </div>
                 </div>
@@ -354,78 +434,128 @@
             <section id="structure" class="scroll-mt-28">
               <div class="reveal card-soft p-7 md:p-8">
                 <div class="kicker" data-i18n="secS_k">Structure</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="secS_h">Franchise production structure</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="secS_h">Franchise
+                  production structure</h2>
 
                 <div class="mt-4 space-y-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed">
                   <p data-i18n="secS_p1">
-                    Production Blitz 1 covers two story years, producing two two-part films and two premium series seasons. This structure follows the family year by year in depth, rather than compressing full-year arcs into a single feature.
+                    Production Blitz 1 spans two story years and is executed through a 12-month principal photography
+                    window, producing two two-part films
+                    and two premium series seasons. Post-production runs in parallel throughout production and spans
+                    approximately 16 months in total.
+                    The six-title rollout is staggered across the following two years for theatrical (spring/summer) and
+                    series (fall) releases, while preserving premium finishing standards.
                   </p>
                   <p data-i18n="secS_p2">
-                    Films deliver the primary milestones (spring and early summer). The series expands causes and consequences, and character evolution (fall). Across PB1, the series totals 18 hours (two seasons of 12×45 minutes), alongside 10 hours of films.
+                    Films deliver the primary milestones (spring and early summer). The series expands causes and
+                    consequences, and character evolution (fall). Across PB1, the series totals 18 hours (two seasons of
+                    12×45 minutes), alongside 10 hours of films.
                   </p>
                   <p data-i18n="secS_p3">
-                    Film and series are captured in parallel with the same cast, sets, lighting, and costumes, preserving a unified premium look. The series delivers about 75% original footage: roughly 14 of 18 hours come from TV’s own shooting (about 6 hours captured in parallel during film days plus about 8 hours of extensions and added scenes), while selectively integrating about 4 hours from the films.
+                    Film and series are captured in parallel with the same cast, sets, lighting, and costumes,
+                    preserving a unified premium look. The series delivers about 75% original footage: roughly 14 of 18
+                    hours come from TV’s own shooting (about 6 hours captured in parallel during film days plus about 8
+                    hours of extensions and added scenes), while selectively integrating about 4 hours from the films.
                   </p>
                 </div>
+                <div class="kicker" data-i18n="secS_k">Structure</div>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="secS_h">Production
+                  structure</h2>
 
+                <div class="mt-4 space-y-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed">
+                  <p data-i18n="secG_p1">
+                    The project delivers approximately 18–20 hours of unique filmed material within a 10–12 month
+                    principal photography window,
+                    supported by dual units, Montreal-centered post-production, and structured A/A+ scene architecture.
+                    Comparable high-end series shoot
+                    8–10 hours in 6–8 months; this model scales that production logic across simultaneous film and
+                    series formats but with two directors, showrunners, and crews.
+                  </p>
+                </div>
                 <div class="mt-7 space-y-3">
                   <details class="group rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
                     <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
-                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="secS_c1_t">Studio-facing advantages</span>
-                      <i data-lucide="chevron-down" class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
+                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-deep/60"
+                        data-i18n="secS_c1_t">Studio-facing advantages</span>
+                      <i data-lucide="chevron-down"
+                        class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
                     </summary>
                     <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="secS_c1_p">
-                      Concentrated cycles increase deliverable volume per production window, stabilize release cadence, and strengthen packaging leverage across theatrical and premium streaming/TV. The model expands total franchise value without extending principal photography across multiple separate years.
+                      Concentrated cycles increase deliverable volume per production window, stabilize release cadence,
+                      and strengthen packaging leverage across theatrical and premium streaming/TV. The model expands
+                      total franchise value without extending principal photography across multiple separate years.
                     </p>
                   </details>
 
                   <details class="group rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
                     <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
-                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="secS_c2_t">Parallel capture and premium standards</span>
-                      <i data-lucide="chevron-down" class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
+                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-deep/60"
+                        data-i18n="secS_c2_t">Parallel capture and premium standards</span>
+                      <i data-lucide="chevron-down"
+                        class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
                     </summary>
                     <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="secS_c2_p">
-                      Films and series are planned to shoot simultaneously, not sequentially: same actors, same sets, same lighting, same production design. Dedicated TV coverage captures TV-specific material in parallel (extensions, connective tissue, added scenes), while film cameras focus on premium cinematic coverage. Film-originated material is integrated selectively only when performance, coverage, and technical standards strengthen the episodic cut.
+                      Films and series are planned to shoot simultaneously, not sequentially: same actors, same sets,
+                      same lighting, same production design. Dedicated TV coverage captures TV-specific material in
+                      parallel (extensions, connective tissue, added scenes), while film cameras focus on premium
+                      cinematic coverage. Film-originated material is integrated selectively only when performance,
+                      coverage, and technical standards strengthen the episodic cut.
                     </p>
                   </details>
 
                   <details class="group rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
                     <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
-                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="secS_c3_t">Schedule discipline and release runway</span>
-                      <i data-lucide="chevron-down" class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
+                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-deep/60"
+                        data-i18n="secS_c3_t">Schedule discipline and release runway</span>
+                      <i data-lucide="chevron-down"
+                        class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
                     </summary>
                     <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="secS_c3_p">
-                      Post-production begins immediately during principal photography, with editorial, VFX, music and finishing running in parallel to support a rolling delivery schedule. Releases are then staged across the following two years, with six titles delivered on a controlled cadence.
+                      Post-production begins immediately during principal photography, with editorial, VFX, music and
+                      finishing running in parallel to support a rolling delivery schedule. Releases are then staged
+                      across the following two years, with six titles delivered on a controlled cadence.
                     </p>
                   </details>
                 </div>
 
                 <div class="mt-7 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
-                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="secS_note_k">Note</div>
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="secS_note_k">Note
+                  </div>
                   <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="secS_note_p">
-                    This structure is designed to stay premium while remaining operationally efficient: unified standards, centralized editorial/post, and clear canon decisions across film and series.
+                    This structure is designed to stay premium while remaining operationally efficient: unified
+                    standards, centralized editorial/post, and clear canon decisions across film and series.
                   </p>
                 </div>
               </div>
             </section>
 
-<section id="hub" class="scroll-mt-28">
+            <section id="hub" class="scroll-mt-28">
               <div class="reveal card-soft p-7 md:p-8">
                 <div class="kicker" data-i18n="sec2_k">Execution</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec2_h">Montréal hub and pipeline</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec2_h">Montréal hub
+                  and pipeline</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec2_p">
-                  Shoot and post-produce a substantial portion of the saga in the Montréal area—competitive CAD costs, supported by generous tax credits, within an integrated studio-to-post ecosystem.</p>
+                  Shoot and post-produce a substantial portion of the saga in the Montréal area—competitive CAD costs,
+                  supported by generous tax credits, within an integrated studio-to-post ecosystem.</p>
                 <div class="mt-6 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
                   <div class="flex items-start gap-3">
                     <i data-lucide="workflow" class="w-5 h-5 mt-0.5"></i>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec2_blitz_h">Production Blitz 1 (of 2) - January 2028</div>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60"
+                        data-i18n="sec2_blitz_h">Production Blitz 1 (of 2) - January 2028</div>
                       <ul class="mt-3 space-y-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed">
-                        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_blitz_1">To produce 2 two-part films and 2 seasons</span></li>
-                        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_blitz_2">4 reusable anchor locations rebuilt once at premium level</span></li>
-                        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_blitz_3">Film and series shot in parallel to share sets, crews, and momentum</span></li>
-                        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_blitz_4">2 directors and showrunners to keep pace and evolve the look</span></li>
+                        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                            data-i18n="sec2_blitz_1">To produce 2 two-part films and 2 seasons</span></li>
+                        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                            data-i18n="sec2_blitz_2">4 reusable anchor locations rebuilt once at premium level</span>
+                        </li>
+                        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                            data-i18n="sec2_blitz_3">Film and series shot in parallel to share sets, crews, and
+                            momentum</span></li>
+                        <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                            data-i18n="sec2_blitz_4">2 directors and showrunners to keep pace and evolve the look</span>
+                        </li>
                       </ul>
                     </div>
                   </div>
@@ -434,51 +564,62 @@
                 <div class="mt-6 space-y-4">
                   <div class="flex gap-4">
                     <div class="mt-1">
-                      <div class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-deep/10 flex items-center justify-center">
+                      <div
+                        class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-deep/10 flex items-center justify-center">
                         <i data-lucide="layers" class="w-5 h-5"></i>
                       </div>
                     </div>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec2_i1_h">Local collaboration</div>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec2_i1_h">
+                        Local collaboration</div>
                       <p class="mt-1 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec2_i1_p">
-                        Partner with leading local studios, craftspeople, and union crews to scale production while maintaining high-end standards.
+                        Partner with leading local studios, craftspeople, and union crews to scale production while
+                        maintaining high-end standards.
                       </p>
                     </div>
                   </div>
 
                   <div class="flex gap-4">
                     <div class="mt-1">
-                      <div class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-deep/10 flex items-center justify-center">
+                      <div
+                        class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-deep/10 flex items-center justify-center">
                         <i data-lucide="scissors" class="w-5 h-5"></i>
                       </div>
                     </div>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec2_i2_h">Post continuity</div>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec2_i2_h">
+                        Post continuity</div>
                       <p class="mt-1 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec2_i2_p">
-                        Centralize editorial, finishing, and post workflows so film and series remain aligned in tone, pacing, and polish.
+                        Centralize editorial, finishing, and post workflows so film and series remain aligned in tone,
+                        pacing, and polish.
                       </p>
                     </div>
                   </div>
 
                   <div class="flex gap-4">
                     <div class="mt-1">
-                      <div class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-deep/10 flex items-center justify-center">
+                      <div
+                        class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-deep/10 flex items-center justify-center">
                         <i data-lucide="shield" class="w-5 h-5"></i>
                       </div>
                     </div>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec2_i3_h">Operational stability</div>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec2_i3_h">
+                        Operational stability</div>
                       <p class="mt-1 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec2_i3_p">
-                        A primary hub reduces transitions, protects schedules, and supports long-form quality control across multiple units.
+                        A primary hub reduces transitions, protects schedules, and supports long-form quality control
+                        across multiple units.
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div class="mt-7 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
-                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec2_note_k">Note</div>
+                  <div class="text-xs font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec2_note_k">Note
+                  </div>
                   <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec2_note_p">
-                    Montréal is also part of the story world, supporting cultural texture and continuity without forcing the saga into a “backlot-only” feel.
+                    Montréal is also part of the story world, supporting cultural texture and continuity without forcing
+                    the saga into a “backlot-only” feel.
                   </p>
                 </div>
               </div>
@@ -487,10 +628,12 @@
             <section id="sets" class="scroll-mt-28">
               <div class="reveal card-soft p-7 md:p-8">
                 <div class="kicker" data-i18n="sec3_k">World-building</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec3_h">Reusable premium sets</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec3_h">Reusable
+                  premium sets</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec3_p">
-                  Premium, reuse-first builds: key locations built once, reused across films and series for continuity and efficiency.
+                  Premium, reuse-first builds: key locations built once, reused across films and series for continuity
+                  and efficiency.
                 </p>
 
                 <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -536,9 +679,11 @@
                   <div class="flex items-start gap-3">
                     <i data-lucide="repeat-2" class="w-5 h-5 mt-0.5"></i>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec3_note_h">Why it matters</div>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec3_note_h">
+                        Why it matters</div>
                       <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec3_note_p">
-                        Reusable sets protect continuity, accelerate returns to the story world, and allow production to spend where it shows on screen.
+                        Reusable sets protect continuity, accelerate returns to the story world, and allow production to
+                        spend where it shows on screen.
                       </p>
                     </div>
                   </div>
@@ -549,10 +694,12 @@
             <section id="locations" class="scroll-mt-28">
               <div class="reveal card-soft p-7 md:p-8">
                 <div class="kicker" data-i18n="sec4_k">Authenticity</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec4_h">Complementary location filming</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec4_h">Complementary
+                  location filming</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec4_p">
-                  While the primary hub supports efficiency and continuity, selected location units anchor the saga in real environments and cultures.
+                  While the primary hub supports efficiency and continuity, selected location units anchor the saga in
+                  real environments and cultures.
                 </p>
 
                 <div class="mt-6 grid md:grid-cols-2 gap-4">
@@ -562,7 +709,8 @@
                       <span data-i18n="sec4_l1_h">Planned locations</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec4_l1_p">
-                      New York, California, Italy, and the Dominican Republic are used strategically to reinforce the story’s cultural and geographic truth. 
+                      New York, California, Italy, and the Dominican Republic are used strategically to reinforce the
+                      story’s cultural and geographic truth.
                     </p>
                   </div>
 
@@ -572,7 +720,8 @@
                       <span data-i18n="sec4_l2_h">Use with intent</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec4_l2_p">
-                      Locations are chosen for narrative impact and authenticity: each unit must add visible on-screen value while maximizing marketing impact.
+                      Locations are chosen for narrative impact and authenticity: each unit must add visible on-screen
+                      value while maximizing marketing impact.
                     </p>
                   </div>
                 </div>
@@ -582,10 +731,12 @@
             <section id="quality" class="scroll-mt-28">
               <div class="reveal card-soft p-7 md:p-8">
                 <div class="kicker" data-i18n="sec5_k">Standards</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec5_h">Consistency and quality control</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec5_h">Consistency and
+                  quality control</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec5_p">
-                  The saga’s format requires a system that keeps tone and craft aligned across multiple entries, units, and timelines.
+                  The saga’s format requires a system that keeps tone and craft aligned across multiple entries, units,
+                  and timelines.
                 </p>
                 <div class="mt-6 rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
                   <div class="flex items-start gap-3">
@@ -595,80 +746,102 @@
                         Two directors + showrunners model
                       </div>
                       <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_dual_p1">
-                        Two directors share the saga’s cinematic language and lead two film units to tackle the required volume while preserving a unified premium signature that reflects the duality of the criminal mind—each director bringing a distinct style: one rooted in the Family, the other in its oppositions.
+                        Two directors share the saga’s cinematic language and lead two film units to tackle the required
+                        volume while preserving a unified premium signature that reflects the duality of the criminal
+                        mind—each director bringing a distinct style: one rooted in the Family, the other in its
+                        oppositions.
                       </p>
                       <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_dual_p2">
-                        Each director is paired with a showrunner who leads a complementary series unit, ensuring that the television entries maintain narrative depth, character development, and continuity with the films.
+                        Each director is paired with a showrunner who leads a complementary series unit, ensuring that
+                        the television entries maintain narrative depth, character development, and continuity with the
+                        films.
                       </p>
                       <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_dual_p3">
-                        Film and series are produced at the same time across four units: the two film units drive master coverage and “canon” choices, while two lighter series units—under showrunner leadership—shoot longer dialogue beats and complementary scenes to deepen character and continuity.
+                        Film and series are produced at the same time across four units: the two film units drive master
+                        coverage and “canon” choices, while two lighter series units—under showrunner leadership—shoot
+                        longer dialogue beats and complementary scenes to deepen character and continuity.
                       </p>
                       <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_dual_p4">
-                        A shared story bible, unified tone rules, and a centralized editorial/post pipeline keep everything aligned.
+                        A shared story bible, unified tone rules, and a centralized editorial/post pipeline keep
+                        everything aligned.
                       </p>
                     </div>
+                  </div>
+
+                  <div class="mt-6 space-y-4">
+                    <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                      <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                        <i data-lucide="git-branch" class="w-4 h-4"></i>
+                        <span data-i18n="sec5_q1_h">Creative spine</span>
+                      </div>
+                      <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_q1_p">
+                        Robust bibles, arcs, and production rules keep the universe coherent while still leaving room
+                        for interpretation and elevation by key creatives.
+                      </p>
+                    </div>
+
+                    <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                      <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                        <span data-i18n="sec5_q2_h">Shared benchmarks</span>
+                      </div>
+                      <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_q2_p">
+                        Common standards for tone, color, sound, and editorial rhythm help ensure each entry feels
+                        premium and unmistakably “NDF.”
+                      </p>
+                    </div>
+
+                    <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
+                      <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
+                        <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+                        <span data-i18n="sec5_q3_h">Delivery discipline</span>
+                      </div>
+                      <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_q3_p">
+                        A clear delivery approach supports release planning across film and series without sacrificing
+                        craftsmanship.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-
-                <div class="mt-6 space-y-4">
-                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
-                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
-                      <i data-lucide="git-branch" class="w-4 h-4"></i>
-                      <span data-i18n="sec5_q1_h">Creative spine</span>
-                    </div>
-                    <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_q1_p">
-                      Robust bibles, arcs, and production rules keep the universe coherent while still leaving room for interpretation and elevation by key creatives.
-                    </p>
-                  </div>
-
-                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
-                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
-                      <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
-                      <span data-i18n="sec5_q2_h">Shared benchmarks</span>
-                    </div>
-                    <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_q2_p">
-                      Common standards for tone, color, sound, and editorial rhythm help ensure each entry feels premium and unmistakably “NDF.”
-                    </p>
-                  </div>
-
-                  <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
-                    <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-deep/60">
-                      <i data-lucide="clipboard-check" class="w-4 h-4"></i>
-                      <span data-i18n="sec5_q3_h">Delivery discipline</span>
-                    </div>
-                    <p class="mt-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed" data-i18n="sec5_q3_p">
-                      A clear delivery approach supports release planning across film and series without sacrificing craftsmanship.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </section>
 
             <section id="readiness" class="scroll-mt-28">
               <div class="reveal card-soft p-7 md:p-8">
                 <div class="kicker" data-i18n="sec6_k">Practical</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec6_h">Production readiness</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-deep" data-i18n="sec6_h">Production
+                  readiness</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-deep/80 leading-relaxed" data-i18n="sec6_p">
-                  This section highlights what is already defined at a production level, and what will be formalized with partners during packaging.
+                  This section highlights what is already defined at a production level, and what will be formalized
+                  with partners during packaging.
                 </p>
 
                 <div class="mt-6 grid md:grid-cols-2 gap-4">
                   <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
-                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec6_r1_h">Defined now</div>
+                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec6_r1_h">
+                      Defined now</div>
                     <ul class="mt-3 space-y-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed">
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec6_r1_1">Core recurring locations and set logic</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec6_r1_2">Primary hub approach (Montréal) + targeted location units</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec6_r1_3">Craft and continuity standards across entries</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec6_r1_4">Blitz production logic and parallel film/series workflow</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec6_r1_1">Core recurring locations and set logic</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec6_r1_2">Primary hub approach (Montréal) + targeted location units</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec6_r1_3">Craft and continuity standards across entries</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec6_r1_4">Blitz production logic and parallel film/series workflow</span></li>
                     </ul>
                   </div>
 
                   <div class="rounded-2xl border border-ndf-deep/10 bg-white/55 p-5">
-                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec6_r2_h">To finalize with partners</div>
+                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-deep/60" data-i18n="sec6_r2_h">To
+                      finalize with partners</div>
                     <ul class="mt-3 space-y-2 text-sm md:text-base text-ndf-deep/75 leading-relaxed">
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec6_r2_1">Stage bookings, unit schedules, and department staffing</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec6_r2_2">Post pipeline specifics and vendor selection (per entry)</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec6_r2_3">Full operational packaging and execution plan</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec6_r2_1">Stage bookings, unit schedules, and department staffing</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec6_r2_2">Post pipeline specifics and vendor selection (per entry)</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec6_r2_3">Full operational packaging and execution plan</span></li>
                     </ul>
                   </div>
                 </div>
@@ -708,7 +881,7 @@
     const MAIN_PAGE = "../index.html";
     const MAIN_HASH = "#production";
 
-    function setLinks(){
+    function setLinks() {
       const url = `${MAIN_PAGE}${MAIN_HASH}`;
       const back = document.getElementById("backLink");
       const back2 = document.getElementById("backLink2");
@@ -753,7 +926,7 @@
         toc_structure: "Franchise production structure",
         secS_k: "Structure",
         secS_h: "Franchise production structure",
-        secS_p1: "Production Blitz 1 covers two story years, producing two two-part films and two premium series seasons. This structure follows the family year by year in depth, rather than compressing full-year arcs into a single feature.",
+        secS_p1: "The project delivers approximately 18–20 hours of unique filmed material within a 10–12 month principal photography window, supported by dual units, Montreal-centered post-production, and structured A/A+ scene architecture. Comparable high-end series shoot 8–10 hours in 6–8 months; this model scales that production logic across simultaneous film and series formats but with two directors, showrunners, and crews.",
         secS_p2: "Films deliver the primary milestones (spring and early summer). The series expands causes and consequences, and character evolution (fall). Across PB1, the series totals 18 hours (two seasons of 12×45 minutes), alongside 10 hours of films.",
         secS_p3: "Film and series are captured in parallel with the same cast, sets, lighting, and costumes, preserving a unified premium look. The series delivers about 75% original footage: roughly 14 of 18 hours come from TV’s own shooting (about 6 hours captured in parallel during film days plus about 8 hours of extensions and added scenes), while selectively integrating about 4 hours from the films.",
         secS_c1_t: "Studio-facing advantages",
@@ -764,6 +937,7 @@
         secS_c3_p: "Post-production begins immediately during principal photography, with editorial, VFX, music and finishing running in parallel to support a rolling delivery schedule. Releases are then staged across the following two years, with six titles delivered on a controlled cadence.",
         secS_note_k: "Note",
         secS_note_p: "This structure is designed to stay premium while remaining operationally efficient: unified standards, centralized editorial/post, and clear canon decisions across film and series.",
+        secG_p1: "The project delivers approximately 18–20 hours of unique filmed material within a 10–12 month principal photography window, supported by dual units, Montreal-centered post-production, and structured A/A+ scene architecture. Comparable high-end series shoot 8–10 hours in 6–8 months; this model scales that production logic across simultaneous film and series formats but with two directors, showrunners, and crews.",
         toc_2: "Montréal hub and pipeline",
         toc_3: "Reusable world-building",
         toc_4: "Authentic locations",
@@ -837,7 +1011,7 @@
         sec5_dual_p2: "Each director brings a distinct style: one rooted in the Family, the other in its oppositions.",
         sec5_dual_p3: "Film and series are produced at the same time across four units: the two film units drive master coverage and “canon” choices, while two lighter series units—under showrunner leadership—shoot longer dialogue beats and complementary scenes to deepen character and continuity.",
         sec5_dual_p4: "A shared story bible, unified tone rules, and a centralized editorial/post pipeline keep everything aligned.",
-        
+
         sec6_k: "Practical",
         sec6_h: "Production readiness",
         sec6_p: "This section highlights what is already defined at a production level, and what will be formalized with partners during packaging.",
@@ -886,7 +1060,7 @@
         toc_structure: "Structure de production de la franchise",
         secS_k: "Structure",
         secS_h: "Structure de production de la franchise",
-        secS_p1: "Le Blitz de production 1 couvre deux années d’histoire et produit deux films en deux parties ainsi que deux saisons de série premium. Cette structure suit la famille année par année, en profondeur, plutôt que de condenser des arcs annuels complets en un seul long métrage.",
+        secS_p1: "Production Blitz 1 covers two story years, producing two two-part films and two premium series seasons. This structure follows the family year by year in depth, rather than compressing full-year arcs into a single feature.",
         secS_p2: "Les films livrent les jalons principaux (printemps et début d’été). La série développe les causes et conséquences, ainsi que l’évolution des personnages (automne). Pour le BP1, la série totalise 18 heures (deux saisons de 12×45 minutes), en plus de 10 heures de films.",
         secS_p3: "Films et série sont captés en parallèle avec les mêmes acteurs, décors, éclairage et costumes, tout en préservant une signature premium unifiée. La série livre environ 75 % de métrage original : environ 14 heures sur 18 proviennent du tournage TV (environ 6 heures captées en parallèle pendant les jours film, plus environ 8 heures d’extensions et de scènes ajoutées), tout en intégrant de façon sélective environ 4 heures issues des films.",
         secS_c1_t: "Avantages pour un studio",
@@ -897,6 +1071,7 @@
         secS_c3_p: "La postproduction démarre immédiatement pendant le tournage, avec le montage, les VFX, la musique et les finitions menés en parallèle afin de soutenir un calendrier de livraison progressif. Six sorties sont ensuite échelonnées sur les deux années suivantes.",
         secS_note_k: "Note",
         secS_note_p: "La structure est pensée pour rester premium tout en demeurant efficiente : standards unifiés, postproduction centralisée et décisions canoniques claires entre films et séries.",
+        secG_p1: "Le Blitz de production 1 prévoit la production d'environ 18 à 20 heures de contenu original, sur une période de tournage principale de 10 à 12 mois. Il s'appuie sur deux équipes de tournage, une postproduction centrée sur Montréal et une architecture de scènes structurée de qualité A/A+. À titre de comparaison, les séries haut de gamme tournent 8 à 10 heures en 6 à 8 mois. Ce modèle adapte cette logique de production aux formats film et série, mais avec deux réalisateurs, deux showrunners et deux équipes de tournage.",
         toc_2: "Pôle montréalais et pipeline",
         toc_3: "Construction d’univers réutilisable",
         toc_4: "Lieux authentiques",
@@ -993,9 +1168,11 @@
     let currentLang = "en";
 
     function applyI18n() {
+      // Select the dictionary based on current language
       const dict = i18n[currentLang] || i18n.en;
       document.documentElement.lang = currentLang;
 
+      // Find all elements with 'data-i18n' and update their content
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
         if (!key) return;
@@ -1013,6 +1190,10 @@
       applyI18n();
     }
 
+    /**
+     * Initializes the IntersectionObserver to trigger '.reveal' animations
+     * when elements scroll into view.
+     */
     function initReveal() {
       const els = document.querySelectorAll(".reveal");
       const io = new IntersectionObserver((entries) => {
@@ -1028,7 +1209,8 @@
       if (window.lucide) window.lucide.createIcons();
     }
 
-    (function boot(){
+    // Boot sequence: Set links, load language, start animations
+    (function boot() {
       setLinks();
       currentLang = localStorage.getItem("ndf_lang") || "en";
       applyI18n();
@@ -1037,4 +1219,5 @@
     })();
   </script>
 </body>
+
 </html>
