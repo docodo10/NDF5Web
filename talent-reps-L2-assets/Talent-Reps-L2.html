@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +11,9 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400&display=swap"
+    rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -39,147 +42,195 @@
   </script>
 
   <style>
-    body { background:#0B0806; color:#F0EFE9; }
-    ::selection { background:#C5A065; color:#0B0806; }
-
-    .noise-overlay{
-      position: fixed; inset: 0; pointer-events:none; z-index: 10; opacity: 0.06;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    body {
+      background: #0B0806;
+      color: #F0EFE9;
     }
 
-    .reveal{
+    ::selection {
+      background: #C5A065;
+      color: #0B0806;
+    }
+
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.06;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .reveal {
       opacity: 0;
       transform: translateY(10px);
       transition: all 1.05s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .reveal.active{ opacity: 1; transform: translateY(0); }
 
-    .delay-100{ transition-delay:100ms; }
-    .delay-200{ transition-delay:200ms; }
-    .delay-300{ transition-delay:300ms; }
-    .delay-450{ transition-delay:450ms; }
-    .delay-500{ transition-delay:500ms; }
-    .delay-650{ transition-delay:650ms; }
-
-    .card-dark{
-      background: rgba(240,239,233,0.06);
-      border: 1px solid rgba(240,239,233,0.10);
-      border-radius: 1rem;
-      box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    .gridline-dark{
+    .delay-100 {
+      transition-delay: 100ms;
+    }
+
+    .delay-200 {
+      transition-delay: 200ms;
+    }
+
+    .delay-300 {
+      transition-delay: 300ms;
+    }
+
+    .delay-450 {
+      transition-delay: 450ms;
+    }
+
+    .delay-500 {
+      transition-delay: 500ms;
+    }
+
+    .delay-650 {
+      transition-delay: 650ms;
+    }
+
+    .card-dark {
+      background: rgba(240, 239, 233, 0.06);
+      border: 1px solid rgba(240, 239, 233, 0.10);
+      border-radius: 1rem;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .gridline-dark {
       background-image:
-        linear-gradient(to right, rgba(240,239,233,0.08) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(240,239,233,0.08) 1px, transparent 1px);
+        linear-gradient(to right, rgba(240, 239, 233, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(240, 239, 233, 0.08) 1px, transparent 1px);
       background-size: 44px 44px;
     }
 
-    .hero-dark{
+    .hero-dark {
       background:
-        radial-gradient(900px 520px at 15% 10%, rgba(197,160,101,0.18), transparent 55%),
-        radial-gradient(800px 460px at 85% 25%, rgba(240,239,233,0.10), transparent 60%),
-        linear-gradient(180deg, rgba(240,239,233,0.08), rgba(240,239,233,0.05));
+        radial-gradient(900px 520px at 15% 10%, rgba(197, 160, 101, 0.18), transparent 55%),
+        radial-gradient(800px 460px at 85% 25%, rgba(240, 239, 233, 0.10), transparent 60%),
+        linear-gradient(180deg, rgba(240, 239, 233, 0.08), rgba(240, 239, 233, 0.05));
     }
 
-    .kicker{
-      font-family:'JetBrains Mono', monospace;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      font-size:.72rem;
-      color: rgba(240,239,233,0.70);
+    .kicker {
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      font-size: .72rem;
+      color: rgba(240, 239, 233, 0.70);
     }
 
-    .hairline{
-      height:1px;
-      background: linear-gradient(90deg, rgba(240,239,233,0.00), rgba(240,239,233,0.22), rgba(240,239,233,0.00));
+    .hairline {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(240, 239, 233, 0.00), rgba(240, 239, 233, 0.22), rgba(240, 239, 233, 0.00));
     }
 
-    .pill{
-      display:inline-flex; align-items:center; gap:.5rem;
-      border: 1px solid rgba(240,239,233,0.16);
-      background: rgba(240,239,233,0.06);
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      border: 1px solid rgba(240, 239, 233, 0.16);
+      background: rgba(240, 239, 233, 0.06);
       border-radius: 999px;
       padding: .42rem .75rem;
       font-size: .72rem;
-      color: rgba(240,239,233,0.78);
+      color: rgba(240, 239, 233, 0.78);
       line-height: 1;
       white-space: nowrap;
     }
 
-    .toc-link{
-      display:flex; align-items:center; justify-content:space-between; gap:.75rem;
-      padding:.6rem .75rem;
+    .toc-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      padding: .6rem .75rem;
       border-radius: .85rem;
-      border: 1px solid rgba(240,239,233,0.12);
-      background: rgba(240,239,233,0.05);
+      border: 1px solid rgba(240, 239, 233, 0.12);
+      background: rgba(240, 239, 233, 0.05);
       transition: all .22s ease;
       font-size: .92rem;
-      color: rgba(240,239,233,0.84);
+      color: rgba(240, 239, 233, 0.84);
     }
-    .toc-link:hover{
-      background: rgba(197,160,101,0.14);
-      border-color: rgba(197,160,101,0.45);
+
+    .toc-link:hover {
+      background: rgba(197, 160, 101, 0.14);
+      border-color: rgba(197, 160, 101, 0.45);
       transform: translateY(-1px);
     }
 
-    .btn-gold{
-      display:inline-flex; align-items:center; justify-content:center; gap:.55rem;
-      padding:.85rem 1.2rem;
-      font-family:'JetBrains Mono', monospace;
-      font-size:.78rem;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      border-radius:.95rem;
+    .btn-gold {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      padding: .85rem 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      border-radius: .95rem;
       transition: all .25s ease;
-      border: 1px solid rgba(197,160,101,0.70);
-      background: rgba(197,160,101,0.92);
-      color:#0B0806;
+      border: 1px solid rgba(197, 160, 101, 0.70);
+      background: rgba(197, 160, 101, 0.92);
+      color: #0B0806;
     }
-    .btn-gold:hover{
-      background:#C5A065;
-      border-color:#C5A065;
+
+    .btn-gold:hover {
+      background: #C5A065;
+      border-color: #C5A065;
       transform: translateY(-1px);
     }
 
-    .btn-outline{
-      display:inline-flex; align-items:center; justify-content:center; gap:.55rem;
-      padding:.85rem 1.2rem;
-      font-family:'JetBrains Mono', monospace;
-      font-size:.78rem;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      border-radius:.95rem;
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      padding: .85rem 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      border-radius: .95rem;
       transition: all .25s ease;
-      border: 1px solid rgba(240,239,233,0.22);
-      background: rgba(240,239,233,0.06);
-      color: rgba(240,239,233,0.92);
+      border: 1px solid rgba(240, 239, 233, 0.22);
+      background: rgba(240, 239, 233, 0.06);
+      color: rgba(240, 239, 233, 0.92);
     }
-    .btn-outline:hover{
-      border-color: rgba(197,160,101,0.70);
-      background: rgba(197,160,101,0.14);
+
+    .btn-outline:hover {
+      border-color: rgba(197, 160, 101, 0.70);
+      background: rgba(197, 160, 101, 0.14);
       transform: translateY(-1px);
     }
 
-    .btn-chip{
-      background: rgba(240,239,233,0.06);
-      border: 1px solid rgba(240,239,233,0.22);
-      color: rgba(240,239,233,0.92);
+    .btn-chip {
+      background: rgba(240, 239, 233, 0.06);
+      border: 1px solid rgba(240, 239, 233, 0.22);
+      color: rgba(240, 239, 233, 0.92);
       transition: all .25s ease;
     }
-    .btn-chip:hover{
-      background: rgba(197,160,101,0.14);
-      border-color: rgba(197,160,101,0.55);
-      color: rgba(240,239,233,0.96);
+
+    .btn-chip:hover {
+      background: rgba(197, 160, 101, 0.14);
+      border-color: rgba(197, 160, 101, 0.55);
+      color: rgba(240, 239, 233, 0.96);
     }
 
-    a.underlink{
+    a.underlink {
       text-decoration: underline;
       text-underline-offset: 4px;
-      text-decoration-color: rgba(197,160,101,0.55);
+      text-decoration-color: rgba(197, 160, 101, 0.55);
     }
-    a.underlink:hover{
-      text-decoration-color: rgba(197,160,101,1);
+
+    a.underlink:hover {
+      text-decoration-color: rgba(197, 160, 101, 1);
     }
   </style>
 </head>
@@ -192,16 +243,10 @@
       <nav class="container mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
 
         <div class="flex items-center gap-4">
-          <button type="button" class="shrink-0"
-            onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
-            aria-label="Scroll to top"
-          >
-            <img
-              src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
-              alt="NDF5 Productions"
-              class="h-14 md:h-14 w-auto block object-contain"
-              decoding="async"
-            />
+          <button type="button" class="shrink-0" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            aria-label="Scroll to top">
+            <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
+              alt="NDF5 Productions" class="h-14 md:h-14 w-auto block object-contain" decoding="async" />
           </button>
 
           <div class="hidden sm:flex items-center gap-3">
@@ -211,7 +256,8 @@
               <span data-i18n="back_main">Back</span>
             </a>
             <span class="text-ndf-paper/25">/</span>
-            <span class="text-xs font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="kicker">Talent & Representation</span>
+            <span class="text-xs font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="kicker">Talent &
+              Representation</span>
           </div>
         </div>
 
@@ -243,13 +289,14 @@
               <div class="kicker" data-i18n="kicker_top">The New Drago Family</div>
 
               <h1 class="reveal delay-100 text-4xl md:text-6xl font-serif italic tracking-tight text-ndf-paper"
-                  data-i18n="title">
+                data-i18n="title">
                 Talent & Representation
               </h1>
 
               <p class="reveal delay-200 mt-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed max-w-3xl"
-                 data-i18n="subtitle">
-                A prestige, character-forward saga designed to create screen legacy — with a representative-friendly structure for scheduling, continuity, and meaningful participation.
+                data-i18n="subtitle">
+                A prestige, character-forward saga designed to create screen legacy — with a representative-friendly
+                structure for scheduling, continuity, and meaningful participation.
               </p>
 
               <p class="reveal delay-250 text-base md:text-lg text-ndf-paper/85 leading-relaxed max-w-3xl"
@@ -258,16 +305,22 @@
               </p>
 
               <p class="reveal mt-4 text-sm md:text-base text-ndf-paper/70 leading-relaxed max-w-3xl"
-                 data-i18n="statusline">
-                Creator-led project in development. Written and controlled by the creator; producing and studio/streaming partners to be attached. This page describes intended talent experience and scheduling targets.
+                data-i18n="statusline">
+                Creator-led project in development. Written and controlled by the creator; producing and
+                studio/streaming partners to be attached. This page describes intended talent experience and scheduling
+                targets.
               </p>
 
 
               <div class="reveal delay-300 flex flex-wrap gap-2 pt-1">
-                <span class="pill"><i data-lucide="theater" class="w-4 h-4"></i><span data-i18n="pill_roles">Complex, layered roles</span></span>
-                <span class="pill"><i data-lucide="sparkles" class="w-4 h-4"></i><span data-i18n="pill_prestige">Premium craft and tone</span></span>
-                <span class="pill"><i data-lucide="calendar-clock" class="w-4 h-4"></i><span data-i18n="pill_schedule">Target work windows: 2028 & 2030</span></span>
-                <span class="pill"><i data-lucide="handshake" class="w-4 h-4"></i><span data-i18n="pill_upside">Meaningful upside model</span></span>
+                <span class="pill"><i data-lucide="theater" class="w-4 h-4"></i><span data-i18n="pill_roles">Complex,
+                    layered roles</span></span>
+                <span class="pill"><i data-lucide="sparkles" class="w-4 h-4"></i><span data-i18n="pill_prestige">Premium
+                    craft and tone</span></span>
+                <span class="pill"><i data-lucide="calendar-clock" class="w-4 h-4"></i><span
+                    data-i18n="pill_schedule">Target work windows: 2028 & 2030</span></span>
+                <span class="pill"><i data-lucide="handshake" class="w-4 h-4"></i><span
+                    data-i18n="pill_upside">Meaningful upside model</span></span>
               </div>
 
               <div class="reveal delay-450 flex flex-wrap gap-3 pt-2">
@@ -289,15 +342,20 @@
           <div class="grid md:grid-cols-3 gap-6">
             <div class="space-y-2">
               <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="m1_k">Format</div>
-              <div class="text-base md:text-lg text-ndf-paper/90" data-i18n="m1_v">Films + series, one coherent saga with 3 seasonal releases each year for 5 years, starting in 2029</div>
+              <div class="text-base md:text-lg text-ndf-paper/90" data-i18n="m1_v">Films + series, one coherent saga
+                with 3 seasonal releases each year for 5 years, starting in 2029</div>
             </div>
             <div class="space-y-2">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="m2_k">Work windows</div>
-              <div class="text-base md:text-lg text-ndf-paper/90" data-i18n="m2_v">Two concentrated production blitzes (2028 & 2030) with a planned break in between</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="m2_k">Work windows
+              </div>
+              <div class="text-base md:text-lg text-ndf-paper/90" data-i18n="m2_v">Two concentrated production blitzes
+                (2028 & 2030) with a planned break in between</div>
             </div>
             <div class="space-y-2">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="m3_k">For representation</div>
-              <div class="text-base md:text-lg text-ndf-paper/90" data-i18n="m3_v">Clear packaging logic, role briefs, and a strong audience runway</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="m3_k">For
+                representation</div>
+              <div class="text-base md:text-lg text-ndf-paper/90" data-i18n="m3_v">Clear packaging logic, role briefs,
+                and a strong audience runway</div>
             </div>
           </div>
         </div>
@@ -311,23 +369,33 @@
 
           <aside class="lg:col-span-3">
             <div class="reveal sticky top-28 card-dark p-6">
-              <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="toc">Navigate on this page</div>
+              <div class="text-xs font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="toc">Navigate on
+                this page</div>
               <div class="mt-4 flex flex-col gap-3 text-sm">
-                <a href="#offer" class="hover:text-ndf-gold transition-colors" data-i18n="toc_1">What the saga offers</a>
-                <a href="#roles" class="hover:text-ndf-gold transition-colors" data-i18n="toc_2">Roles & screen legacy</a>
-                <a href="#creative-intent" class="hover:text-ndf-gold transition-colors" data-i18n="toc_2b">Creative intent</a>
+                <a href="#offer" class="hover:text-ndf-gold transition-colors" data-i18n="toc_1">What the saga
+                  offers</a>
+                <a href="#roles" class="hover:text-ndf-gold transition-colors" data-i18n="toc_2">Roles & screen
+                  legacy</a>
+                <a href="#creative-intent" class="hover:text-ndf-gold transition-colors" data-i18n="toc_2b">Creative
+                  intent</a>
                 <a href="#schedule" class="hover:text-ndf-gold transition-colors" data-i18n="toc_3">Schedule format</a>
-                <a href="#parallel-workflow" class="hover:text-ndf-gold transition-colors" data-i18n="toc_parallel">Production model & workload rationale</a>
-                <a href="#talent-upside" class="hover:text-ndf-gold transition-colors" data-i18n="toc_upside">Two-year commitment & upside</a>
-                <a href="#reps" class="hover:text-ndf-gold transition-colors" data-i18n="toc_4">How we work with reps</a>
-                <a href="#packaging" class="hover:text-ndf-gold transition-colors" data-i18n="toc_5">Packaging & partners</a>
-                <a href="#contact" class="hover:text-ndf-gold transition-colors" data-i18n="toc_6">Contact & request access</a>
+                <a href="#parallel-workflow" class="hover:text-ndf-gold transition-colors"
+                  data-i18n="toc_parallel">Production model & workload rationale</a>
+                <a href="#talent-upside" class="hover:text-ndf-gold transition-colors" data-i18n="toc_upside">Two-year
+                  commitment & upside</a>
+                <a href="#reps" class="hover:text-ndf-gold transition-colors" data-i18n="toc_4">How we work with
+                  reps</a>
+                <a href="#packaging" class="hover:text-ndf-gold transition-colors" data-i18n="toc_5">Packaging &
+                  partners</a>
+                <a href="#contact" class="hover:text-ndf-gold transition-colors" data-i18n="toc_6">Contact & request
+                  access</a>
               </div>
 
               <div class="mt-6">
                 <div class="hairline"></div>
                 <div class="mt-5 text-sm text-ndf-paper/75 leading-relaxed" data-i18n="side_note">
-                  This page is tailored to agents, managers, casting and directors. Full character lists, materials, and deal structures are shared through a controlled access process.
+                  This page is tailored to agents, managers, casting and directors. Full character lists, materials, and
+                  deal structures are shared through a controlled access process.
                 </div>
               </div>
             </div>
@@ -338,10 +406,12 @@
             <section id="offer" class="scroll-mt-28">
               <div class="reveal card-dark p-7 md:p-8">
                 <div class="kicker" data-i18n="sec1_k">Opportunity</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec1_h">What the saga offers</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec1_h">What the saga
+                  offers</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed" data-i18n="sec1_p">
-                  The New Drago Family is built to combine the theatrical impact of film with the intimate evolution of premium series — so talent gets both iconic moments and long-form depth.
+                  The New Drago Family is built to combine the theatrical impact of film with the intimate evolution of
+                  premium series — so talent gets both iconic moments and long-form depth.
                 </p>
 
                 <div class="mt-6 grid md:grid-cols-2 gap-4">
@@ -351,7 +421,8 @@
                       <span data-i18n="sec1_b1_h">Complex inner lives</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec1_b1_p">
-                      Each major role is written around psychology, contradiction, and long-term consequence — not only plot function.
+                      Each major role is written around psychology, contradiction, and long-term consequence — not only
+                      plot function.
                     </p>
                   </div>
 
@@ -361,7 +432,8 @@
                       <span data-i18n="sec1_b2_h">Premium scenes and set pieces</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec1_b2_p">
-                      The format creates room for high-stakes cinema moments and quieter, dangerous intimacy — with consistent craft.
+                      The format creates room for high-stakes cinema moments and quieter, dangerous intimacy — with
+                      consistent craft.
                     </p>
                   </div>
 
@@ -371,7 +443,8 @@
                       <span data-i18n="sec1_b3_h">Audience runway</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec1_b3_p">
-                      A multi-entry saga supports visibility over time: films deliver milestones; the series deepens the ecosystem and relationships.
+                      A multi-entry saga supports visibility over time: films deliver milestones; the series deepens the
+                      ecosystem and relationships.
                     </p>
                   </div>
 
@@ -381,7 +454,8 @@
                       <span data-i18n="sec1_b4_h">Ensemble with elevation</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec1_b4_p">
-                      The ensemble structure creates recurring presence, while allowing select roles to scale in prominence from entry to entry.
+                      The ensemble structure creates recurring presence, while allowing select roles to scale in
+                      prominence from entry to entry.
                     </p>
                   </div>
                 </div>
@@ -390,9 +464,11 @@
                   <div class="flex items-start gap-3">
                     <i data-lucide="lock" class="w-5 h-5 mt-0.5"></i>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec1_note_h">Access</div>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60"
+                        data-i18n="sec1_note_h">Access</div>
                       <p class="mt-2 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec1_note_p">
-                        Role briefs, arcs, and additional materials are shared through NDA / controlled access, so reps can assess fit with clarity.
+                        Role briefs, arcs, and additional materials are shared through NDA / controlled access, so reps
+                        can assess fit with clarity.
                       </p>
                     </div>
                   </div>
@@ -403,37 +479,51 @@
             <section id="roles" class="scroll-mt-28">
               <div class="reveal card-dark p-7 md:p-8">
                 <div class="kicker" data-i18n="sec2_k">Roles</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec2_h">Roles and screen legacy</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec2_h">Roles and
+                  screen legacy</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed" data-i18n="sec2_p">
-                  The five-year arc is written to create roles that stay with audiences — with the breadth of film and the depth of serialized storytelling.
+                  The five-year arc is written to create roles that stay with audiences — with the breadth of film and
+                  the depth of serialized storytelling.
                 </p>
 
                 <div class="mt-6 grid md:grid-cols-2 gap-4">
                   <div class="rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
-                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec2_r1_h">What actors get</div>
+                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec2_r1_h">
+                      What actors get</div>
                     <ul class="mt-3 space-y-2 text-sm md:text-base text-ndf-paper/75 leading-relaxed">
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_r1_1">Deep psychology, inner conflict, and moral ambiguity</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_r1_2">Power scenes: negotiation, manipulation, family pressure</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_r1_3">A role that evolves across multiple entries</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_r1_4">A sunlit world where glamour carries real danger</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec2_r1_1">Deep psychology, inner conflict, and moral ambiguity</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec2_r1_2">Power scenes: negotiation, manipulation, family pressure</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec2_r1_3">A role that evolves across multiple entries</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec2_r1_4">A sunlit world where glamour carries real danger</span></li>
                     </ul>
                   </div>
 
                   <div class="rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
-                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec2_r2_h">Why it helps reps</div>
+                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec2_r2_h">Why
+                      it helps reps</div>
                     <ul class="mt-3 space-y-2 text-sm md:text-base text-ndf-paper/75 leading-relaxed">
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_r2_1">Clear role lanes: recurring leads, event roles, defined but adaptable arcs</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_r2_2">Defined work windows to protect other commitments</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_r2_3">Consistent creative standards across film + series</span></li>
-                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span data-i18n="sec2_r2_4">An upside model designed to share meaningful participation</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec2_r2_1">Clear role lanes: recurring leads, event roles, defined but adaptable
+                          arcs</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec2_r2_2">Defined work windows to protect other commitments</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec2_r2_3">Consistent creative standards across film + series</span></li>
+                      <li class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-ndf-gold"></span><span
+                          data-i18n="sec2_r2_4">An upside model designed to share meaningful participation</span></li>
                     </ul>
                   </div>
                 </div>
 
                 <div class="mt-7 rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                   <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div class="text-lg text-ndf-paper/75" data-i18n="sec2_cta_note">Want to see the character ecosystem at a glance?</div>
+                    <div class="text-lg text-ndf-paper/75" data-i18n="sec2_cta_note">Want to see the character ecosystem
+                      at a glance?</div>
                     <a class="btn-outline" href="/characters-L2-assets/Characters-L2.html">
                       <span data-i18n="sec2_cta_btn">View characters</span>
                       <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -447,19 +537,28 @@
             <section id="creative-intent" class="scroll-mt-28">
               <div class="reveal card-dark p-7 md:p-8">
                 <div class="kicker" data-i18n="sec2b_k">Creative</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec2b_h">Creative intent</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec2b_h">Creative
+                  intent</h2>
 
                 <div class="mt-4 space-y-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed">
                   <p data-i18n="sec2b_p1">
-                    NDF is not about glamorizing crime. It’s about exposing its contradictions. The saga explores the duality of the criminal mind: characters who can be generous, charming, and protective—then manipulative, ruthless, or dangerous when power is threatened.
+                    NDF is not about glamorizing crime. It’s about exposing its contradictions. The saga explores the
+                    duality of the criminal mind: characters who can be generous, charming, and protective—then
+                    manipulative, ruthless, or dangerous when power is threatened.
                   </p>
 
                   <p data-i18n="sec2b_p2">
-                    These roles are built on moral tension rather than stereotypes. Characters justify their actions, defend values they struggle to apply to themselves, and navigate the gap between intention and consequence. Crime in NDF is not constant violence—it’s a shifting psychological state shaped by fear, loyalty, ambition, and denial.
+                    These roles are built on moral tension rather than stereotypes. Characters justify their actions,
+                    defend values they struggle to apply to themselves, and navigate the gap between intention and
+                    consequence. Crime in NDF is not constant violence—it’s a shifting psychological state shaped by
+                    fear, loyalty, ambition, and denial.
                   </p>
 
                   <p data-i18n="sec2b_p3">
-                    For actors and creatives, NDF offers characters that evolve year after year, confronting the cost of their choices as personal power collides with social and geopolitical forces. It’s prestige storytelling designed to entertain, challenge, and leave a mark—without ever celebrating the crime itself.
+                    For actors and creatives, NDF offers characters that evolve year after year, confronting the cost of
+                    their choices as personal power collides with social and geopolitical forces. It’s prestige
+                    storytelling designed to entertain, challenge, and leave a mark—without ever celebrating the crime
+                    itself.
                   </p>
                 </div>
               </div>
@@ -468,7 +567,8 @@
             <section id="schedule" class="scroll-mt-28">
               <div class="reveal card-dark p-7 md:p-8">
                 <div class="kicker" data-i18n="sec3_k">Schedule</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec3_h">Schedule format</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec3_h">Schedule
+                  format</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed" data-i18n="sec3_p">
                   The project is designed for clarity, performance, and efficiency, subject to partner alignment.
@@ -481,46 +581,53 @@
                       <span data-i18n="sec3_b1_h">Clarity</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec3_b1_p">
-                      A defined target format: two major production windows (targets: 2028 and 2030), a planned break year, and role windows that can be mapped early.
+                      A defined target format: two major production windows (targets: 2028 and 2030), a planned break
+                      year, and role windows that can be mapped early.
                     </p>
                   </div>
-                  
+
                   <div class="rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                     <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-paper/60">
                       <i data-lucide="layers" class="w-4 h-4"></i>
                       <span data-i18n="sec3_b2_h">Parallel format</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec3_b2_p">
-                      The intent is to shoot the films and the series in parallel within each blitz, for efficiency, keeping availability and tone aligned.
+                      The intent is to shoot the films and the series in parallel within each blitz, for efficiency,
+                      keeping availability and tone aligned.
                     </p>
                   </div>
-                  
+
                   <div class="rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                     <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-paper/60">
                       <i data-lucide="timer" class="w-4 h-4"></i>
                       <span data-i18n="sec3_b3_h">Efficiency</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec3_b3_p">
-                     The design favors a Montréal-based hub, reusable sets, and disciplined continuity to control costs and protect performance time on set, subject to producing partner decisions. Location work in New York, California, Italy, and the Dominican Republic is planned across the six titles to meaningfully reduce cost per minute.
+                      The design favors a Montréal-based hub, reusable sets, and disciplined continuity to control costs
+                      and protect performance time on set, subject to producing partner decisions. Location work in New
+                      York, California, Italy, and the Dominican Republic is planned across the six titles to
+                      meaningfully reduce cost per minute.
                     </p>
                   </div>
 
-                 <div class="rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
+                  <div class="rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                     <div class="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ndf-paper/60">
                       <i data-lucide="plane" class="w-4 h-4"></i>
                       <span data-i18n="sec3_b4_h">Biweekly weekend travel</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec3_b4_p">
-                      Scheduling is designed to support biweekly weekend travel options for key talent and HODs, after a certain period, subject to production partner policies and budget.
+                      Scheduling is designed to support biweekly weekend travel options for key talent and HODs, after a
+                      certain period, subject to production partner policies and budget.
                     </p>
-                  </div> 
+                  </div>
                 </div>
 
                 <div class="mt-7 rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                   <div class="flex items-start gap-3">
                     <i data-lucide="info" class="w-5 h-5 mt-0.5"></i>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec3_note_h">Note</div>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60"
+                        data-i18n="sec3_note_h">Note</div>
                       <p class="mt-2 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec3_note_p">
 
                       </p>
@@ -528,79 +635,115 @@
                   </div>
                 </div>
               </div>
-            </section>          <div class="mt-10 max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-            <p class="text-xs uppercase tracking-widest text-white/50 mb-2" data-i18n="creative_note_h">
-              Creative leadership note for reps
-            </p>
-            <p class="text-sm leading-relaxed text-white/80" data-i18n="creative_note_p">
-              Creative leadership is creator-led at this stage, with director and showrunner appointments finalized in partnership with the producing studio. The structure is designed to ensure continuity, senior oversight, and clear authority as the project scales.
-            </p>
-          </div>
-
-
+            </section>
+            <div class="mt-10 max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+              <p class="text-xs uppercase tracking-widest text-white/50 mb-2" data-i18n="creative_note_h">
+                Creative leadership note for reps
+              </p>
+              <p class="text-sm leading-relaxed text-white/80" data-i18n="creative_note_p">
+                Creative leadership is creator-led at this stage, with director and showrunner appointments finalized in
+                partnership with the producing studio. The structure is designed to ensure continuity, senior oversight,
+                and clear authority as the project scales.
+              </p>
+            </div>
 
             <section id="parallel-workflow" class="scroll-mt-28">
               <div class="reveal card-dark p-7 md:p-8">
                 <div class="kicker" data-i18n="sec_parallel_k">Production model</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec_parallel_h">Production Model & Workload Rationale</h2>
-
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec_parallel_h">
+                  Production Model & Workload Rationale</h2>
+                <div class="mt-1 text-sm font-mono uppercase tracking-widest text-ndf-deep/50"
+                  data-i18n="sec_parallel_sub">
+                  Workload is comparable to shooting roughly two seasons within one year.
+                </div>
                 <div class="mt-4 space-y-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed">
                   <p data-i18n="sec_parallel_p1">
-                    Production Blitz 1 covers two story years, producing two two-part films and two premium series seasons, following the family year by year in depth instead of compressing full-year arcs into a single feature.
+                    Production Blitz 1 covers two story years, producing two two-part films and two premium series
+                    seasons, following the family year by year in depth instead of compressing full-year arcs into a
+                    single feature.
                   </p>
                   <p data-i18n="sec_parallel_p2">
-                    Films deliver the primary milestones (spring and early summer). The series expands causes and consequences, and character evolution (fall). Across PB1, the series totals 18 hours (two seasons of 12×45 minutes), alongside 10 hours of films.
+                    Films deliver the primary milestones (spring and early summer). The series expands causes and
+                    consequences, and character evolution (fall). Across PB1, the series totals 18 hours (two seasons of
+                    12×45 minutes), alongside 10 hours of films.
                   </p>
                   <p data-i18n="sec_parallel_p3">
-                    Film and series are captured in parallel with the same cast, sets, lighting, and costumes, preserving a unified premium look. The series delivers about 75% original footage: roughly 14 of 18 hours come from TV’s own shooting (selectively integrating about 4 hours from the films, plus about 6 hours captured in parallel during film days, and adding about 8 hours of extensions and added scenes).
+                    Film and series are captured in parallel with the same cast, sets, lighting, and costumes,
+                    preserving a unified premium look. The series delivers about 75% original footage: roughly 14 of 18
+                    hours come from TV’s own shooting (selectively integrating about 4 hours from the films, plus about
+                    6 hours captured in parallel during film days, and adding about 8 hours of extensions and added
+                    scenes).
                   </p>
                 </div>
 
                 <div class="mt-7 space-y-3">
                   <details class="group rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                     <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
-                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-paper/75" data-i18n="sec_parallel_c1_t">Why this format exists</span>
-                      <i data-lucide="chevron-down" class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
+                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-paper/75"
+                        data-i18n="sec_parallel_c1_t">Why this format exists</span>
+                      <i data-lucide="chevron-down"
+                        class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
                     </summary>
-                    <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec_parallel_c1_p">
-                      The goal of the saga is to follow the Drago family with realism over five years, through a semi-historical chronology, delivering a truly immersive experience.
+                    <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed"
+                      data-i18n="sec_parallel_c1_p">
+                      The goal of the saga is to follow the Drago family with realism over five years, through a
+                      semi-historical chronology, delivering a truly immersive experience.
                     </p>
                   </details>
 
                   <details class="group rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                     <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
-                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-paper/75" data-i18n="sec_parallel_c2_t">Parallel capture and premium standards</span>
-                      <i data-lucide="chevron-down" class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
+                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-paper/75"
+                        data-i18n="sec_parallel_c2_t">Parallel capture and premium standards</span>
+                      <i data-lucide="chevron-down"
+                        class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
                     </summary>
-                    <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec_parallel_c2_p">
-                      Films and series are planned to shoot simultaneously, not sequentially: same actors, same sets, same lighting, same production design. The dual format preserves authenticity: films for high-impact milestones, while the series adds causes, strategy, fallout, and the psychological pressure of power. The result is one coherent saga delivered as premium content in both formats.
+                    <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed"
+                      data-i18n="sec_parallel_c2_p">
+                      Films and series are planned to shoot simultaneously, not sequentially: same actors, same sets,
+                      same lighting, same production design. The dual format preserves authenticity: films for
+                      high-impact milestones, while the series adds causes, strategy, fallout, and the psychological
+                      pressure of power. The result is one coherent saga delivered as premium content in both formats.
                     </p>
                   </details>
 
                   <details class="group rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                     <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
-                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-paper/75" data-i18n="sec_parallel_c3_t">Workload and manageability for A-list talent (≈ 2 Seasons)</span>
-                      <i data-lucide="chevron-down" class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
+                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-paper/75"
+                        data-i18n="sec_parallel_c3_t">Workload and manageability for A-list talent (≈ 2 Seasons)</span>
+                      <i data-lucide="chevron-down"
+                        class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
                     </summary>
-                    <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec_parallel_c3_p">
-                      Simultaneous capture concentrates the commitment into a defined production cycle. Instead of returning repeatedly over years, performers shoot once per cycle while generating multiple releases. In practice, it is comparable to shooting roughly two seasons within one year, followed by a one-year break and two years of releases across six titles.
+                    <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed"
+                      data-i18n="sec_parallel_c3_p">
+                      Simultaneous capture concentrates the commitment into a defined production cycle. Instead of
+                      returning repeatedly over years, performers shoot once per cycle while generating multiple
+                      releases. In practice, it is comparable to shooting roughly two seasons within one year, followed
+                      by a one-year break and two years of releases across six titles.
                     </p>
                   </details>
 
                   <details class="group rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                     <summary class="cursor-pointer list-none flex items-center justify-between gap-4">
-                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-paper/75" data-i18n="sec_parallel_c4_t">Why two director/showrunner/crew teams in parallel</span>
-                      <i data-lucide="chevron-down" class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
+                      <span class="text-sm md:text-base font-mono uppercase tracking-widest text-ndf-paper/75"
+                        data-i18n="sec_parallel_c4_t">Why two director/showrunner/crew teams in parallel</span>
+                      <i data-lucide="chevron-down"
+                        class="w-4 h-4 opacity-70 transition-transform duration-200 group-open:rotate-180"></i>
                     </summary>
-                    <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec_parallel_c4_p">
-                      This volume cannot be carried by one director without sacrificing performance attention or coverage quality. Two director/showrunner teams operate in parallel under shared standards and continuity guardrails, keeping the scale premium, controlled, and actor-friendly: one team is most often aligned with the Dragos’ point of view, while the other is most often aligned against them (opposition, pressure, threats).
+                    <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed"
+                      data-i18n="sec_parallel_c4_p">
+                      This volume cannot be carried by one director without sacrificing performance attention or
+                      coverage quality. Two director/showrunner teams operate in parallel under shared standards and
+                      continuity guardrails, keeping the scale premium, controlled, and actor-friendly: one team is most
+                      often aligned with the Dragos’ point of view, while the other is most often aligned against them
+                      (opposition, pressure, threats).
                     </p>
                   </details>
                 </div>
               </div>
             </section>
 
-<section id="talent-upside" class="scroll-mt-28">
+            <section id="talent-upside" class="scroll-mt-28">
               <div class="reveal card-dark p-7 md:p-8">
                 <div class="kicker" data-i18n="sec_upside_k">Value alignment</div>
                 <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec_upside_h">
@@ -608,17 +751,25 @@
                 </h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed" data-i18n="sec_upside_p">
-                  
-                  Key talent is intended to be engaged across two major production windows (targets: 2028 and 2030), reflecting the scope of each blitz (roughly 28 hours / 1,680 minutes: two two-part films plus two seasons). Because the workload extends beyond a standard 2–3 hour feature, compensation is designed to scale accordingly. Competitive terms and meaningful participation are negotiated case-by-case and documented in the relevant agreements, subject to financing, partners, and customary deal structures.
-                
+
+                  Key talent is intended to be engaged across two major production windows (targets: 2028 and 2030),
+                  reflecting the scope of each blitz (roughly 28 hours / 1,680 minutes: two two-part films plus two
+                  seasons). Because the workload extends beyond a standard 2–3 hour feature, compensation is designed to
+                  scale accordingly. Competitive terms and meaningful participation are negotiated case-by-case and
+                  documented in the relevant agreements, subject to financing, partners, and customary deal structures.
+
                 </p>
 
                 <div class="mt-6 rounded-2xl border border-ndf-gold/25 bg-ndf-gold/10 p-5">
                   <div class="flex items-start gap-3">
                     <i data-lucide="quote" class="w-5 h-5 mt-0.5 text-ndf-gold"></i>
                     <div>
-                      <p class="text-base md:text-lg text-ndf-paper/90 italic leading-relaxed" data-i18n="creator_quote_workload">
-                        “In practice, cast may experience the workload like shooting two premium seasons across a full production year — but the output becomes six releases, not one or two. Production Blitz 2 replicates the model in 2030. For the fifth year, a futuristic epilogue is planned, with an AI-assisted production approach, subject to full stakeholder approval.”
+                      <p class="text-base md:text-lg text-ndf-paper/90 italic leading-relaxed"
+                        data-i18n="creator_quote_workload">
+                        “In practice, cast may experience the workload like shooting two premium seasons across a full
+                        production year — but the output becomes six releases, not one or two. Production Blitz 2
+                        replicates the model in 2030. For the fifth year, a futuristic epilogue is planned, with an
+                        AI-assisted production approach, subject to full stakeholder approval.”
                       </p>
                       <p class="mt-3 text-xs uppercase tracking-widest text-ndf-paper/60" data-i18n="creator_quote_sig">
                         DMP — Creator’s note
@@ -632,7 +783,8 @@
                   <div class="flex items-start gap-3">
                     <i data-lucide="shield-check" class="w-5 h-5 mt-0.5"></i>
                     <p class="text-sm md:text-base text-ndf-paper/70 leading-relaxed" data-i18n="sec_upside_note">
-                      Framework statement for reps; participation terms are negotiated case-by-case and documented in the relevant agreements.
+                      Framework statement for reps; participation terms are negotiated case-by-case and documented in
+                      the relevant agreements.
                     </p>
                   </div>
                 </div>
@@ -642,58 +794,73 @@
             <section id="reps" class="scroll-mt-28">
               <div class="reveal card-dark p-7 md:p-8">
                 <div class="kicker" data-i18n="sec4_k">Process</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec4_h">How we work with reps</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec4_h">How we work
+                  with reps</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed" data-i18n="sec4_p">
-                  We prioritize a streamlined, professional workflow for agencies and management — with clear materials, fast feedback, and confidentiality when needed.
+                  We prioritize a streamlined, professional workflow for agencies and management — with clear materials,
+                  fast feedback, and confidentiality when needed.
                 </p>
 
                 <div class="mt-6 space-y-4">
                   <div class="flex gap-4">
                     <div class="mt-1">
-                      <div class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-paper/10 flex items-center justify-center">
+                      <div
+                        class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-paper/10 flex items-center justify-center">
                         <i data-lucide="file-lock" class="w-5 h-5"></i>
                       </div>
                     </div>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec4_i1_h">1) Request access</div>
-                      <p class="mt-1 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec4_i1_p">We share role briefs, arcs, and packaging context through NDA / controlled access.</p>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec4_i1_h">
+                        1) Request access</div>
+                      <p class="mt-1 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec4_i1_p">We
+                        share role briefs, arcs, and packaging context through NDA / controlled access.</p>
                     </div>
                   </div>
 
                   <div class="flex gap-4">
                     <div class="mt-1">
-                      <div class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-paper/10 flex items-center justify-center">
+                      <div
+                        class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-paper/10 flex items-center justify-center">
                         <i data-lucide="messages-square" class="w-5 h-5"></i>
                       </div>
                     </div>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec4_i2_h">2) Creative alignment</div>
-                      <p class="mt-1 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec4_i2_p">A short call to confirm tone, scope, and how the role evolves across entries.</p>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec4_i2_h">
+                        2) Creative alignment</div>
+                      <p class="mt-1 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec4_i2_p">A
+                        short call to confirm tone, scope, and how the role evolves across entries.</p>
                     </div>
                   </div>
 
                   <div class="flex gap-4">
                     <div class="mt-1">
-                      <div class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-paper/10 flex items-center justify-center">
+                      <div
+                        class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-paper/10 flex items-center justify-center">
                         <i data-lucide="video" class="w-5 h-5"></i>
                       </div>
                     </div>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec4_i3_h">3) Auditions & chemistry</div>
-                      <p class="mt-1 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec4_i3_p">Tapes, reads, and (when relevant) chemistry sessions — designed to respect time and availability.</p>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec4_i3_h">
+                        3) Auditions & chemistry</div>
+                      <p class="mt-1 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec4_i3_p">
+                        Tapes, reads, and (when relevant) chemistry sessions — designed to respect time and
+                        availability.</p>
                     </div>
                   </div>
 
                   <div class="flex gap-4">
                     <div class="mt-1">
-                      <div class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-paper/10 flex items-center justify-center">
+                      <div
+                        class="h-9 w-9 rounded-xl bg-ndf-gold/20 border border-ndf-paper/10 flex items-center justify-center">
                         <i data-lucide="check-circle-2" class="w-5 h-5"></i>
                       </div>
                     </div>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec4_i4_h">4) Offers & scheduling</div>
-                      <p class="mt-1 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec4_i4_p">We aim for clarity on dates, travel, and role windows early — to protect other commitments.</p>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec4_i4_h">
+                        4) Offers & scheduling</div>
+                      <p class="mt-1 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec4_i4_p">We
+                        aim for clarity on dates, travel, and role windows early — to protect other commitments.</p>
                     </div>
                   </div>
                 </div>
@@ -702,9 +869,11 @@
                   <div class="flex items-start gap-3">
                     <i data-lucide="shield" class="w-5 h-5 mt-0.5"></i>
                     <div>
-                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec4_note_h">Professional standards</div>
+                      <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60"
+                        data-i18n="sec4_note_h">Professional standards</div>
                       <p class="mt-2 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec4_note_p">
-                        Casting and hiring follow professional union standards and partner requirements. The goal is a premium set environment where performance is protected.
+                        Casting and hiring follow professional union standards and partner requirements. The goal is a
+                        premium set environment where performance is protected.
                       </p>
                     </div>
                   </div>
@@ -715,10 +884,13 @@
             <section id="packaging" class="scroll-mt-28">
               <div class="reveal card-dark p-7 md:p-8">
                 <div class="kicker" data-i18n="sec5_k">Partners</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec5_h">Packaging and creative leadership</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec5_h">Packaging and
+                  creative leadership</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed" data-i18n="sec5_p">
-                  The saga is designed for premium packaging: director/showrunner leadership is intended to stay aligned across entries, and the world is grounded in an original authored novel and extended through robust bibles and standards.
+                  The saga is designed for premium packaging: director/showrunner leadership is intended to stay aligned
+                  across entries, and the world is grounded in an original authored novel and extended through robust
+                  bibles and standards.
                 </p>
 
                 <div class="mt-6 grid md:grid-cols-2 gap-4">
@@ -728,7 +900,8 @@
                       <span data-i18n="sec5_b1_h">Creative spine</span>
                     </div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/75 leading-relaxed" data-i18n="sec5_b1_p">
-                      Series bibles, film arcs, visual rules, and continuity logic keep the universe coherent — while still leaving room to elevate.
+                      Series bibles, film arcs, visual rules, and continuity logic keep the universe coherent — while
+                      still leaving room to elevate.
                     </p>
                   </div>
 
@@ -745,7 +918,8 @@
 
                 <div class="mt-7 rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                   <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div class="text-lg text-ndf-paper/75" data-i18n="sec5_cta_note">For a high-level view of the production logic:</div>
+                    <div class="text-lg text-ndf-paper/75" data-i18n="sec5_cta_note">For a high-level view of the
+                      production logic:</div>
                     <a class="btn-outline" href="/production-L2-assets/Production-L2.html">
                       <span data-i18n="sec5_cta_btn">View production</span>
                       <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -758,39 +932,48 @@
             <section id="contact" class="scroll-mt-28">
               <div class="reveal card-dark p-7 md:p-8">
                 <div class="kicker" data-i18n="sec6_k">Contact</div>
-                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec6_h">Contact and request access</h2>
+                <h2 class="mt-2 text-2xl md:text-3xl font-serif italic text-ndf-paper" data-i18n="sec6_h">Contact and
+                  request access</h2>
 
                 <p class="mt-4 text-base md:text-lg text-ndf-paper/80 leading-relaxed" data-i18n="sec6_p">
-                  If you represent talent (actors, directors, writers, showrunners) and want to discuss fit, we can share role briefs and materials through a controlled access process.
+                  If you represent talent (actors, directors, writers, showrunners) and want to discuss fit, we can
+                  share role briefs and materials through a controlled access process.
                 </p>
 
                 <div class="mt-6 grid md:grid-cols-2 gap-4">
                   <div class="rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
-                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec6_c1_h">Representation</div>
+                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec6_c1_h">
+                      Representation</div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/80 leading-relaxed">
                       <a class="underlink" href="mailto:dominikpigeon@NDF5.com">dominikpigeon@NDF5.com</a>
                     </p>
-                    <p class="mt-2 text-sm text-ndf-paper/60 leading-relaxed" data-i18n="sec6_c1_p">Agents, managers, casting directors, directors.</p>
+                    <p class="mt-2 text-sm text-ndf-paper/60 leading-relaxed" data-i18n="sec6_c1_p">Agents, managers,
+                      casting directors, directors.</p>
                   </div>
 
                   <div class="rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
-                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec6_c2_h">Business / production</div>
+                    <div class="text-sm font-mono uppercase tracking-widest text-ndf-paper/60" data-i18n="sec6_c2_h">
+                      Business / production</div>
                     <p class="mt-3 text-sm md:text-base text-ndf-paper/80 leading-relaxed">
                       <a class="underlink" href="mailto:dominikpigeon@NDF5.com">dominikpigeon@NDF5.com</a>
                     </p>
-                    <p class="mt-2 text-sm text-ndf-paper/60 leading-relaxed" data-i18n="sec6_c2_p">Partnerships and packaging discussions.</p>
+                    <p class="mt-2 text-sm text-ndf-paper/60 leading-relaxed" data-i18n="sec6_c2_p">Partnerships and
+                      packaging discussions.</p>
                   </div>
                 </div>
 
                 <div class="mt-7 rounded-2xl border border-ndf-paper/10 bg-ndf-paper/5 p-5">
                   <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div class="text-sm text-ndf-paper/75" data-i18n="sec6_cta_note">Prefer a one-pager before a call?</div>
+                    <div class="text-sm text-ndf-paper/75" data-i18n="sec6_cta_note">Prefer a one-pager before a call?
+                    </div>
                     <div class="flex flex-wrap gap-3">
-                      <a class="btn-gold" href="mailto:dominikpigeon@NDF5.com?subject=NDF%20%E2%80%94%20Talent%20%26%20Representation%20Access%20Request">
+                      <a class="btn-gold"
+                        href="mailto:dominikpigeon@NDF5.com?subject=NDF%20%E2%80%94%20Talent%20%26%20Representation%20Access%20Request">
                         <span data-i18n="sec6_cta_btn1">Request access</span>
                         <i data-lucide="send" class="w-4 h-4"></i>
                       </a>
-                      <a class="btn-outline" href="mailto:dominikpigeon@NDF5.com?subject=NDF%20%E2%80%94%20Role%20Inquiry">
+                      <a class="btn-outline"
+                        href="mailto:dominikpigeon@NDF5.com?subject=NDF%20%E2%80%94%20Role%20Inquiry">
                         <span data-i18n="sec6_cta_btn2">Role inquiry</span>
                         <i data-lucide="message-square" class="w-4 h-4"></i>
                       </a>
@@ -818,7 +1001,7 @@
     const MAIN_PAGE = "../index.html";
     const MAIN_HASH = "#talent";
 
-    function setLinks(){
+    function setLinks() {
       const url = `${MAIN_PAGE}${MAIN_HASH}`;
       const back = document.getElementById("backLink");
       const back2 = document.getElementById("backLink2");
@@ -925,29 +1108,22 @@
         sec_parallel_k: "Production model",
         sec_parallel_h: "Production Model & Workload Rationale",
         sec_parallel_p1: "Production Blitz 1 covers two story years, producing two two-part films and two premium series seasons, following the family year by year in depth instead of compressing full-year arcs into a single feature.",
-sec_parallel_c4_p: "This volume cannot be carried by one director without sacrificing performance attention or coverage quality. Two director/showrunner teams operate in parallel under shared standards and continuity guardrails, keeping the scale premium, controlled, and actor-friendly: one team is most often aligned with the Dragos’ point of view, while the other is most often aligned against them (opposition, pressure, threats).",
-
+        sec_parallel_c4_p: "This volume cannot be carried by one director without sacrificing performance attention or coverage quality. Two director/showrunner teams operate in parallel under shared standards and continuity guardrails, keeping the scale premium, controlled, and actor-friendly: one team is most often aligned with the Dragos’ point of view, while the other is most often aligned against them (opposition, pressure, threats).",
         sec_parallel_c4_t: "Why two director/showrunner/crew teams in parallel",
-
         sec_parallel_c3_p: "Simultaneous capture concentrates the commitment into a defined production cycle. Instead of returning repeatedly over years, performers shoot once per cycle while generating multiple releases. In practice, it is comparable to shooting roughly two seasons within one year, followed by a one-year break and two years of releases across six titles.",
-
         sec_parallel_c3_t: "Workload and manageability for A-list talent (≈ 2 Seasons)",
-
         sec_parallel_c2_p: "Films and series are planned to shoot simultaneously, not sequentially: same actors, same sets, same lighting, same production design. The dual format preserves authenticity: films for high-impact milestones, while the series adds causes, strategy, fallout, and the psychological pressure of power. The result is one coherent saga delivered as premium content in both formats.",
-
         sec_parallel_c2_t: "Parallel capture and premium standards",
-
         sec_parallel_c1_p: "The goal of the saga is to follow the Drago family with realism over five years, through a semi-historical chronology, delivering a truly immersive experience.",
-
         sec_parallel_c1_t: "Why this format exists",
-
         sec_parallel_p3: "Film and series are captured in parallel with the same cast, sets, lighting, and costumes, preserving a unified premium look. The series delivers about 75% original footage: roughly 14 of 18 hours come from TV’s own shooting (selectively integrating about 4 hours from the films, plus about 6 hours captured in parallel during film days, and adding about 8 hours of extensions and added scenes).",
-
         sec_parallel_p2: "Films deliver the primary milestones (spring and early summer). The series expands causes and consequences, and character evolution (fall). Across PB1, the series totals 18 hours (two seasons of 12×45 minutes), alongside 10 hours of films.",
+        sec_parallel_sub: "Workload is comparable to shooting roughly two seasons within one year.",
 
         sec_upside_k: "Value alignment",
         sec_upside_h: "Two-year commitment & upside",
         sec_upside_p: "Key talent is intended to be engaged across two major production windows (targets: 2028 and 2030), reflecting the scope of each blitz (roughly 28 hours / 1,680 minutes: two two-part films plus two seasons). Because the workload extends beyond a standard 2–3 hour feature, compensation is designed to scale accordingly. Competitive terms and meaningful participation are negotiated case-by-case and documented in the relevant agreements, subject to financing, partners, and customary deal structures.",
+
         creator_quote_workload: "“In practice, cast may experience the workload like shooting two premium seasons across a full production year — but the output becomes six releases, not one or two. Production Blitz 2 replicates the model in 2030. For the fifth year, a futuristic epilogue is planned, with an AI-assisted production approach, subject to full stakeholder approval.”",
         creator_quote_sig: "DMP — Creator's Note",
         sec_upside_note: "Framework statement for reps; participation terms are negotiated case-by-case and documented in the relevant agreements.",
@@ -1085,29 +1261,21 @@ sec_parallel_c4_p: "This volume cannot be carried by one director without sacrif
         sec_parallel_k: "Structure",
         sec_parallel_h: "Structure de production et charge de travail",
         sec_parallel_p1: "Le Blitz de production 1 couvre deux années d’histoire et produit deux films en deux parties ainsi que deux saisons de série premium, en accompagnant la famille année par année, en profondeur, plutôt que de condenser des arcs annuels complets en un seul long métrage.",
-sec_parallel_c4_p: "Ce volume ne peut pas être porté par un seul réalisateur sans sacrifier l’attention portée au jeu ou la qualité de la couverture. Deux équipes réalisateur/showrunner opèrent en parallèle, selon des standards communs et des garde-fous de continuité, afin de maintenir une échelle premium, maîtrisée et respectueuse des interprètes : l’une est le plus souvent alignée du côté des Dragos, l’autre le plus souvent du côté de l’opposition, de la pression et des menaces.",
-
+        sec_parallel_c4_p: "Ce volume ne peut pas être porté par un seul réalisateur sans sacrifier l’attention portée au jeu ou la qualité de la couverture. Deux équipes réalisateur/showrunner opèrent en parallèle, selon des standards communs et des garde-fous de continuité, afin de maintenir une échelle premium, maîtrisée et respectueuse des interprètes : l’une est le plus souvent alignée du côté des Dragos, l’autre le plus souvent du côté de l’opposition, de la pression et des menaces.",
         sec_parallel_c4_t: "Pourquoi deux équipes réalisateur/showrunner/équipe en parallèle",
-
         sec_parallel_c3_p: "La captation simultanée concentre l’engagement dans un cycle de production défini. Plutôt que de revenir de façon répétée sur plusieurs années, les interprètes tournent une seule fois par cycle tout en générant plusieurs sorties. Concrètement, c’est comparable à tourner environ deux saisons en un an, suivi d’une année de pause et de deux années de sorties réparties sur six titres.",
-
         sec_parallel_c3_t: "Charge de travail et faisabilité pour les talents A-list (≈ 2 saisons)",
-
         sec_parallel_c2_p: "Le tournage des films et de la série est prévu simultanément, et non successivement : mêmes acteurs, mêmes décors, même éclairage, même design de production. Ce double format préserve l’authenticité : les films mettent en lumière les moments clés, tandis que la série explore les causes, les stratégies, les conséquences et la pression psychologique du pouvoir. La saga est livrée en deux formats cohérents, avec un contenu premium dans les deux cas.",
-
         sec_parallel_c2_t: "Captation en parallèle et standards premium",
-
         sec_parallel_c1_p: "L’objectif de la saga est de suivre la famille Drago avec réalisme sur cinq ans, à travers une chronologie semi-historique, afin d’offrir une expérience véritablement immersive.",
-
         sec_parallel_c1_t: "Pourquoi ce format existe",
-
         sec_parallel_p3: "Films et série sont captés en parallèle avec les mêmes acteurs, décors, éclairage et costumes, tout en préservant une signature premium unifiée. La série livre environ 75 % de métrage original : environ 14 heures sur 18 proviennent du tournage TV (en intégrant de façon sélective environ 4 heures issues des films, plus environ 6 heures captées en parallèle pendant les jours film, et en ajoutant environ 8 heures d’extensions et de scènes ajoutées).",
-
         sec_parallel_p2: "Les films livrent les jalons principaux (printemps et début d’été). La série développe les causes et conséquences, ainsi que l’évolution des personnages (automne). Sur PB1, la série totalise 18 heures (deux saisons de 12×45 minutes), en plus de 10 heures de films.",
-
+        sec_parallel_sub: "Le volume de travail est similaire à l'équivalent à deux saisons premium, mais avec six sorties au lieu de deux.",
         sec_upside_k: "Alignement de valeur",
         sec_upside_h: "Engagement sur deux ans et participation",
         sec_upside_p: "Les talents clés sont destinés à être engagés sur deux grandes fenêtres de production (cibles : 2028 et 2030), à l’image de l’ampleur de chaque blitz (environ 28 heures / 1 680 minutes : deux films en deux parties plus deux saisons). Comme la charge dépasse un long-métrage standard de 2 à 3 heures, la rémunération est conçue pour évoluer en conséquence. Des conditions compétitives et une participation significative sont négociées au cas par cas et documentées dans les accords pertinents, sous réserve du financement, des partenaires et des pratiques usuelles du secteur.",
+
         creator_quote_workload: "« En pratique, les interprètes peuvent vivre la charge de travail comme le tournage de deux saisons premium sur une année complète de production — mais le résultat est de six sorties, et non une ou deux. Le Blitz de production 2 reproduit le modèle en 2030. Pour la cinquième année, un épilogue futuriste est prévu, avec une approche de production assistée par l’IA, sous réserve de l’approbation de l’ensemble des parties prenantes. »",
         creator_quote_sig: "DMP — Note du créateur",
         sec_upside_note: "Énoncé de principe pour les représentants : les modalités de participation se négocient au cas par cas et sont consignées dans les ententes pertinentes.",
@@ -1189,7 +1357,7 @@ sec_parallel_c4_p: "Ce volume ne peut pas être porté par un seul réalisateur 
       if (window.lucide) window.lucide.createIcons();
     }
 
-    (function boot(){
+    (function boot() {
       setLinks();
       currentLang = localStorage.getItem("ndf_lang") || "en";
       applyI18n();
@@ -1200,4 +1368,5 @@ sec_parallel_c4_p: "Ce volume ne peut pas être porté par un seul réalisateur 
 
 
 </body>
+
 </html>
