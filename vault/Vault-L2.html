@@ -39,6 +39,8 @@
     body { background:#0B0806; color:#F0EFE9; }
     ::selection { background:#C5A065; color:#0B0806; }
   </style>
+  <link rel="stylesheet" href="../assets/l2-global-nav.css">
+  <script src="../assets/l2-global-nav.js" defer></script>
 </head>
 
 <body class="min-h-screen">
@@ -47,6 +49,9 @@
     <div class="backdrop-blur bg-ndf-deep/70 border-b border-white/10">
       <nav class="mx-auto max-w-6xl px-6 md:px-12 py-4 flex items-center justify-between">
         <div class="flex items-center gap-4">
+          <a id="backLink" href="../index.html?lang=en#business" class="inline-flex items-center gap-2 border border-white/15 px-3 py-2 text-xs font-mono uppercase tracking-widest text-white/75 hover:text-white hover:border-white/30 transition rounded-full" aria-label="Back to Business section">
+            <span aria-hidden="true">←</span><span class="hidden sm:inline" data-l2-back-label>Back</span>
+          </a>
           <a href="../index.html" class="flex items-center gap-3">
             <img
               src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png"
