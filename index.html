@@ -20,8 +20,9 @@
   08) Hero (background image + gradients + title + CTA + featured image)
   09) #saga (logline + subtitle + Sunlit Noir tag)
   10) #story (story label + synopsis/logline)
-  11) #characters (character grid, all cards open Vault)
-  12) #timeline (timeline cards I/II/III placeholders)
+  11) #locations (The Drago World)
+  12) #characters (character grid, all cards open Vault)
+  13) #timeline (timeline cards I/II/III placeholders)
   13) #production (production data cards)
   14) #business (business & finance message + CTA)
   15) #talent (talent & reps message + CTA)
@@ -50,6 +51,7 @@
   <!-- Basic meta -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:,">
 
   <!-- Tab title -->
   <title>The New Drago Family | NDF5 Productions</title>
@@ -204,8 +206,10 @@
        - If you want more responsive: use CSS clamp() or Tailwind w/h utilities with aspect ratio.
     */
     .char-image {
-      width: 4in;
-      height: 3in;
+      width: 100%;
+      max-width: 4in;
+      height: auto;
+      aspect-ratio: 4 / 3;
     }
 
     /* Tighten character cards on large screens */
@@ -261,6 +265,34 @@
       hyphens: auto;
       -webkit-hyphens: auto;
     }
+
+    :focus-visible {
+      outline: 3px solid #C5A065;
+      outline-offset: 4px;
+    }
+
+    #locations .world-card {
+      min-height: 16rem;
+      transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 350ms ease, border-color 350ms ease;
+    }
+
+    #locations .world-card:hover,
+    #locations .world-card:focus-visible {
+      transform: translateY(-4px);
+      border-color: rgba(197, 160, 101, 0.7);
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto !important; }
+      .reveal, .reveal.active {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      #locations .world-card { transition: none !important; }
+    }
   </style>
 </head>
 
@@ -285,13 +317,16 @@
     <!-- Only this part uses blend (menu + controls) -->
     <div class="flex items-center gap-6 mix-blend-difference text-ndf-paper">
       <!-- Desktop menu -->
-      <div class="hidden md:flex gap-8">
+      <div class="hidden xl:flex gap-4 2xl:gap-7">
         <a href="#saga"
           class="text-xs font-mono font-medium tracking-widest hover:text-ndf-gold transition-colors uppercase"
           data-i18n="nav_saga">The Saga</a>
         <a href="#story"
           class="text-xs font-mono font-medium tracking-widest hover:text-ndf-gold transition-colors uppercase"
           data-i18n="nav_story">Story</a>
+        <a href="#locations"
+          class="text-xs font-mono font-medium tracking-widest hover:text-ndf-gold transition-colors uppercase"
+          data-i18n="nav_world">World</a>
         <a href="#characters"
           class="text-xs font-mono font-medium tracking-widest hover:text-ndf-gold transition-colors uppercase"
           data-i18n="nav_char">Characters</a>
@@ -317,6 +352,24 @@
 
       <!-- Right controls -->
       <div class="flex items-center gap-4">
+        <details class="relative xl:hidden">
+          <summary class="list-none cursor-pointer inline-flex items-center gap-2 border border-white/30 bg-black/30 px-3 py-2 text-xs font-mono font-bold uppercase tracking-widest">
+            <i data-lucide="menu" class="w-4 h-4"></i>
+            <span class="hidden sm:inline" data-i18n="nav_menu">Menu</span>
+          </summary>
+          <div class="absolute right-0 mt-3 w-64 max-h-[75vh] overflow-y-auto bg-ndf-deep border border-white/20 shadow-2xl p-3 text-ndf-paper">
+            <a href="#saga" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_saga">The Saga</a>
+            <a href="#story" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_story">Story</a>
+            <a href="#locations" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_world">World</a>
+            <a href="#characters" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_char">Characters</a>
+            <a href="#timeline" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_timeline">Timeline</a>
+            <a href="#production" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_prod">Production</a>
+            <a href="#business" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_bus">Business</a>
+            <a href="#talent" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_talent">Talent &amp; Reps</a>
+            <a href="#creator" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_creat">Creator</a>
+            <a href="#contact" class="block px-4 py-3 text-xs font-mono uppercase tracking-widest hover:bg-white/10" data-i18n="nav_cont">Contact</a>
+          </div>
+        </details>
         <button onclick="toggleLang()"
           class="text-xs font-mono font-bold bg-white/40 border border-white/30 px-3 py-1 hover:bg-white hover:text-black hover:border-ndf-gold transition-all duration-500 uppercase">
           <span id="lang-btn">FR</span>
@@ -337,13 +390,9 @@
        - Includes CTA that also opens Vault.
        - Includes an additional featured image hosted on GitHub raw URL.
   -->
-  <section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+  <section class="relative min-h-screen flex items-center justify-center overflow-hidden bg-ndf-deep">
     <div class="absolute inset-0 z-0">
-      <!-- Background image -->
-      <img src="https://images.unsplash.com/photo-1541533260371-b8fc9b036eb1?q=80&w=2600&auto=format&fit=crop"
-        class="w-full h-full object-cover grayscale opacity-50 scale-105 animate-[pulse_10s_ease-in-out_infinite]"
-        alt="Cinematic Atmosphere">
-      <!-- Layering gradients for depth -->
+      <!-- Plain cinematic background -->
       <div class="absolute inset-0 bg-gradient-to-t from-ndf-deep via-ndf-deep/60 to-transparent"></div>
       <div class="absolute inset-0 bg-radial-gradient from-transparent to-ndf-deep opacity-80"></div>
     </div>
@@ -415,7 +464,7 @@
        
         <p class="reveal delay-100 text-lg md:text-xl text-ndf-deep font-light leading-relaxed max-w-2xl mb-12 balance"
           data-i18n="saga_subtitle3">
-          The NDF Saga captures the new culture of hyperbolic ambition.
+          The NDF Saga is driven by the duality of the criminal mind and set against the rise of the Hyperbolic Society where technology, finance, and influence magnify the ambition of a few.
         </p>
         
         <!-- Saga CTA (same style as Business) -->
@@ -472,8 +521,8 @@
             <ul class="space-y-4 text-sm md:text-base text-neutral-200/90 font-light leading-relaxed">
               <li class="flex gap-3">
                 <span class="mt-2 h-1.5 w-1.5 rounded-full bg-ndf-gold/70 shrink-0"></span>
-                <span data-i18n="story_fast_1">A prestige crime-family saga built on duality: conscience vs
-                  ambition.</span>
+                <span data-i18n="story_fast_1">A reflection on the emerging Hyperbolic Society, where technology allows wealth,
+                   ambition, and influence to expand beyond traditional limits.</span>
               </li>
 
               <li class="flex gap-3">
@@ -493,7 +542,11 @@
                 <span data-i18n="story_fast_4">Two directors embody opposing states of the criminal mind: Sunlit
                   Noir.</span>
               </li>
-            </ul>
+              <li class="flex gap-3">
+                <span class="mt-2 h-1.5 w-1.5 rounded-full bg-ndf-gold/70 shrink-0"></span>
+                <span data-i18n="story_fast_5">A reflection on the emerging Hyperbolic Society, where technology
+                  allows wealth, ambition, and influence to expand beyond traditional limits.</span>
+              </li></ul>
 
             <!-- Button centered under the left box (centers to the box because it's inside it) -->
             <div class="mt-10 text-center">
@@ -528,6 +581,74 @@
             </p>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- WORLD & LOCATIONS SECTION -->
+  <section id="locations" class="scroll-mt-24 bg-ndf-paper text-ndf-deep py-28 md:py-36 px-6 md:px-12 border-t border-black/5">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-end reveal">
+        <div class="lg:col-span-8">
+          <p class="text-xl md:text-2xl font-mono font-bold tracking-widest uppercase text-ndf-gold mb-5" data-i18n="world_kicker">World &amp; Locations</p>
+          <h2 class="font-serif italic text-4xl md:text-6xl leading-tight tracking-tight" data-i18n="world_title">The Drago World</h2>
+          <p class="mt-6 text-base md:text-lg text-neutral-700 leading-relaxed max-w-4xl" data-i18n="world_intro">From a private Caribbean island and a billionaire estate in Santa Barbara to New York, Montréal, Milan, and Sicily, the NDF Saga unfolds across an international world of wealth, intimacy, culture, crime, and power.</p>
+        </div>
+        <div class="lg:col-span-4 lg:text-right">
+          <button type="button" onclick="openCtaPortal('locations')"
+            class="inline-flex items-center gap-3 bg-ndf-gold text-ndf-deep px-7 py-3 font-mono text-xs font-bold uppercase tracking-widest hover:bg-ndf-deep hover:text-ndf-paper transition-all duration-300">
+            <span data-i18n="world_cta">Explore the Drago World</span><i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <figure class="mt-12 reveal overflow-hidden rounded-2xl border border-black/10 bg-black relative">
+        <img src="locations-L2-assets/images/estate-sky-view.webp" width="1916" height="821"
+          alt="High aerial view of the Drago Estate, coastline, and surrounding landscape"
+          data-alt-en="High aerial view of the Drago Estate, coastline, and surrounding landscape"
+          data-alt-fr="Vue aérienne élevée du domaine Drago, de la côte et du paysage environnant"
+          class="w-full aspect-[21/9] object-cover" decoding="async" fetchpriority="high">
+        <figcaption class="absolute inset-x-0 bottom-0 p-5 md:p-7 bg-gradient-to-t from-black/85 to-transparent text-white">
+          <span class="font-mono text-[11px] uppercase tracking-[0.25em] text-white/80" data-i18n="world_hero_caption">The Drago Estate · Santa Barbara</span>
+        </figcaption>
+      </figure>
+
+      <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7">
+        <a class="world-card group block rounded-2xl overflow-hidden border border-black/10 bg-white/70 hover:bg-white transition-colors" href="locations-L2-assets/Locations-L2.html#tdi" data-lang-href="locations-L2-assets/Locations-L2.html#tdi">
+          <div class="overflow-hidden"><img src="locations-L2-assets/images/tdi-bird-view.webp" width="1916" height="821" loading="lazy" decoding="async" class="w-full aspect-[21/9] object-cover" alt="Aerial view of The Drago Island and its turquoise Caribbean waters" data-alt-en="Aerial view of The Drago Island and its turquoise Caribbean waters" data-alt-fr="Vue aérienne de L’Île Drago et de ses eaux turquoise des Caraïbes"></div>
+          <div class="p-6 md:p-7"><p class="font-mono text-[11px] uppercase tracking-[0.22em] text-neutral-500">TDI · Dominica</p><h3 class="mt-2 text-2xl font-serif" data-i18n="loc_tdi_title">The Drago Island</h3><p class="mt-3 text-sm md:text-base leading-relaxed text-neutral-600" data-i18n="loc_tdi_desc">A fictional private Caribbean sanctuary off Dominica, built for elite gatherings, discreet deals, pleasure, surveillance, and danger beneath the sun.</p></div>
+        </a>
+        <a class="world-card group block rounded-2xl overflow-hidden border border-black/10 bg-white/70 hover:bg-white transition-colors" href="locations-L2-assets/Locations-L2.html#dimansion" data-lang-href="locations-L2-assets/Locations-L2.html#dimansion">
+          <div class="overflow-hidden"><img src="locations-L2-assets/images/dimansion-front-day.webp" width="1915" height="821" loading="lazy" decoding="async" class="w-full aspect-[21/9] object-cover" alt="Sunlit front façade and gardens of Dimansion" data-alt-en="Sunlit front façade and gardens of Dimansion" data-alt-fr="Façade avant et jardins de Dimansion en plein soleil"></div>
+          <div class="p-6 md:p-7"><p class="font-mono text-[11px] uppercase tracking-[0.22em] text-neutral-500" data-i18n="world_estate_label">The Drago Estate · Santa Barbara</p><h3 class="mt-2 text-2xl font-serif">Dimansion</h3><p class="mt-3 text-sm md:text-base leading-relaxed text-neutral-600" data-i18n="loc_dim_desc">The emotional home of the Drago Family within their Santa Barbara estate: art, family dinners, romance, celebration, surveillance, secrets, and fracture.</p></div>
+        </a>
+        <a class="world-card group block rounded-2xl overflow-hidden border border-black/10 bg-white/70 hover:bg-white transition-colors" href="locations-L2-assets/Locations-L2.html#tgp" data-lang-href="locations-L2-assets/Locations-L2.html#tgp">
+          <div class="overflow-hidden"><img src="locations-L2-assets/images/tgp-exterior.webp" width="1448" height="621" loading="lazy" decoding="async" class="w-full aspect-[21/9] object-cover" alt="Circular exterior of The Grande Paolo at sunset" data-alt-en="Circular exterior of The Grande Paolo at sunset" data-alt-fr="Extérieur circulaire de The Grande Paolo au coucher du soleil"></div>
+          <div class="p-6 md:p-7"><p class="font-mono text-[11px] uppercase tracking-[0.22em] text-neutral-500" data-i18n="world_estate_label">The Drago Estate · Santa Barbara</p><h3 class="mt-2 text-2xl font-serif">The Grande Paolo</h3><p class="mt-3 text-sm md:text-base leading-relaxed text-neutral-600" data-i18n="loc_tgp_desc">The estate’s strategic command center, where finance, law, crisis management, ethical debate, and Family power converge.</p></div>
+        </a>
+        <a class="world-card group block rounded-2xl overflow-hidden border border-black/10 bg-white/70 hover:bg-white transition-colors" href="locations-L2-assets/Locations-L2.html#nydc" data-lang-href="locations-L2-assets/Locations-L2.html#nydc">
+          <div class="overflow-hidden"><img src="locations-L2-assets/images/ny-drago-castle-nydc.webp" width="1916" height="821" loading="lazy" decoding="async" class="w-full aspect-[21/9] object-cover" alt="New York Drago Castle illuminated against the Manhattan skyline" data-alt-en="New York Drago Castle illuminated against the Manhattan skyline" data-alt-fr="Le Château Drago de New York illuminé devant la silhouette de Manhattan"></div>
+          <div class="p-6 md:p-7"><p class="font-mono text-[11px] uppercase tracking-[0.22em] text-neutral-500">NYDC · New York</p><h3 class="mt-2 text-2xl font-serif" data-i18n="loc_nydc_title">New York Drago Castle</h3><p class="mt-3 text-sm md:text-base leading-relaxed text-neutral-600" data-i18n="loc_nydc_desc">The Family’s New York stronghold: old-world authority, urban pressure, private vaults, weapons, politics, and confrontation.</p></div>
+        </a>
+      </div>
+
+      <div class="mt-10 border-y border-black/10 py-7 reveal">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <p class="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500" data-i18n="world_territories_label">Across the Saga</p>
+          <div class="flex flex-wrap gap-x-5 gap-y-2 font-serif text-lg md:text-xl">
+            <span data-i18n="territory_dominica">Dominica</span><span>Santa Barbara</span><span>Montréal</span><span>Milan</span><span data-i18n="territory_trapani">Trapani / Sicily</span><span>New York</span>
+          </div>
+          <a href="locations-L2-assets/Locations-L2.html#story-territories" data-lang-href="locations-L2-assets/Locations-L2.html#story-territories" class="font-mono text-xs uppercase tracking-widest text-ndf-deep hover:text-ndf-gold" data-i18n="world_territories_link">Story territories →</a>
+        </div>
+      </div>
+      <p class="mt-6 text-sm text-neutral-500" data-i18n="world_secondary">Additional sequences unfold in Las Vegas, Los Angeles, Monaco, Niagara, and other destinations.</p>
+      <p class="mt-4 text-xs leading-relaxed text-neutral-500 max-w-4xl" data-i18n="world_disclosure">Original cinematic visualizations of fictional NDF environments. Final screen locations are intended to combine practical sets, production design, virtual production, CGI, and VFX.</p>
+      <div class="mt-10 flex justify-center reveal">
+        <button type="button" onclick="openCtaPortal('locations')"
+          class="inline-flex items-center gap-3 bg-ndf-gold text-ndf-deep px-7 py-3 font-mono text-xs font-bold uppercase tracking-widest hover:bg-ndf-deep hover:text-ndf-paper transition-all duration-300">
+          <span data-i18n="world_cta">Explore the Drago World</span><i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+        </button>
       </div>
     </div>
   </section>
@@ -725,9 +846,7 @@
   </section>
 
 
-  <!-- =========================================================
-     TIMELINE & LOCATIONS SECTION (single section, two equal titles in different places)
-========================================================= -->
+  <!-- TIMELINE SECTION -->
   <!-- TIMELINE (L1 - Ultra Simple) -->
   <section id="timeline" class="bg-ndf-paper text-ndf-deep py-32 md:py-40 px-6 md:px-12 border-t border-black/5">
     <div class="container mx-auto max-w-6xl">
@@ -796,150 +915,6 @@
           </button>
         </div>
       </div>
-
-      <!-- LOCATIONS (Carousel) - reintegrated inside Timeline section -->
-      <div class="mt-14 md:mt-16 reveal">
-        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-5">
-          <div>
-            <h3 class="text-2xl font-mono font-bold tracking-widest uppercase text-ndf-gold mb-3"
-              data-i18n="locations_title">
-              Iconic Story Locations
-            </h3>
-            <p class="mt-3 font-serif text-4xl md:text-5xl text-neutral-700 leading-tight balance"
-              data-i18n="locations_sub">
-              A visual teaser of the world.
-            </p>
-          </div>
-
-          <a href="#story"
-            class="text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-ndf-deep transition mt-2 md:mt-0"
-            data-i18n="locations_link">
-            Explore →
-          </a>
-        </div>
-
-        <div class="relative overflow-hidden rounded-2xl border border-black/10 bg-black/5">
-          <div class="relative">
-            <div id="locTrack" class="flex transition-transform duration-700 ease-out will-change-transform">
-
-              <!-- Slide 1: TDI -->
-              <article class="min-w-full grid md:grid-cols-2 gap-0">
-                <div class="relative h-64 md:h-[420px] overflow-hidden">
-                  <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/2_TDI_Lion.jpg"
-                    alt="The Drago Island" class="absolute inset-0 w-full h-full object-cover grayscale brightness-75">
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                </div>
-                <div class="p-8 md:p-10">
-                  <p class="text-xs uppercase tracking-[0.22em] text-neutral-600">TDI</p>
-                  <h4 class="mt-2 text-2xl md:text-3xl font-serif font-medium tracking-tight" data-i18n="loc_tdi_title">
-                    The Drago Island
-                  </h4>
-                  <p class="mt-4 text-base leading-relaxed text-neutral-600" data-i18n="loc_tdi_desc">
-                    A private Caribbean sanctuary: airstrip, villas, docks, and jungle paths, where networking rituals,
-                    deals, stolen art, jewels exchanged, and disappearances share the sun.
-                  </p>
-                </div>
-              </article>
-
-              <!-- Slide 2: Dimansion -->
-              <article class="min-w-full grid md:grid-cols-2 gap-0">
-                <div class="relative h-64 md:h-[420px] overflow-hidden">
-                  <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/1_Ocean_Dimansion.jpg"
-                    alt="Dimansion" class="absolute inset-0 w-full h-full object-cover grayscale brightness-75">
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                </div>
-                <div class="p-8 md:p-10">
-                  <p class="text-xs uppercase tracking-[0.22em] text-neutral-600">The Mansion</p>
-                  <h4 class="mt-2 text-2xl md:text-3xl font-serif font-medium tracking-tight" data-i18n="loc_dim_title">
-                    Dimansion
-                  </h4>
-                  <p class="mt-4 text-base leading-relaxed text-neutral-600" data-i18n="loc_dim_desc">
-                    Cliffside Santa Barbara estate of glass and shadows—art, intimacy, surveillance—where loyalty is
-                    tested in rooms designed for pleasure and secrets.
-                  </p>
-                </div>
-              </article>
-
-              <!-- Slide 3: TGP -->
-              <article class="min-w-full grid md:grid-cols-2 gap-0">
-                <div class="relative h-64 md:h-[420px] overflow-hidden">
-                  <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/4a_TGP_zoom_in.jpg"
-                    alt="The Grande Paolo" class="absolute inset-0 w-full h-full object-cover grayscale brightness-75">
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                </div>
-                <div class="p-8 md:p-10">
-                  <p class="text-xs uppercase tracking-[0.22em] text-neutral-600">TGP</p>
-                  <h4 class="mt-2 text-2xl md:text-3xl font-serif font-medium tracking-tight" data-i18n="loc_tgp_title">
-                    The Grande Paolo
-                  </h4>
-                  <p class="mt-4 text-base leading-relaxed text-neutral-600" data-i18n="loc_tgp_desc">
-                    In honor of Paolo, the family’s former patriarch: Sicilian church stained glass, discreet offices,
-                    legal war rooms—where money moves faster than truth.
-                  </p>
-                </div>
-              </article>
-
-              <!-- Slide 4: NYDC -->
-              <article class="min-w-full grid md:grid-cols-2 gap-0">
-                <div class="relative h-64 md:h-[420px] overflow-hidden">
-                  <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/9_NYDC_Access.jpg"
-                    alt="New York Drago Castle"
-                    class="absolute inset-0 w-full h-full object-cover grayscale brightness-75">
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                </div>
-                <div class="p-8 md:p-10">
-                  <p class="text-xs uppercase tracking-[0.22em] text-neutral-600">NYDC</p>
-                  <h4 class="mt-2 text-2xl md:text-3xl font-serif font-medium tracking-tight"
-                    data-i18n="loc_nydc_title">
-                    New York Drago Castle
-                  </h4>
-                  <p class="mt-4 text-base leading-relaxed text-neutral-600" data-i18n="loc_nydc_desc">
-                    A New York fortress: old-world grandeur, private vaults, political access—where image is weapon and
-                    shelter.
-                  </p>
-                </div>
-              </article>
-
-            </div>
-
-            <!-- Controls -->
-            <button type="button" aria-label="Previous"
-              class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/20 bg-black/35 hover:bg-black/55 text-white/85 transition"
-              data-loc-prev>
-              ‹
-            </button>
-
-            <button type="button" aria-label="Next"
-              class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/20 bg-black/35 hover:bg-black/55 text-white/85 transition"
-              data-loc-next>
-              ›
-            </button>
-
-            <!-- Dots -->
-            <div class="absolute right-5 bottom-5 md:right-7 flex gap-2">
-              <button type="button" class="w-2 h-2 rounded-full transition border border-white/30" data-loc-dot="0"
-                aria-label="Go to slide 1"></button>
-              <button type="button" class="w-2 h-2 rounded-full transition border border-white/30" data-loc-dot="1"
-                aria-label="Go to slide 2"></button>
-              <button type="button" class="w-2 h-2 rounded-full transition border border-white/30" data-loc-dot="2"
-                aria-label="Go to slide 3"></button>
-              <button type="button" class="w-2 h-2 rounded-full transition border border-white/30" data-loc-dot="3"
-                aria-label="Go to slide 4"></button>
-            </div>
-          </div>
-        </div>
-        <!-- CTA Location to L2 -->
-        <div class="mt-6 text-center reveal">
-          <div class="flex justify-center">
-            <button
-              class="bg-ndf-gold text-ndf-deep px-8 py-3 font-mono text-xs font-bold uppercase tracking-widest hover:bg-white transition-all duration-300"
-              data-i18n="loc_btn" onclick="openCtaPortal('timeline')">
-              Learn More
-            </button>
-          </div>
-        </div>
-      </div>
-      <!-- /LOCATIONS -->
 
     </div>
   </section>
@@ -1209,7 +1184,7 @@
               It is crafted to captivate today’s audience and unite artistic vision with commercial and financial success.”
             </p>
             <p class="text-base md:text-lg text-black font-light mb-6 mt-6 leading-relaxed max-w-xl" data-i18n="creator_setting">
-              Set in 2005, before the trillion-dollar age, the saga captures the birth of hyperbolic ambition — when digital wealth, asset control, and moral compromise began accelerating toward today’s society, and toward the consequences now gathering ahead.
+              Set in 2005, before the trillion-dollar age, the saga captures the birth of hyperbolic ambition when digital wealth, asset control, and moral compromise began accelerating toward today’s society, and toward the consequences now gathering ahead.
             </p>
             <div class="text-center mt-6">
               <button
@@ -1509,6 +1484,8 @@
         NDF5_presents: "NDF5 Productions Inc. presents",
         nav_saga: "The Saga",
         nav_story: "Story",
+        nav_world: "World",
+        nav_menu: "Menu",
         nav_char: "Characters",
         nav_timeline: "Timeline",
         nav_prod: "Production",
@@ -1531,7 +1508,7 @@
         saga_immersive: "An immersive, semi-historical five-year chronology designed to bring audiences inside the Drago family.",
         saga_subtitle: "Born from the dual states of the criminal mind, The New Drago Family is both a psychological odyssey and a mirror of the human soul, where ambition too often replaces conscience.",
         saga_subtitle2: "An original standalone IP conceived as a large-scale, multi-platform crime saga.",
-        saga_subtitle3: "The NDF Saga captures the new culture of hyperbolic ambition.",
+        saga_subtitle3: "The NDF Saga is driven by the duality of the criminal mind and set against the rise of the Hyperbolic Society where technology, finance, and influence magnify the ambition of a few.",
         saga_style: "Sunlit Noir",
         saga_btn: "Learn More",
         saga_tag: "Five Years",
@@ -1543,6 +1520,7 @@
         story_fast_2: "Five annual chapters set in the 2000s and beyond, spanning continents and generations.",
         story_fast_3: "An intimate triangle of power, desire, secrets: Domenico, Lenny, Greta.",
         story_fast_4: "Two directors embody opposing states of the criminal mind: Sunlit Noir.",
+        sotry_fast_5: "A reflection on the emerging Hyperbolic Society, where technology allows wealth, ambition, and influence to expand beyond traditional limits.",
         story_p1: "Through the deconstruction of the criminal mind, the author crafts a spectacular, adventurous, and beautifully rendered psychological crime saga, The New Drago Family, a premium multi-platform, five-year blitz franchise transcending continents and generations.",
         story_p2: "Masters of the financial world and moral ambiguity, the very wealthy Dragos stand at the heart of an extravagant triangle: the charismatic Don Domenico Drago, striving to preserve his family identity and empire; Lenny, the ambitious chief counsel whose intellect outgrows his conscience; and Greta, the wise navigator steering between art, love, and danger.",
         story_p3: "Across a multidimensional storyline laced with secrets, shocking twists, and unexpected revelations, two renowned directors express the opposing states of the criminal mind, driving a five-year odyssey, an annual chronology set in the 2000s — from the Drago Island to the ultimate summit of American society — a humanized hurricane where conscience may yield to greed and ambition in the corroded pursuit of this American dream.",
@@ -1589,19 +1567,27 @@
 
         tline_btn: "Learn More",
 
-        // LOCATIONS
-        locations_title: "Iconic Story Locations",
-        locations_sub: "A visual teaser of the world",
-        locations_link: "Explore →",
+        // WORLD & LOCATIONS
+        world_kicker: "World & Locations",
+        world_title: "The Drago World",
+        world_intro: "From a private Caribbean island and a billionaire estate in Santa Barbara to New York, Montréal, Milan, and Sicily, the NDF Saga unfolds across an international world of wealth, intimacy, culture, crime, and power.",
+        world_cta: "Explore the Drago World",
+        world_property_link: "Explore property →",
+        world_hero_caption: "The Drago Estate · Santa Barbara",
+        world_estate_label: "The Drago Estate · Santa Barbara",
+        world_estate_label_tgp: "The Drago Estate · Santa Barbara",
+        world_territories_label: "Across the Saga",
+        world_territories_link: "Story territories →",
+        world_secondary: "Additional sequences unfold in Las Vegas, Los Angeles, Monaco, Niagara, and other destinations.",
+        world_disclosure: "Original cinematic visualizations of fictional NDF environments. Final screen locations are intended to combine practical sets, production design, virtual production, CGI, and VFX.",
+        territory_dominica: "Dominica",
+        territory_trapani: "Trapani / Sicily",
         loc_tdi_title: "The Drago Island",
-        loc_tdi_desc: "A private Caribbean sanctuary: airstrip, villas, docks, and jungle paths, where networking rituals, deals, stolen art, jewels exchanged, and disappearances share the sun.",
-        loc_dim_title: "Dimansion",
-        loc_dim_desc: "Cliffside Santa Barbara estate of glass and shadows—art, intimacy, surveillance—where loyalty is tested in rooms designed for pleasure and secrets.",
-        loc_tgp_title: "The Grande Paolo",
-        loc_tgp_desc: "In honor of Paolo, the family’s former patriarch: Sicilian church stained glass, discreet offices, legal war rooms—where money moves faster than truth.",
+        loc_tdi_desc: "A fictional private Caribbean sanctuary off Dominica, built for elite gatherings, discreet deals, pleasure, surveillance, and danger beneath the sun.",
+        loc_dim_desc: "The emotional home of the Drago Family within their Santa Barbara estate: art, family dinners, romance, celebration, surveillance, secrets, and fracture.",
+        loc_tgp_desc: "The estate’s strategic command center, where finance, law, crisis management, ethical debate, and Family power converge.",
         loc_nydc_title: "New York Drago Castle",
-        loc_nydc_desc: "A New York fortress: old-world grandeur, private vaults, political access—where image is weapon and shelter.",
-        loc_btn: "Learn More",
+        loc_nydc_desc: "The Family’s New York stronghold: old-world authority, urban pressure, private vaults, weapons, politics, and confrontation.",
 
         // PRODUCTION
         prod_data: "Production",
@@ -1654,7 +1640,7 @@
         creator_label: "Executive Producer and Author",
         creator_name: "Dominik Mario Pigeon",
         creator_quote: "“I created a modern, psychological and adventurous five-year crime-family saga born from the duality of the criminal mind, where wealth, power, love, and ambition collide — and where conscience yields to greed in the pursuit of the American dream. It is crafted to captivate today’s audience and unite artistic vision with commercial and financial success.”",
-        creator_setting: "Set in 2005, before the trillion-dollar age, the saga captures the birth of hyperbolic ambition — when digital wealth, asset control, and moral compromise began accelerating toward today’s society, and toward the consequences now gathering ahead.",
+        creator_setting: "Set in 2005, before the trillion-dollar age, the saga captures the birth of hyperbolic ambition when digital wealth, asset control, and moral compromise began accelerating toward today’s society, and toward the consequences now gathering ahead.",
         creator_desc: "The saga author and architect has a background in business, mergers and acquisitions, global finance, and teaching, holds an MBA from UCLA and is a Certified Public Accountant (CPA), bringing depth, realism, and a distinctive point of view to the story and the project itself. He combines creative vision with executive discipline, shaping the project to resonate with audiences while aligning the interests of key stakeholders.",
         standalone_ip: "Created by Dominik Mario Pigeon as an original standalone IP, The New Drago Family is conceived as a large-scale, multi-platform crime saga.",
         dmp_title: "President, NDF5 Productions Inc.",
@@ -1707,6 +1693,8 @@
         NDF5_presents: "NDF5 Productions Inc. présente",
         nav_saga: "La Saga",
         nav_story: "Histoire",
+        nav_world: "Univers",
+        nav_menu: "Menu",
         nav_char: "Personnages",
         nav_timeline: "Chronologie",
         nav_prod: "Production",
@@ -1743,6 +1731,7 @@
         story_fast_2: "Cinq chapitres annuels situés dans les années 2000 et plus, à travers continents et générations.",
         story_fast_3: "Un triangle intime de pouvoir, désir, secrets : Domenico, Lenny, Greta.",
         story_fast_4: "Deux réalisateurs incarnent les états opposés de l’esprit criminel : Sunlit Noir.",
+        story_fast_5: "Une réflexion sur la Société Hyperbolique émergente, où la technologie permet à la richesse, à l'ambition et à l'influence de dépasser les limites traditionnelles.",
         story_p1: "À travers la déconstruction de l’esprit criminel, l’auteur façonne une saga criminelle psychologique spectaculaire, aventureuse et magnifiquement mise en scène, La Nouvelle Famille Drago, une franchise premium multiplateforme, déployée sur cinq ans qui transcende les continents et les générations.",
         story_p2: "Maîtres du monde financier et de l’ambiguïté morale, les Drago se trouvent au cœur d’un triangle extravagant : le charismatique Don Domenico Drago, déterminé à préserver l’identité familiale et l’empire ; Lenny,  l'ambitieux conseiller juridique en chef dont l’intellect dépasse la conscience ; et Greta, la navigatrice avisée, évoluant entre l’art, l’amour et le danger.",
         story_p3: "À travers une trame multidimensionnelle tissée de secrets, de rebondissements et de révélations inattendues, deux réalisateurs de renom expriment les états d’esprit opposés de l’esprit criminel, entraînant une odyssée de cinq ans, une chronologie annuelle ancrée dans les années 2000 — de l’Île Drago jusqu’au sommet ultime de la société américaine — un ouragan humain où la conscience pourrait céder à la cupidité et à l’ambition, dans la poursuite corrodée de ce rêve américain.",
@@ -1788,19 +1777,27 @@
 
         tline_btn: "En savoir plus",
 
-        // LOCATIONS
-        locations_title: "Lieux iconiques de l’histoire",
-        locations_sub: "Un aperçu visuel du monde",
-        locations_link: "Explorer →",
+        // UNIVERS ET LIEUX
+        world_kicker: "Univers et lieux",
+        world_title: "Le monde des Drago",
+        world_intro: "D’une île privée des Caraïbes et d’un domaine milliardaire à Santa Barbara jusqu’à New York, Montréal, Milan et la Sicile, la saga NDF se déploie dans un univers international de richesse, d’intimité, de culture, de crime et de pouvoir.",
+        world_cta: "Explorer le monde des Drago",
+        world_property_link: "Explorer la propriété →",
+        world_hero_caption: "Le domaine Drago · Santa Barbara",
+        world_estate_label: "Le domaine Drago · Santa Barbara",
+        world_estate_label_tgp: "Le domaine Drago · Santa Barbara",
+        world_territories_label: "À travers la saga",
+        world_territories_link: "Territoires du récit →",
+        world_secondary: "D’autres séquences se déroulent à Las Vegas, Los Angeles, Monaco, Niagara et dans d’autres destinations.",
+        world_disclosure: "Visualisations cinématographiques originales de lieux fictifs de NDF. Les environnements finaux à l’écran devraient combiner décors pratiques, direction artistique, production virtuelle, images de synthèse et effets visuels.",
+        territory_dominica: "La Dominique",
+        territory_trapani: "Trapani / Sicile",
         loc_tdi_title: "L’Île Drago",
-        loc_tdi_desc: "Un sanctuaire privé des Caraïbes : piste d’atterrissage, villas, quais et sentiers de jungle, où rituels de réseautage, transactions, œuvres d’art volées, bijoux échangés et disparitions se côtoient.",
-        loc_dim_title: "Dimansion",
-        loc_dim_desc: "Domaine en falaise à Santa Barbara, verre et ombre—art, intimité, surveillance—où la loyauté se teste dans des pièces conçues pour le plaisir et les secrets.",
-        loc_tgp_title: "Le Grande Paolo",
-        loc_tgp_desc: "En l’honneur de Paolo, ancien patriarche de la famille : vitraux d’église sicilienne, bureaux discrets, salles de crise juridiques—où l’argent circule plus vite que la vérité.",
+        loc_tdi_desc: "Un sanctuaire privé fictif des Caraïbes, au large de la Dominique, conçu pour les rassemblements d’élite, les ententes discrètes, le plaisir, la surveillance et le danger sous le soleil.",
+        loc_dim_desc: "Le cœur émotionnel de la famille Drago au sein de son domaine de Santa Barbara : art, repas de famille, romance, célébrations, surveillance, secrets et fractures.",
+        loc_tgp_desc: "Le centre de commandement stratégique du domaine, où convergent finance, droit, gestion de crise, débats éthiques et pouvoir familial.",
         loc_nydc_title: "Château Drago de New York",
-        loc_nydc_desc: "Une forteresse new-yorkaise : grandeur d’antan, coffres privés, accès politique—où l’image protège et frappe.",
-        loc_btn: "En savoir plus",
+        loc_nydc_desc: "Le bastion new-yorkais de la famille : autorité de l’Ancien Monde, pression urbaine, coffres privés, armes, politique et confrontations.",
 
         // PRODUCTION
         prod_data: "Production",
@@ -1852,7 +1849,7 @@
         creator_label: "Producteur Exécutif et Auteur",
         creator_name: "Dominik Mario Pigeon",
         creator_quote: "« J’ai créé une saga criminelle familiale moderne, psychologique et aventureuse sur cinq ans, née de la dualité de l’esprit criminel, où richesse, pouvoir, amour et ambition s’entrechoquent — et où la conscience cède à la cupidité dans la poursuite du rêve américain. Elle est conçue pour captiver le public d’aujourd’hui et unir vision artistique et réussite commerciale et financière. »",
-        creator_setting: "Située en 2005, avant l’ère des mille milliards, la saga capte la naissance de l’ambition hyperbolique — le moment où la richesse numérique, le contrôle des actifs et le compromis moral ont commencé à s’accélérer vers la société d’aujourd’hui, et vers les conséquences qui se profilent maintenant.",
+        creator_setting: "Située en 2005, avant l’ère des trillions de dollars, la saga capture la naissance de l’ambition hyperbolique lorsque la richesse numérique, le contrôle des actifs et le compromis moral ont commencé à accélérer vers la société d’aujourd’hui, et vers les conséquences qui se profilent désormais.",
         creator_desc: "L’auteur et architecte de la saga possède une expérience en affaires, en fusions et acquisitions, en finance mondiale et en enseignement, détient un MBA de UCLA, et est comptable professionnel agréé (CPA), apportant à l’histoire comme au projet lui-même profondeur, réalisme et un point de vue distinctif. Il conjugue vision créative et rigueur stratégique, façonnant le projet pour qu’il résonne auprès du public tout en servant les intérêts de ses principaux partenaires.",
         standalone_ip: "Créée par Dominik Mario Pigeon en tant que propriété intellectuelle originale et autonome, La Nouvelle Famille Drago est conçue comme une saga criminelle de grande envergure, déclinée sur plusieurs plateformes.",
         dmp_title: "Président, NDF5 Productions Inc.",
@@ -1905,7 +1902,8 @@
     const LANG_KEY = 'ndf_lang';
     const SUPPORTED_LANGS = ['en', 'fr'];
 
-    let currentLang = (localStorage.getItem(LANG_KEY) || 'en').toLowerCase();
+    const requestedLang = new URLSearchParams(window.location.search).get('lang');
+    let currentLang = (requestedLang || localStorage.getItem(LANG_KEY) || 'en').toLowerCase();
     if (!SUPPORTED_LANGS.includes(currentLang)) currentLang = 'en';
 
     function applyI18n() {
@@ -1922,6 +1920,16 @@
       const nextLang = currentLang === 'en' ? 'fr' : 'en';
       const btn = document.getElementById('lang-btn');
       if (btn) btn.innerText = nextLang.toUpperCase();
+
+      document.querySelectorAll('[data-lang-href]').forEach(el => {
+        const raw = el.getAttribute('data-lang-href');
+        const parts = raw.split('#');
+        el.href = `${parts[0]}?lang=${encodeURIComponent(currentLang)}${parts[1] ? `#${parts[1]}` : ''}`;
+      });
+
+      document.querySelectorAll('[data-alt-en]').forEach(img => {
+        img.alt = img.getAttribute(currentLang === 'fr' ? 'data-alt-fr' : 'data-alt-en') || '';
+      });
     }
 
     function setLang(lang) {
@@ -1948,68 +1956,12 @@
   </script>
 
   <script>
-    /* -------------------------------------------------------
-       CAROUSEL
-       - Simple fade/scale carousel for .ndf-slide elements.
-       - Auto-advances every 6.5s; pauses if prefers-reduced-motion is set.
-       - Dots navigation below; next/prev functions exposed globally.
-    -------------------------------------------------------- */
-
-    function initLocationsCarousel() {
-      const track = document.getElementById('locTrack');
-      if (!track) return;
-
-      const slides = Array.from(track.children);
-      const dots = Array.from(document.querySelectorAll('[data-loc-dot]'));
-      const prevBtn = document.querySelector('[data-loc-prev]');
-      const nextBtn = document.querySelector('[data-loc-next]');
-
-      let index = 0;
-      let timer = null;
-
-      function paintDots(i) {
-        dots.forEach((d, k) => {
-          d.style.background = (k === i) ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.18)";
-        });
-      }
-
-      function goTo(i) {
-        index = (i + slides.length) % slides.length;
-        track.style.transform = `translateX(-${index * 100}%)`;
-        paintDots(index);
-      }
-
-      function next() { goTo(index + 1); }
-      function prev() { goTo(index - 1); }
-
-      dots.forEach((d) => {
-        d.addEventListener('click', () => {
-          const i = parseInt(d.getAttribute('data-loc-dot'), 10);
-          goTo(i);
-          restart();
-        });
+    document.addEventListener('DOMContentLoaded', () => {
+      applyI18n();
+      document.querySelectorAll('details a[href^="#"]').forEach(link => {
+        link.addEventListener('click', () => link.closest('details')?.removeAttribute('open'));
       });
-
-      if (prevBtn) prevBtn.addEventListener('click', () => { prev(); restart(); });
-      if (nextBtn) nextBtn.addEventListener('click', () => { next(); restart(); });
-
-      function restart() {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        clearInterval(timer);
-        timer = setInterval(next, 6500);
-      }
-
-      goTo(0);
-      restart();
-    }
-
-    document.addEventListener('DOMContentLoaded', initLocationsCarousel);
-
-
-    // Optional but recommended: set correct content on first load
-    document.addEventListener('DOMContentLoaded', applyI18n);
-
-
+    });
     /* Vault logic removed from homepage (moved to vault/Vault-L2.html). */
   </script>
 
@@ -2059,7 +2011,7 @@
 
     <!-- image container -->
     <div class="relative w-full h-full overflow-hidden">
-      <img id="ctaPortalImg" alt="" class="absolute inset-0 w-full h-full object-cover
+      <img id="ctaPortalImg" src="locations-L2-assets/images/estate-sky-view.webp" alt="" class="absolute inset-0 w-full h-full object-cover
                 transition-[filter,transform,opacity] duration-[1100ms] ease-out
                 opacity-0 scale-[1.03] grayscale brightness-[0.85] contrast-[1.1] saturate-[0.8]" />
 
@@ -2133,7 +2085,7 @@
         title_fr: "La Saga",
         sub_en: "A sunlit world with dark shadows underneath.",
         sub_fr: "Un monde en plein soleil, avec des ombres dangereuses.",
-        img: "https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/transitL1L2/1_Ocean_Dimansion.jpg",
+        img: "locations-L2-assets/images/estate-sky-view.webp",
         href: "saga-L2-assets/Saga-L2.html"
       },
       story: {
@@ -2141,15 +2093,25 @@
         title_fr: "Histoire",
         sub_en: "The bigger the fortune, the more the family is threatened.",
         sub_fr: "Plus la fortune est grande, plus la famille est menacée.",
-        img: "https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/transitL1L2/2_TDI_Lion.jpg",
+        img: "locations-L2-assets/images/tdi-jet-view.webp",
         href: "story-L2-assets/Story-L2.html"
+      },
+      locations: {
+        title_en: "The Drago World",
+        title_fr: "Le monde des Drago",
+        sub_en: "Enter an international world of wealth, intimacy, culture, crime, and power.",
+        sub_fr: "Entrez dans un monde international de richesse, d’intimité, de culture, de crime et de pouvoir.",
+        enter_en: "ENTER THE DRAGO WORLD",
+        enter_fr: "ENTRER DANS LE MONDE DES DRAGO",
+        img: "locations-L2-assets/images/dimansion-front-sunset.webp",
+        href: "locations-L2-assets/Locations-L2.html"
       },
       characters: {
         title_en: "Characters",
         title_fr: "Personnages",
         sub_en: "The duality of the criminal mind.",
         sub_fr: "La dualité de l’esprit criminel.",
-        img: "https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/transitL1L2/3_Characters.png",
+        img: "assets/Transfer%20L1%20to%20L2/4_Characters_23_Ensemble.png",
         href: "characters-L2-assets/Characters-L2.html"
       },
       timeline: {
@@ -2157,7 +2119,7 @@
         title_fr: "Chronologie",
         sub_en: "Five years. One family. Many consequences.",
         sub_fr: "Cinq ans. Une famille. D’immenses conséquences.",
-        img: "https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/transitL1L2/4_TGP_zoom_out.png",
+        img: "locations-L2-assets/images/tgp-exterior.webp",
         href: "timeline-L2-assets/Timeline-L2.html"
       },
       production: {
@@ -2165,7 +2127,7 @@
         title_fr: "Production Blitz 1",
         sub_en: "For 6 new titles",
         sub_fr: "Pour 6 nouveaux titres",
-        img: "https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/transitL1L2/5a_Production.jpg",
+        img: "locations-L2-assets/images/dimansion-armory.webp",
         href: "production-L2-assets/Production-L2.html"
       },
       business: {
@@ -2173,7 +2135,7 @@
         title_fr: "Business & Finance",
         sub_en: "More content to maximize profitability.",
         sub_fr: "Plus de contenu pour maximiser la rentabilité.",
-        img: "https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/transitL1L2/6a_Business.jpg",
+        img: "locations-L2-assets/images/dimansion-al-capone-bar.webp",
         href: "business-finance-L2-assets/Business-Finance-L2.html"
       },
       talent_reps: {
@@ -2181,7 +2143,7 @@
         title_fr: "Talent & Représentants",
         sub_en: "Contributing to the risk mitigation. Sharing the upside.",
         sub_fr: "Contribuer à la réduction des risques. Partager les gains.",
-        img: "https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/transitL1L2/9_NYDC_Access.jpg",
+        img: "locations-L2-assets/images/nydc-entrance.webp",
         href: "talent-reps-L2-assets/Talent-Reps-L2.html"
       },
       creator: {
@@ -2189,7 +2151,7 @@
         title_fr: "Créateur",
         sub_en: "Contributing in several ways. Sharing the vision. Here's Sicily",
         sub_fr: "Contribuer de plusieurs manières. Partager la vision. Voici la Sicile",
-        img: "https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/transitL1L2/12_Trapani_Sicily.jpg",
+        img: "locations-L2-assets/images/trapani-sicily.webp",
         href: "creator-L2-assets/Creator-L2.html"
       }
     };
@@ -2246,7 +2208,9 @@
 
       // Enter button text (bilingual)
       if (enterBtn) {
-        enterBtn.textContent = isFR ? "ENTRER DANS LE MONDE DES DRAGO" : "ENTER DRAGO'S WORLD";
+        enterBtn.textContent = isFR
+          ? (cfg.enter_fr || "ENTRER DANS LE MONDE DES DRAGO")
+          : (cfg.enter_en || "ENTER DRAGO'S WORLD");
 
         // Keep space reserved, only hide visually
         enterBtn.classList.add("opacity-0", "pointer-events-none");
