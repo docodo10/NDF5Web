@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:,">
+  <title>The Drago World | The New Drago Family</title>
+  <meta name="description" content="Explore the signature properties, recurring story territories, and production design strategy behind the fictional world of The New Drago Family.">
+  <link rel="canonical" href="https://www.ndf5.com/locations-L2-assets/Locations-L2.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The Drago World | The New Drago Family">
+  <meta property="og:description" content="Signature properties, recurring story territories, and the production design strategy behind the Drago world.">
+  <meta property="og:image" content="https://www.ndf5.com/locations-L2-assets/images/estate-back-bird-view.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: { ndf: { deep:'#0B0806', paper:'#F0EFE9', gold:'#C5A065', twilight:'#0F1724', red:'#8A1C1C' } },
+      fontFamily: { sans:['Manrope','sans-serif'], serif:['Playfair Display','serif'], mono:['JetBrains Mono','monospace'] }
+    }}};
+  </script>
+  <style>
+    body { background:#070605; color:#F0EFE9; }
+    .reveal { opacity:0; transform:translateY(18px); transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1); }
+    .reveal.active { opacity:1; transform:none; }
+    .hairline { border-color:rgba(255,255,255,.13); }
+    .card-soft { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.12); border-radius:1rem; }
+    .card-soft:hover { background:rgba(197,160,101,.10)!important; }
+    .text-black\/50 { color:rgba(240,239,233,.50)!important; }
+    .text-black\/55 { color:rgba(240,239,233,.55)!important; }
+    .text-black\/65 { color:rgba(240,239,233,.68)!important; }
+    .text-black\/70 { color:rgba(240,239,233,.74)!important; }
+    .border-black\/10 { border-color:rgba(255,255,255,.12)!important; }
+    .border-black\/15 { border-color:rgba(255,255,255,.18)!important; }
+    .bg-white\/55,.bg-white\/60,.bg-white\/70 { background-color:rgba(255,255,255,.06)!important; }
+    .gallery img { transition:transform .7s cubic-bezier(.16,1,.3,1); }
+    .gallery figure:hover img { transform:scale(1.025); }
+    :focus-visible { outline:3px solid #C5A065; outline-offset:4px; }
+    section[id] { scroll-margin-top:7rem; }
+    @media (prefers-reduced-motion:reduce) {
+      html { scroll-behavior:auto!important; }
+      .reveal,.reveal.active { opacity:1!important; transform:none!important; transition:none!important; }
+      .gallery img { transition:none!important; }
+    }
+  </style>
+</head>
+<body class="font-sans antialiased overflow-x-hidden">
+  <header class="sticky top-0 z-50 border-b border-white/10 bg-ndf-deep/90 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto h-20 px-5 md:px-8 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <a id="backLink" href="../index.html?lang=en#locations" class="inline-flex items-center gap-2 px-3 py-2 border border-white/15 hover:bg-white hover:text-ndf-deep transition" aria-label="Back to World section">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i><span class="hidden sm:inline text-xs font-mono uppercase tracking-widest" data-i18n="back">Back</span>
+        </a>
+        <span class="hidden md:inline text-xs font-mono uppercase tracking-[.25em] text-white/55" data-i18n="page_label">World</span>
+      </div>
+      <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png" alt="NDF5 Productions" class="h-11 w-auto object-contain" decoding="async">
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="toggleLang()" class="px-3 py-2 border border-white/20 text-xs font-mono font-semibold uppercase tracking-widest hover:bg-white hover:text-ndf-deep"><span id="lang-btn">FR</span></button>
+        <a id="mainLink" href="../index.html?lang=en" class="inline-flex items-center gap-2 px-3 py-2 bg-ndf-gold text-ndf-deep hover:bg-white transition">
+          <i data-lucide="home" class="w-4 h-4"></i><span class="hidden sm:inline text-xs font-mono uppercase tracking-widest" data-i18n="main">Main</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="overview" class="px-5 md:px-8 pt-8 md:pt-12 pb-14">
+      <div class="max-w-7xl mx-auto">
+        <div class="relative overflow-hidden rounded-3xl bg-ndf-deep min-h-[560px] md:min-h-[650px] flex items-end">
+          <img src="images/estate-back-night-bird-view.webp" width="1915" height="821" alt="The Drago Estate illuminated beneath a moonlit coastal sky" data-alt-en="The Drago Estate illuminated beneath a moonlit coastal sky" data-alt-fr="Le domaine Drago illuminé sous un ciel côtier au clair de lune" class="absolute inset-0 w-full h-full object-cover" fetchpriority="high" decoding="async">
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent"></div>
+          <div class="relative z-10 p-7 md:p-12 lg:p-16 max-w-4xl text-white reveal active">
+            <p class="font-mono text-xs uppercase tracking-[.28em] text-ndf-gold" data-i18n="hero_kicker">World &amp; Locations</p>
+            <h1 class="mt-4 font-serif italic text-5xl md:text-7xl leading-[.98] tracking-tight" data-i18n="hero_title">The Drago World</h1>
+            <p class="mt-6 max-w-3xl text-base md:text-xl text-white/85 leading-relaxed" data-i18n="hero_intro">Original fictional environments define the Drago world—from a private Caribbean sanctuary to the Family’s Santa Barbara estate and New York stronghold.</p>
+            <div class="mt-8 flex flex-wrap gap-3">
+              <a href="#signature-properties" class="inline-flex items-center gap-2 bg-ndf-gold text-ndf-deep px-5 py-3 font-mono text-xs font-bold uppercase tracking-widest hover:bg-white transition"><span data-i18n="start">Start exploring</span><i data-lucide="arrow-down" class="w-4 h-4"></i></a>
+              <a id="heroBack" href="../index.html?lang=en#locations" class="inline-flex items-center gap-2 border border-white/30 bg-black/25 px-5 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white hover:text-black transition" data-i18n="back_world">Back to World section</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-3 gap-4 mt-5">
+          <div class="card-soft p-5 reveal"><p class="font-mono text-[11px] uppercase tracking-widest text-black/50" data-i18n="metric1_k">Signature properties</p><p class="mt-2 font-serif text-2xl" data-i18n="metric1_v">4 principal environments</p></div>
+          <div class="card-soft p-5 reveal"><p class="font-mono text-[11px] uppercase tracking-widest text-black/50" data-i18n="metric2_k">Story territories</p><p class="mt-2 font-serif text-2xl" data-i18n="metric2_v">6 recurring worlds</p></div>
+          <div class="card-soft p-5 reveal"><p class="font-mono text-[11px] uppercase tracking-widest text-black/50" data-i18n="metric3_k">Screen strategy</p><p class="mt-2 font-serif text-2xl" data-i18n="metric3_v">Hybrid production</p></div>
+        </div>
+        <p class="mt-5 text-xs leading-relaxed text-black/55 max-w-5xl reveal" data-i18n="disclosure">Original cinematic visualizations of fictional NDF environments. Final screen locations are intended to combine practical sets, production design, virtual production, CGI, and VFX.</p>
+      </div>
+    </section>
+
+    <div class="max-w-7xl mx-auto px-5 md:px-8 grid lg:grid-cols-[250px_minmax(0,1fr)] gap-10 lg:gap-14">
+      <aside class="hidden lg:block">
+        <div class="sticky top-28 card-soft p-5">
+          <p class="font-mono text-xs uppercase tracking-widest text-black/50" data-i18n="toc">On this page</p>
+          <nav class="mt-4 flex flex-col gap-3 text-sm" aria-label="On this page">
+            <a href="#overview" class="toc-link hover:text-ndf-gold" data-i18n="toc_overview">Overview</a>
+            <a href="#signature-properties" class="toc-link hover:text-ndf-gold" data-i18n="toc_properties">Signature Properties</a>
+            <a href="#story-territories" class="toc-link hover:text-ndf-gold" data-i18n="toc_territories">Story Territories</a>
+            <a href="#production-design" class="toc-link hover:text-ndf-gold" data-i18n="toc_screen">From Vision to Screen</a>
+            <a href="#mels-studies" class="toc-link hover:text-ndf-gold" data-i18n="toc_studies">Selected Studies</a>
+            <a href="#next" class="toc-link hover:text-ndf-gold" data-i18n="toc_next">Next Steps</a>
+          </nav>
+          <div class="mt-6 pt-5 border-t hairline text-xs leading-relaxed text-black/55" data-i18n="rail_note">Architectural and visual IP designed to carry story, character, and recurring dramatic function.</div>
+        </div>
+      </aside>
+
+      <div class="min-w-0 pb-20">
+        <section id="signature-properties" class="py-12 border-t hairline">
+          <div class="reveal">
+            <p class="font-mono text-xs uppercase tracking-[.24em] text-ndf-gold" data-i18n="sig_k">Signature Properties</p>
+            <h2 class="mt-3 font-serif italic text-3xl md:text-5xl tracking-tight" data-i18n="sig_h">Four environments. One recognizable world.</h2>
+            <p class="mt-5 text-base md:text-lg text-black/70 leading-relaxed max-w-3xl" data-i18n="sig_p">The Drago Island, Dimansion, The Grande Paolo, and New York Drago Castle are recurring dramatic engines. Dimansion and TGP sit within the larger Drago Estate in Santa Barbara.</p>
+          </div>
+          <nav class="mt-7 flex flex-wrap gap-2" aria-label="Signature properties">
+            <a href="#tdi" class="px-4 py-2 border border-black/10 bg-white/60 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold">TDI</a>
+            <a href="#estate" class="px-4 py-2 border border-black/10 bg-white/60 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold" data-i18n="estate_short">The Estate</a>
+            <a href="#dimansion" class="px-4 py-2 border border-black/10 bg-white/60 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold">Dimansion</a>
+            <a href="#tgp" class="px-4 py-2 border border-black/10 bg-white/60 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold">TGP</a>
+            <a href="#nydc" class="px-4 py-2 border border-black/10 bg-white/60 font-mono text-xs uppercase tracking-widest hover:bg-ndf-gold">NYDC</a>
+          </nav>
+        </section>
+
+        <section id="tdi" class="py-12 border-t hairline">
+          <div class="grid md:grid-cols-3 gap-7 items-start reveal">
+            <div><p class="font-mono text-xs uppercase tracking-widest text-ndf-gold">TDI · Dominica</p><h2 class="mt-2 font-serif text-3xl md:text-4xl" data-i18n="tdi_h">The Drago Island</h2></div>
+            <p class="md:col-span-2 text-base md:text-lg text-black/70 leading-relaxed" data-i18n="tdi_p">The annual Caribbean gathering: elite networking, pleasure, secrecy, surveillance, political influence, deals, contraband exchanges, and danger concealed beneath paradise.</p>
+          </div>
+          <div class="gallery mt-7 grid grid-cols-2 gap-3 md:gap-5">
+            <figure class="col-span-2 overflow-hidden rounded-2xl"><img src="images/tdi-bird-view.webp" width="1916" height="821" alt="Aerial view of The Drago Island and its turquoise Caribbean waters" data-alt-en="Aerial view of The Drago Island and its turquoise Caribbean waters" data-alt-fr="Vue aérienne de L’Île Drago et de ses eaux turquoise des Caraïbes" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/tdi-jet-view.webp" width="1916" height="821" alt="Private jet approaching The Drago Island over Caribbean waters" data-alt-en="Private jet approaching The Drago Island over Caribbean waters" data-alt-fr="Jet privé approchant L’Île Drago au-dessus des eaux caribéennes" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/tdi-pool-crowd-1.webp" width="1280" height="548" alt="Guests gathering around the resort pool on The Drago Island" data-alt-en="Guests gathering around the resort pool on The Drago Island" data-alt-fr="Invités rassemblés autour de la piscine de L’Île Drago" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/tdi-seafood-buffet.webp" width="1280" height="548" alt="A lavish seafood buffet on The Drago Island" data-alt-en="A lavish seafood buffet on The Drago Island" data-alt-fr="Un somptueux buffet de fruits de mer sur L’Île Drago" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/tdi-sunset-happy-hour.webp" width="1280" height="548" alt="A sunset gathering overlooking the sea on The Drago Island" data-alt-en="A sunset gathering overlooking the sea on The Drago Island" data-alt-fr="Un rassemblement au coucher du soleil face à la mer sur L’Île Drago" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+          </div>
+        </section>
+
+        <section id="estate" class="py-12 border-t hairline">
+          <div class="reveal"><p class="font-mono text-xs uppercase tracking-widest text-ndf-gold" data-i18n="estate_k">Santa Barbara</p><h2 class="mt-2 font-serif italic text-3xl md:text-4xl" data-i18n="estate_h">The Drago Estate</h2><p class="mt-5 text-base md:text-lg text-black/70 leading-relaxed" data-i18n="estate_p">The umbrella environment connecting Dimansion, The Grande Paolo, forests, gardens, private roads, security areas, and the Family’s emotional and operational life.</p></div>
+          <div class="gallery mt-7 grid grid-cols-1 gap-5 md:gap-7">
+            <figure class="overflow-hidden rounded-2xl"><img src="images/estate-sky-view.webp" width="1916" height="821" alt="High aerial view of the Drago Estate, coastline, and surrounding landscape" data-alt-en="High aerial view of the Drago Estate, coastline, and surrounding landscape" data-alt-fr="Vue aérienne élevée du domaine Drago, de la côte et du paysage environnant" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-2xl"><img src="images/estate-front-bird-view.webp" width="1916" height="821" alt="Front aerial view of the Drago Estate and its formal grounds" data-alt-en="Front aerial view of the Drago Estate and its formal grounds" data-alt-fr="Vue aérienne avant du domaine Drago et de ses jardins formels" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-2xl"><img src="images/estate-back-bird-view.webp" width="1915" height="821" alt="Aerial view of the Drago Estate linking Dimansion and The Grande Paolo" data-alt-en="Aerial view of the Drago Estate linking Dimansion and The Grande Paolo" data-alt-fr="Vue aérienne du domaine Drago reliant Dimansion et The Grande Paolo" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+          </div>
+        </section>
+
+        <section id="dimansion" class="py-12 border-t hairline">
+          <div class="grid md:grid-cols-3 gap-7 reveal"><div><p class="font-mono text-xs uppercase tracking-widest text-ndf-gold" data-i18n="home_k">The emotional home</p><h2 class="mt-2 font-serif text-3xl md:text-4xl">Dimansion</h2></div><p class="md:col-span-2 text-base md:text-lg text-black/70 leading-relaxed" data-i18n="dim_p">The domestic center of the saga: romance, breakfasts, family dinners, Christmas celebrations, private recovery, staff life, surveillance, secrets, and internal conflict.</p></div>
+          <div class="gallery mt-7 grid grid-cols-2 gap-3 md:gap-5">
+            <figure class="col-span-2 overflow-hidden rounded-2xl"><img src="images/dimansion-front-day.webp" width="1915" height="821" alt="Sunlit front façade and gardens of Dimansion" data-alt-en="Sunlit front façade and gardens of Dimansion" data-alt-fr="Façade avant et jardins de Dimansion en plein soleil" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="col-span-2 overflow-hidden rounded-2xl"><img src="images/dimansion-back-pool-night.webp" width="1916" height="821" alt="Dimansion and its formal pool illuminated at night" data-alt-en="Dimansion and its formal pool illuminated at night" data-alt-fr="Dimansion et sa piscine formelle illuminées la nuit" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/dimansion-living-room.webp" width="1915" height="821" alt="The grand living room and fireplace inside Dimansion" data-alt-en="The grand living room and fireplace inside Dimansion" data-alt-fr="Le grand salon et la cheminée de Dimansion" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/dimansion-dining-room.webp" width="1916" height="821" alt="A family dinner in the formal dining room at Dimansion" data-alt-en="A family dinner in the formal dining room at Dimansion" data-alt-fr="Un dîner familial dans la salle à manger formelle de Dimansion" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/dimansion-al-capone-bar.webp" width="1916" height="821" alt="The warmly lit Al Capone Bar inside Dimansion" data-alt-en="The warmly lit Al Capone Bar inside Dimansion" data-alt-fr="Le bar Al Capone de Dimansion baigné d’une lumière chaleureuse" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/dimansion-reading-room.webp" width="1916" height="821" alt="A richly appointed private reading room inside Dimansion" data-alt-en="A richly appointed private reading room inside Dimansion" data-alt-fr="Une riche salle de lecture privée dans Dimansion" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+          </div>
+        </section>
+
+        <section id="tgp" class="py-12 border-t hairline">
+          <div class="grid md:grid-cols-3 gap-7 reveal"><div><p class="font-mono text-xs uppercase tracking-widest text-ndf-gold" data-i18n="command_k">The command center</p><h2 class="mt-2 font-serif text-3xl md:text-4xl">The Grande Paolo</h2></div><p class="md:col-span-2 text-base md:text-lg text-black/70 leading-relaxed" data-i18n="tgp_p">The strategic brain of the Estate, where the Family manages finance, law, crisis, ethical debate, retaliation, intelligence, and succession pressure.</p></div>
+          <div class="gallery mt-7 grid grid-cols-2 gap-3 md:gap-5">
+            <figure class="col-span-2 overflow-hidden rounded-2xl"><img src="images/tgp-exterior.webp" width="1448" height="621" alt="Circular exterior of The Grande Paolo at sunset" data-alt-en="Circular exterior of The Grande Paolo at sunset" data-alt-fr="Extérieur circulaire de The Grande Paolo au coucher du soleil" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/tgp-4-desks-aquarium.webp" width="1916" height="821" alt="The Grande Paolo command center with four desks and an aquarium" data-alt-en="The Grande Paolo command center with four desks and an aquarium" data-alt-fr="Centre de commandement de The Grande Paolo avec quatre bureaux et un aquarium" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/tgp-fireplace.webp" width="1916" height="821" alt="Monumental fireplace inside The Grande Paolo" data-alt-en="Monumental fireplace inside The Grande Paolo" data-alt-fr="Cheminée monumentale à l’intérieur de The Grande Paolo" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/tgp-interior-central-place.webp" width="1916" height="821" alt="The central hall and sculptural floor inside The Grande Paolo" data-alt-en="The central hall and sculptural floor inside The Grande Paolo" data-alt-fr="Hall central et sol sculptural de The Grande Paolo" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-xl"><img src="images/tgp-war-room-g5-map.webp" width="1916" height="821" alt="The Grande Paolo war room during a strategic briefing" data-alt-en="The Grande Paolo war room during a strategic briefing" data-alt-fr="Salle de crise de The Grande Paolo pendant une réunion stratégique" class="w-full aspect-[16/10] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="col-span-2 overflow-hidden rounded-2xl"><img src="images/tgp-don-office.webp" width="1915" height="821" alt="The Don’s monumental office inside The Grande Paolo" data-alt-en="The Don’s monumental office inside The Grande Paolo" data-alt-fr="Le bureau monumental du Don dans The Grande Paolo" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+          </div>
+        </section>
+
+        <section id="nydc" class="py-12 border-t hairline">
+          <div class="grid md:grid-cols-3 gap-7 reveal"><div><p class="font-mono text-xs uppercase tracking-widest text-ndf-gold">NYDC · New York</p><h2 class="mt-2 font-serif text-3xl md:text-4xl" data-i18n="nydc_h">New York Drago Castle</h2></div><p class="md:col-span-2 text-base md:text-lg text-black/70 leading-relaxed" data-i18n="nydc_p">The Family’s New York fortress and old-world power base, connecting criminal authority, politics, law-enforcement pressure, private vaults, image, and confrontation.</p></div>
+          <div class="gallery mt-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <figure class="md:col-span-2 overflow-hidden rounded-2xl"><img src="images/ny-drago-castle-nydc.webp" width="1916" height="821" alt="New York Drago Castle illuminated against the Manhattan skyline" data-alt-en="New York Drago Castle illuminated against the Manhattan skyline" data-alt-fr="Le Château Drago de New York illuminé devant la silhouette de Manhattan" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-2xl"><img src="images/nydc-entrance.webp" width="1280" height="548" alt="Gothic entrance to New York Drago Castle" data-alt-en="Gothic entrance to New York Drago Castle" data-alt-fr="Entrée gothique du Château Drago de New York" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+            <figure class="overflow-hidden rounded-2xl"><img src="images/NYDC_Living_Room.webp" width="1024" height="439" alt="The formal living room inside New York Drago Castle" data-alt-en="The formal living room inside New York Drago Castle" data-alt-fr="Le salon formel à l’intérieur du Château Drago de New York" class="w-full aspect-[21/9] object-cover" loading="lazy" decoding="async"></figure>
+          </div>
+        </section>
+
+        <section id="story-territories" class="py-12 border-t hairline">
+          <div class="reveal"><p class="font-mono text-xs uppercase tracking-[.24em] text-ndf-gold" data-i18n="territories_k">Recurring Story Territories</p><h2 class="mt-3 font-serif italic text-3xl md:text-5xl" data-i18n="territories_h">An international dramatic geography</h2><p class="mt-5 text-base md:text-lg text-black/70 leading-relaxed" data-i18n="territories_p">Six territories recur across the saga, each carrying its own atmosphere, history, alliances, and pressure.</p></div>
+          <div class="mt-8 grid sm:grid-cols-2 gap-5">
+            <article id="dominica" class="card-soft overflow-hidden reveal"><img src="images/tdi-jet-view.webp" width="1916" height="821" alt="The Drago Island off Dominica, seen with an approaching private jet" data-alt-en="The Drago Island off Dominica, seen with an approaching private jet" data-alt-fr="L’Île Drago au large de la Dominique avec un jet privé en approche" class="w-full aspect-[21/9] object-cover" loading="lazy"><div class="p-5"><h3 class="font-serif text-2xl" data-i18n="dominica_h">Dominica / The Drago Island</h3><p class="mt-2 text-sm text-black/65 leading-relaxed" data-i18n="dominica_p">Paradise, sovereignty, local alliances, secrecy, pleasure, danger, and maritime transfer operations.</p></div></article>
+            <article id="santa-barbara" class="card-soft overflow-hidden reveal"><img src="images/santa-barbara-bird-view.webp" width="1916" height="821" alt="Aerial geographic context of the Santa Barbara coast and harbor" data-alt-en="Aerial geographic context of the Santa Barbara coast and harbor" data-alt-fr="Contexte géographique aérien de la côte et du port de Santa Barbara" class="w-full aspect-[21/9] object-cover" loading="lazy"><div class="p-5"><h3 class="font-serif text-2xl">Santa Barbara</h3><p class="mt-2 text-sm text-black/65 leading-relaxed" data-i18n="santa_p">The Family’s emotional and operational home: estate life, beaches, art, medicine, hospitality, and relationships.</p></div></article>
+            <article id="montreal" class="card-soft overflow-hidden reveal"><img src="images/montreal-winter.webp" width="1916" height="821" alt="Aerial winter view of Montréal and the St. Lawrence River" data-alt-en="Aerial winter view of Montréal and the St. Lawrence River" data-alt-fr="Vue aérienne hivernale de Montréal et du fleuve Saint-Laurent" class="w-full aspect-[21/9] object-cover" loading="lazy"><div class="p-5"><h3 class="font-serif text-2xl">Montréal</h3><p class="mt-2 text-sm text-black/65 leading-relaxed" data-i18n="montreal_p">Family history, culture, celebration, recruitment, transition, and the production hub behind the project.</p></div></article>
+            <article id="milan" class="card-soft overflow-hidden reveal"><img src="images/milan-bird-view.webp" width="1915" height="821" alt="Aerial city view of Milan and the cathedral district" data-alt-en="Aerial city view of Milan and the cathedral district" data-alt-fr="Vue aérienne de Milan et du quartier de la cathédrale" class="w-full aspect-[21/9] object-cover" loading="lazy"><div class="p-5"><h3 class="font-serif text-2xl">Milan</h3><p class="mt-2 text-sm text-black/65 leading-relaxed" data-i18n="milan_p">Art, opera, fashion, business, romance, sophistication, heritage, and violence.</p></div></article>
+            <article id="trapani" class="card-soft overflow-hidden reveal"><img src="images/trapani-sicily.webp" width="1916" height="821" alt="Aerial view of Trapani harbor and the Sicilian coastline" data-alt-en="Aerial view of Trapani harbor and the Sicilian coastline" data-alt-fr="Vue aérienne du port de Trapani et de la côte sicilienne" class="w-full aspect-[21/9] object-cover" loading="lazy"><div class="p-5"><h3 class="font-serif text-2xl" data-i18n="trapani_h">Trapani / Sicily</h3><p class="mt-2 text-sm text-black/65 leading-relaxed" data-i18n="trapani_p">Heritage, exile, family origins, protection, romance, identity, and rediscovery.</p></div></article>
+            <article id="new-york" class="card-soft overflow-hidden reveal"><img src="images/new-york-bird-view.webp" width="1916" height="821" alt="Aerial view of Manhattan and New York Harbor" data-alt-en="Aerial view of Manhattan and New York Harbor" data-alt-fr="Vue aérienne de Manhattan et du port de New York" class="w-full aspect-[21/9] object-cover" loading="lazy"><div class="p-5"><h3 class="font-serif text-2xl">New York</h3><p class="mt-2 text-sm text-black/65 leading-relaxed" data-i18n="newyork_p">The urban battlefield: NYDC, finance, law enforcement, political access, and underworld control.</p></div></article>
+          </div>
+        </section>
+
+        <section id="secondary-destinations" class="py-12 border-t hairline">
+          <div class="card-soft p-7 md:p-9 reveal">
+            <p class="font-mono text-xs uppercase tracking-widest text-ndf-gold" data-i18n="secondary_k">Additional destinations</p>
+            <h2 class="mt-3 font-serif text-3xl" data-i18n="secondary_h">Las Vegas · Los Angeles · Monaco · Niagara Falls</h2>
+            <p class="mt-4 text-black/65 leading-relaxed" data-i18n="secondary_p">Selected operations and chapters move through these locations and other occasional destinations. They remain intentionally text-only until approved visual material is available.</p>
+          </div>
+        </section>
+
+        <section id="production-design" class="py-12 border-t hairline">
+          <div class="reveal"><p class="font-mono text-xs uppercase tracking-[.24em] text-ndf-gold" data-i18n="screen_k">From Vision to Screen</p><h2 class="mt-3 font-serif italic text-3xl md:text-5xl" data-i18n="screen_h">Designed for an intelligent hybrid production</h2><p class="mt-5 text-base md:text-lg text-black/70 leading-relaxed" data-i18n="screen_p">The target environments can combine practical recurring rooms, partial façades, modular and redressable interiors, LED or virtual production, digital set extensions, CGI/VFX, and selected location photography.</p></div>
+          <div class="mt-7 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="card-soft p-5 reveal"><i data-lucide="hammer" class="w-5 h-5 text-ndf-gold"></i><h3 class="mt-3 font-serif text-xl" data-i18n="method1_h">Practical anchors</h3><p class="mt-2 text-sm text-black/65" data-i18n="method1_p">Recurring hero rooms and partial façades built for performance, light, and continuity.</p></div>
+            <div class="card-soft p-5 reveal"><i data-lucide="panels-top-left" class="w-5 h-5 text-ndf-gold"></i><h3 class="mt-3 font-serif text-xl" data-i18n="method2_h">Modular interiors</h3><p class="mt-2 text-sm text-black/65" data-i18n="method2_p">Redressable architecture that supports multiple story functions without flattening identity.</p></div>
+            <div class="card-soft p-5 reveal"><i data-lucide="monitor-play" class="w-5 h-5 text-ndf-gold"></i><h3 class="mt-3 font-serif text-xl" data-i18n="method3_h">Digital extensions</h3><p class="mt-2 text-sm text-black/65" data-i18n="method3_p">Virtual production and VFX extend scale, geography, and controlled visual ambition.</p></div>
+          </div>
+        </section>
+
+        <section id="mels-studies" class="py-12 border-t hairline">
+          <div class="reveal"><p class="font-mono text-xs uppercase tracking-[.24em] text-ndf-gold" data-i18n="studies_k">Selected Production Studies</p><h2 class="mt-3 font-serif italic text-3xl md:text-4xl" data-i18n="studies_h">Evidence of production planning—without exposing it</h2><p class="mt-5 text-black/70 leading-relaxed" data-i18n="studies_p">Selected preliminary studio set studies — intentionally obscured to protect confidential production planning.</p></div>
+          <div class="mt-7 grid md:grid-cols-2 gap-5 items-start">
+            <figure class="card-soft p-4 reveal"><div class="bg-white rounded-xl overflow-hidden"><img src="images/dimansion-floor-plan-frosted.webp" width="700" height="525" alt="Intentionally obscured preliminary Dimansion set study" data-alt-en="Intentionally obscured preliminary Dimansion set study" data-alt-fr="Étude préliminaire volontairement obscurcie du décor de Dimansion" class="w-full h-auto" loading="lazy" decoding="async"></div><figcaption class="mt-4 font-mono text-xs uppercase tracking-widest text-black/55" data-i18n="plan1">Dimansion — supplied frosted production study</figcaption></figure>
+            <figure class="card-soft p-4 reveal"><div class="bg-white rounded-xl overflow-hidden max-h-[525px] flex justify-center"><img src="images/tgp-floor-plan-frosted.webp" width="700" height="1050" alt="Intentionally obscured preliminary The Grande Paolo set study" data-alt-en="Intentionally obscured preliminary The Grande Paolo set study" data-alt-fr="Étude préliminaire volontairement obscurcie du décor de The Grande Paolo" class="w-auto max-h-[525px]" loading="lazy" decoding="async"></div><figcaption class="mt-4 font-mono text-xs uppercase tracking-widest text-black/55" data-i18n="plan2">The Grande Paolo — supplied frosted production study</figcaption></figure>
+          </div>
+          <p class="mt-5 text-xs text-black/50 leading-relaxed" data-i18n="studies_note">Reduced, metadata-stripped web derivatives only. No download or high-resolution lightbox is provided. Final design, allocation, and agreements remain subject to change.</p>
+        </section>
+
+        <section id="next" class="py-12 border-t hairline">
+          <p class="font-mono text-xs uppercase tracking-[.24em] text-ndf-gold reveal" data-i18n="next_k">Continue Exploring</p>
+          <h2 class="mt-3 font-serif italic text-3xl md:text-4xl reveal" data-i18n="next_h">The world serves story, character, and production.</h2>
+          <div class="mt-7 grid sm:grid-cols-2 gap-4">
+            <a href="../index.html?lang=en#story" data-main-anchor="story" class="card-soft p-6 hover:bg-white transition reveal"><span class="font-serif text-2xl" data-i18n="next_story">Story</span><span class="mt-2 block font-mono text-xs uppercase tracking-widest text-black/50" data-i18n="next_story_sub">Return to the premise</span></a>
+            <a href="../index.html?lang=en#characters" data-main-anchor="characters" class="card-soft p-6 hover:bg-white transition reveal"><span class="font-serif text-2xl" data-i18n="next_char">Characters</span><span class="mt-2 block font-mono text-xs uppercase tracking-widest text-black/50" data-i18n="next_char_sub">Meet the ensemble</span></a>
+            <a href="../production-L2-assets/Production-L2.html?lang=en" data-l2-path="../production-L2-assets/Production-L2.html" class="card-soft p-6 hover:bg-white transition reveal"><span class="font-serif text-2xl" data-i18n="next_prod">Production</span><span class="mt-2 block font-mono text-xs uppercase tracking-widest text-black/50" data-i18n="next_prod_sub">See the execution logic</span></a>
+            <a href="../timeline-L2-assets/Timeline-L2.html?lang=en" data-l2-path="../timeline-L2-assets/Timeline-L2.html" class="card-soft p-6 hover:bg-white transition reveal"><span class="font-serif text-2xl" data-i18n="next_time">Timeline</span><span class="mt-2 block font-mono text-xs uppercase tracking-widest text-black/50" data-i18n="next_time_sub">Follow the rollout</span></a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t hairline py-8 px-5 md:px-8">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between gap-3 font-mono text-xs uppercase tracking-widest text-black/50">
+      <span data-i18n="footer">For industry presentation purposes.</span><span>© 2026 NDF5 Productions Inc.</span>
+    </div>
+  </footer>
+
+  <script>
+    const i18n = {
+      en: {
+        back:'Back', page_label:'World', main:'Main', hero_kicker:'World & Locations', hero_title:'The Drago World', hero_intro:'Original fictional environments define the Drago world—from a private Caribbean sanctuary to the Family’s Santa Barbara estate and New York stronghold.', start:'Start exploring', back_world:'Back to World section', metric1_k:'Signature properties', metric1_v:'4 principal environments', metric2_k:'Story territories', metric2_v:'6 recurring worlds', metric3_k:'Screen strategy', metric3_v:'Hybrid production', disclosure:'Original cinematic visualizations of fictional NDF environments. Final screen locations are intended to combine practical sets, production design, virtual production, CGI, and VFX.',
+        toc:'On this page', toc_overview:'Overview', toc_properties:'Signature Properties', toc_territories:'Story Territories', toc_screen:'From Vision to Screen', toc_studies:'Selected Studies', toc_next:'Next Steps', rail_note:'Architectural and visual IP designed to carry story, character, and recurring dramatic function.',
+        sig_k:'Signature Properties', sig_h:'Four environments. One recognizable world.', sig_p:'The Drago Island, Dimansion, The Grande Paolo, and New York Drago Castle are recurring dramatic engines. Dimansion and TGP sit within the larger Drago Estate in Santa Barbara.', estate_short:'The Estate',
+        tdi_h:'The Drago Island', tdi_p:'The annual Caribbean gathering: elite networking, pleasure, secrecy, surveillance, political influence, deals, contraband exchanges, and danger concealed beneath paradise.', estate_k:'Santa Barbara', estate_h:'The Drago Estate', estate_p:'The umbrella environment connecting Dimansion, The Grande Paolo, forests, gardens, private roads, security areas, and the Family’s emotional and operational life.', home_k:'The emotional home', dim_p:'The domestic center of the saga: romance, breakfasts, family dinners, Christmas celebrations, private recovery, staff life, surveillance, secrets, and internal conflict.', command_k:'The command center', tgp_p:'The strategic brain of the Estate, where the Family manages finance, law, crisis, ethical debate, retaliation, intelligence, and succession pressure.', nydc_h:'New York Drago Castle', nydc_p:'The Family’s New York fortress and old-world power base, connecting criminal authority, politics, law-enforcement pressure, private vaults, image, and confrontation.',
+        territories_k:'Recurring Story Territories', territories_h:'An international dramatic geography', territories_p:'Six territories recur across the saga, each carrying its own atmosphere, history, alliances, and pressure.', dominica_h:'Dominica / The Drago Island', dominica_p:'Paradise, sovereignty, local alliances, secrecy, pleasure, danger, and maritime transfer operations.', santa_p:'The Family’s emotional and operational home: estate life, beaches, art, medicine, hospitality, and relationships.', montreal_p:'Family history, culture, celebration, recruitment, transition, and the production hub behind the project.', milan_p:'Art, opera, fashion, business, romance, sophistication, heritage, and violence.', trapani_h:'Trapani / Sicily', trapani_p:'Heritage, exile, family origins, protection, romance, identity, and rediscovery.', newyork_p:'The urban battlefield: NYDC, finance, law enforcement, political access, and underworld control.',
+        secondary_k:'Additional destinations', secondary_h:'Las Vegas · Los Angeles · Monaco · Niagara Falls', secondary_p:'Selected operations and chapters move through these locations and other occasional destinations. They remain intentionally text-only until approved visual material is available.', screen_k:'From Vision to Screen', screen_h:'Designed for an intelligent hybrid production', screen_p:'The target environments can combine practical recurring rooms, partial façades, modular and redressable interiors, LED or virtual production, digital set extensions, CGI/VFX, and selected location photography.', method1_h:'Practical anchors', method1_p:'Recurring hero rooms and partial façades built for performance, light, and continuity.', method2_h:'Modular interiors', method2_p:'Redressable architecture that supports multiple story functions without flattening identity.', method3_h:'Digital extensions', method3_p:'Virtual production and VFX extend scale, geography, and controlled visual ambition.',
+        studies_k:'Selected Production Studies', studies_h:'Evidence of production planning—without exposing it', studies_p:'Selected preliminary studio set studies — intentionally obscured to protect confidential production planning.', plan1:'Dimansion — supplied frosted production study', plan2:'The Grande Paolo — supplied frosted production study', studies_note:'Reduced, metadata-stripped web derivatives only. No download or high-resolution lightbox is provided. Final design, allocation, and agreements remain subject to change.',
+        next_k:'Continue Exploring', next_h:'The world serves story, character, and production.', next_story:'Story', next_story_sub:'Return to the premise', next_char:'Characters', next_char_sub:'Meet the ensemble', next_prod:'Production', next_prod_sub:'See the execution logic', next_time:'Timeline', next_time_sub:'Follow the rollout', footer:'For industry presentation purposes.'
+      },
+      fr: {
+        back:'Retour', page_label:'Univers', main:'Accueil', hero_kicker:'Univers et lieux', hero_title:'Le monde des Drago', hero_intro:'Des environnements fictifs originaux définissent le monde Drago — d’un sanctuaire privé des Caraïbes au domaine familial de Santa Barbara et à son bastion new-yorkais.', start:'Commencer l’exploration', back_world:'Retour à la section Univers', metric1_k:'Propriétés signatures', metric1_v:'4 environnements principaux', metric2_k:'Territoires du récit', metric2_v:'6 univers récurrents', metric3_k:'Stratégie d’écran', metric3_v:'Production hybride', disclosure:'Visualisations cinématographiques originales de lieux fictifs de NDF. Les environnements finaux à l’écran devraient combiner décors pratiques, direction artistique, production virtuelle, images de synthèse et effets visuels.',
+        toc:'Sur cette page', toc_overview:'Aperçu', toc_properties:'Propriétés signatures', toc_territories:'Territoires du récit', toc_screen:'De la vision à l’écran', toc_studies:'Études sélectionnées', toc_next:'Étapes suivantes', rail_note:'Une propriété intellectuelle architecturale et visuelle pensée pour porter le récit, les personnages et des fonctions dramatiques récurrentes.',
+        sig_k:'Propriétés signatures', sig_h:'Quatre environnements. Un monde reconnaissable.', sig_p:'L’Île Drago, Dimansion, The Grande Paolo et le Château Drago de New York sont des moteurs dramatiques récurrents. Dimansion et TGP se trouvent dans le vaste domaine Drago à Santa Barbara.', estate_short:'Le domaine',
+        tdi_h:'L’Île Drago', tdi_p:'Le rassemblement annuel des Caraïbes : réseautage d’élite, plaisir, secret, surveillance, influence politique, ententes, échanges clandestins et danger dissimulé sous le paradis.', estate_k:'Santa Barbara', estate_h:'Le domaine Drago', estate_p:'L’environnement-cadre qui relie Dimansion, The Grande Paolo, les forêts, jardins, routes privées, zones de sécurité et la vie émotionnelle et opérationnelle de la famille.', home_k:'Le cœur émotionnel', dim_p:'Le centre domestique de la saga : romance, petits-déjeuners, repas de famille, Noël, convalescence privée, vie du personnel, surveillance, secrets et conflits internes.', command_k:'Le centre de commandement', tgp_p:'Le cerveau stratégique du domaine, où la famille gère finance, droit, crise, débats éthiques, représailles, renseignement et tensions de succession.', nydc_h:'Château Drago de New York', nydc_p:'La forteresse new-yorkaise et la base de pouvoir de l’Ancien Monde de la famille, reliant autorité criminelle, politique, pression policière, coffres privés, image et confrontation.',
+        territories_k:'Territoires récurrents du récit', territories_h:'Une géographie dramatique internationale', territories_p:'Six territoires reviennent dans la saga, chacun porteur de sa propre atmosphère, de son histoire, de ses alliances et de ses tensions.', dominica_h:'La Dominique / L’Île Drago', dominica_p:'Paradis, souveraineté, alliances locales, secret, plaisir, danger et opérations de transfert maritime.', santa_p:'Le foyer émotionnel et opérationnel de la famille : domaine, plages, art, médecine, hôtellerie et relations.', montreal_p:'Histoire familiale, culture, célébrations, recrutement, transitions et pôle de production du projet.', milan_p:'Art, opéra, mode, affaires, romance, sophistication, héritage et violence.', trapani_h:'Trapani / Sicile', trapani_p:'Héritage, exil, origines familiales, protection, romance, identité et redécouverte.', newyork_p:'Le champ de bataille urbain : NYDC, finance, forces de l’ordre, accès politique et contrôle du milieu.',
+        secondary_k:'Destinations additionnelles', secondary_h:'Las Vegas · Los Angeles · Monaco · Niagara Falls', secondary_p:'Certaines opérations et certains chapitres passent par ces lieux et d’autres destinations occasionnelles. Ils demeurent volontairement présentés en texte seulement jusqu’à l’approbation de matériel visuel.', screen_k:'De la vision à l’écran', screen_h:'Conçu pour une production hybride intelligente', screen_p:'Les environnements visés peuvent combiner pièces pratiques récurrentes, façades partielles, intérieurs modulaires et transformables, production virtuelle ou DEL, extensions numériques, CGI/VFX et prises de vues choisies en décors réels.', method1_h:'Ancrages pratiques', method1_p:'Pièces signatures récurrentes et façades partielles construites pour le jeu, la lumière et la continuité.', method2_h:'Intérieurs modulaires', method2_p:'Une architecture transformable qui sert plusieurs fonctions dramatiques sans diluer son identité.', method3_h:'Extensions numériques', method3_p:'La production virtuelle et les VFX étendent l’échelle, la géographie et l’ambition visuelle maîtrisée.',
+        studies_k:'Études de production sélectionnées', studies_h:'La preuve d’une planification — sans l’exposer', studies_p:'Études préliminaires sélectionnées de décors en studio — volontairement obscurcies afin de protéger la planification confidentielle de la production.', plan1:'Dimansion — étude de production floutée fournie', plan2:'The Grande Paolo — étude de production floutée fournie', studies_note:'Dérivés web réduits et sans métadonnées seulement. Aucun téléchargement ni affichage haute résolution n’est fourni. La conception finale, l’allocation et les ententes demeurent sujettes à modification.',
+        next_k:'Poursuivre l’exploration', next_h:'Le monde sert le récit, les personnages et la production.', next_story:'Histoire', next_story_sub:'Retour à la prémisse', next_char:'Personnages', next_char_sub:'Rencontrer l’ensemble', next_prod:'Production', next_prod_sub:'Voir la logique d’exécution', next_time:'Chronologie', next_time_sub:'Suivre le déploiement', footer:'À des fins de présentation à l’industrie.'
+      }
+    };
+
+    const params = new URLSearchParams(location.search);
+    let lang = (params.get('lang') || localStorage.getItem('ndf_lang') || 'en').toLowerCase();
+    if (!['en','fr'].includes(lang)) lang = 'en';
+
+    function routeMain(anchor='') { return `../index.html?lang=${lang}${anchor ? `#${anchor}` : ''}`; }
+    function applyI18n() {
+      const dict = i18n[lang] || i18n.en;
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => { const v=dict[el.dataset.i18n]; if (typeof v==='string') el.innerHTML=v; });
+      document.querySelectorAll('[data-alt-en]').forEach(img => { img.alt=img.getAttribute(lang==='fr'?'data-alt-fr':'data-alt-en') || ''; });
+      document.getElementById('lang-btn').textContent = lang==='en' ? 'FR' : 'EN';
+      document.getElementById('backLink').href = routeMain('locations');
+      document.getElementById('heroBack').href = routeMain('locations');
+      document.getElementById('mainLink').href = routeMain();
+      document.querySelectorAll('[data-main-anchor]').forEach(a => a.href=routeMain(a.dataset.mainAnchor));
+      document.querySelectorAll('[data-l2-path]').forEach(a => a.href=`${a.dataset.l2Path}?lang=${lang}`);
+      document.title = lang==='fr' ? 'Le monde des Drago | La Nouvelle Famille Drago' : 'The Drago World | The New Drago Family';
+      const description = lang==='fr' ? 'Explorez les propriétés signatures, les territoires récurrents et la stratégie de production du monde fictif de La Nouvelle Famille Drago.' : 'Explore the signature properties, recurring story territories, and production design strategy behind the fictional world of The New Drago Family.';
+      document.querySelector('meta[name="description"]').setAttribute('content',description);
+    }
+    function toggleLang(){ lang=lang==='en'?'fr':'en'; localStorage.setItem('ndf_lang',lang); applyI18n(); }
+    window.toggleLang=toggleLang;
+
+    function initReveal(){
+      const els=[...document.querySelectorAll('.reveal')];
+      if(!('IntersectionObserver' in window)){ els.forEach(el=>el.classList.add('active')); return; }
+      const io=new IntersectionObserver(entries=>entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('active'); io.unobserve(e.target); }}),{threshold:.08,rootMargin:'0px 0px -40px'});
+      els.forEach(el=>io.observe(el));
+      setTimeout(()=>els.forEach(el=>el.classList.add('active')),2500);
+    }
+    document.addEventListener('DOMContentLoaded',()=>{ localStorage.setItem('ndf_lang',lang); applyI18n(); initReveal(); if(window.lucide) lucide.createIcons(); });
+  </script>
+</body>
+</html>
