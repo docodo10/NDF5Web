@@ -38,6 +38,7 @@
 
 <head>
   <meta name="ndf-route-locale" content="en">
+  <script data-ndf-locale-bootstrap>try{localStorage.setItem('ndf_lang',/\.fr\.html$/i.test(location.pathname)?'fr':'en')}catch(_){}</script>
   <link rel="canonical" href="https://www.ndf5.com/">
   <link rel="alternate" hreflang="en-CA" href="https://www.ndf5.com/">
   <link rel="alternate" hreflang="fr-CA" href="https://www.ndf5.com/index.fr.html">
@@ -506,30 +507,6 @@
     </div>
   </section>
 
-
-  <!-- NDF5 SIGNATURE FRAMEWORKS -->
-  <section id="signature-frameworks" class="ndf-framework-section">
-    <div class="ndf-framework-inner">
-      <div class="ndf-framework-intro reveal">
-        <div class="ndf-framework-kicker" data-i18n="framework_kicker">NDF5 Signature Frameworks</div>
-        <h2 class="ndf-framework-title" data-i18n="framework_title">Two Frameworks. One Unified Saga.</h2>
-        <p class="ndf-framework-lead" data-i18n="framework_intro">The NDF Saga is built on two complementary creative frameworks: one defines how the story is told; the other defines the society in which it unfolds.</p>
-      </div>
-      <div class="ndf-framework-grid">
-        <article class="ndf-framework-card reveal delay-100">
-          <div class="ndf-framework-card-kicker" data-i18n="framework_duality_kicker">NDF5 Signature Dramatic &amp; Cinematic Framework</div>
-          <h3 data-i18n="framework_duality_title"><span class="ndf-mark" lang="en">The Duality of the Criminal <span class="ndf-mark-tail">Mind<sup class="ndf-mark-symbol">™</sup></span></span></h3>
-          <p data-i18n="framework_duality_text">The saga’s central creative principle. It reveals the dual states of the criminal mind within the same person: a generous, familial and protective state, and a ruthless state driven by harmful intent, greed, power, fear or survival. Two director-led creative tandems and two complementary presentation styles make that contrast visible.</p>
-        </article>
-        <article class="ndf-framework-card reveal delay-200">
-          <div class="ndf-framework-card-kicker" data-i18n="framework_society_kicker">NDF5 Signature World Framework</div>
-          <h3 data-i18n="framework_society_title"><span class="ndf-mark" lang="en">Hyperbolic <span class="ndf-mark-tail">Society<sup class="ndf-mark-symbol">™</sup></span></span></h3>
-          <p data-i18n="framework_society_text">The evolving social environment surrounding the Dragos. Technology, finance and influence amplify wealth, ambition and power beyond traditional limits, reshaping the family, the saga and the society around them.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
   <!-- STORY SECTION (dark) -->
   <!-- =========================================================
      STORY SECTION
@@ -631,7 +608,7 @@
       <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-end reveal">
         <div class="lg:col-span-8">
           <p class="text-xl md:text-2xl font-mono font-bold tracking-widest uppercase text-ndf-gold mb-5" data-i18n="world_kicker">World &amp; Locations</p>
-          <h2 class="font-serif italic text-4xl md:text-6xl leading-tight tracking-tight" data-i18n="world_title">The Drago World</h2>
+          <h2 class="font-serif text-4xl md:text-6xl leading-tight tracking-tight" data-i18n="world_title">The Drago World</h2>
           <p class="mt-6 text-base md:text-lg text-neutral-700 leading-relaxed max-w-4xl" data-i18n="world_intro">From a private Caribbean island and a billionaire estate in Santa Barbara to New York, Montréal, Milan, and Sicily, the NDF Saga unfolds across an international world of wealth, intimacy, culture, crime, and power.</p>
         </div>
         <div class="lg:col-span-4 lg:text-right">
@@ -1521,8 +1498,8 @@
       en: {
         hero_title: 'The New <br> <span class="italic text-ndf-red">Drago</span> Family',
         NDF5_presents: "NDF5 Productions Inc. presents",
-        nav_saga: "The Saga",
-        nav_story: "Story",
+        nav_saga: "SAGA",
+        nav_story: "STORY",
         nav_world: "World",
         nav_menu: "Menu",
         nav_char: "Characters",
@@ -1537,31 +1514,22 @@
         hero_sub: "Franchise Saga",
         cta_explore: "Access The Archives",
 
-        logline: "\"Across five annual chapters set in the 2000s, a lavish criminal dynasty tests the limits of conscience and ambition.\"",
+        logline: "“Across five annual chapters set in the 2000s, a lavish criminal dynasty tests the limits of conscience and ambition.”",
 
         theme_legacy: "Legacy",
         theme_power: "Power",
         theme_enigma: "Enigma",
 
-        saga_title: "The Saga",
+        saga_title: "THE SAGA",
         saga_immersive: "An immersive, semi-historical five-year chronology designed to bring audiences inside the Drago family.",
-        saga_subtitle: "The New Drago Family is both a psychological odyssey and a mirror of the human soul, built around the dual states of the criminal mind: one guided by goodwill, loyalty and protection; the other by harmful intent, greed, power, fear or survival. Often, both states belong to the same person—and intention makes the difference.",
-        saga_subtitle2: "An original standalone IP conceived as a large-scale, multi-platform crime saga.",
-        saga_subtitle3: "Its dramatic structure and social world are defined by two complementary signature frameworks, introduced below.",
+        saga_subtitle: "Created by Dominik Mario Pigeon, The New Drago Family is both a psychological odyssey and a mirror of the human soul, built on two complementary signature frameworks. <span class=\"ndf-mark\" lang=\"en\">The Duality of the Criminal <span class=\"ndf-mark-tail\">Mind<sup class=\"ndf-mark-symbol\">™</sup></span></span> defines how the story is told through the dual states of the criminal mind: guided by different intentions, both states can coexist within the same person, and two director-led creative tandems make that contrast visible.",
+        saga_subtitle2: "<span class=\"ndf-mark\" lang=\"en\">Hyperbolic <span class=\"ndf-mark-tail\">Society<sup class=\"ndf-mark-symbol\">™</sup></span></span> defines the changing world surrounding the Dragos in the 2000s, where technology, finance and a permissive social environment amplify ambition, power and wealth beyond traditional limits.",
+        saga_subtitle3: "An original standalone IP conceived as a large-scale, multi-platform crime saga.",
         saga_style: "Sunlit Noir",
         saga_btn: "Learn More",
-        framework_kicker: "NDF5 SIGNATURE FRAMEWORKS",
-        framework_title: "Two Frameworks. One Unified Saga.",
-        framework_intro: "The NDF Saga is built on two complementary creative frameworks: one defines how the story is told; the other defines the society in which it unfolds.",
-        framework_duality_kicker: "NDF5 SIGNATURE DRAMATIC & CINEMATIC FRAMEWORK",
-        framework_duality_title: "<span class=\"ndf-mark\" lang=\"en\">The Duality of the Criminal <span class=\"ndf-mark-tail\">Mind<sup class=\"ndf-mark-symbol\">™</sup></span></span>",
-        framework_duality_text: "The saga’s central creative principle. It reveals the dual states of the criminal mind within the same person: a generous, familial and protective state, and a ruthless state driven by harmful intent, greed, power, fear or survival. Two director-led creative tandems and two complementary presentation styles make that contrast visible.",
-        framework_society_kicker: "NDF5 SIGNATURE WORLD FRAMEWORK",
-        framework_society_title: "<span class=\"ndf-mark\" lang=\"en\">Hyperbolic <span class=\"ndf-mark-tail\">Society<sup class=\"ndf-mark-symbol\">™</sup></span></span>",
-        framework_society_text: "The evolving social environment surrounding the Dragos. Technology, finance and influence amplify wealth, ambition and power beyond traditional limits, reshaping the family, the saga and the society around them.",
         saga_tag: "Five Years",
 
-        story_label: "Story",
+        story_label: "THE STORY",
         story_title: "The New Drago Family",
         story_fast_title: "At a glance",
         story_fast_1: "A prestige crime-family saga built on duality: conscience vs ambition.",
@@ -1738,8 +1706,8 @@
       fr: {
         hero_title: 'La Nouvelle <br> Famille <span class="italic text-ndf-red">Drago</span>',
         NDF5_presents: "NDF5 Productions Inc. présente",
-        nav_saga: "La Saga",
-        nav_story: "Histoire",
+        nav_saga: "SAGA",
+        nav_story: "HISTOIRE",
         nav_world: "Univers",
         nav_menu: "Menu",
         nav_char: "Personnages",
@@ -1754,42 +1722,33 @@
         hero_sub: "Saga et Franchise",
         cta_explore: "Accéder aux Archives",
 
-        logline: "\"À travers cinq chapitres annuels situés dans les années 2000, une dynastie criminelle teste les limites de la conscience et de l'ambition.\"",
+        logline: "« À travers cinq chapitres annuels se déroulant dans les années 2000, une somptueuse dynastie criminelle met à l’épreuve les limites de la conscience et de l’ambition. »",
 
         theme_legacy: "Héritage",
         theme_power: "Pouvoir",
         theme_enigma: "Énigme",
 
         // SAGA
-        saga_title: "La Saga",
-        saga_immersive: "Une chronologie semi-historique immersive sur cinq ans, conçue pour faire entrer le public au cœur de la famille Drago.",
-        saga_subtitle: "The New Drago Family est à la fois une odyssée psychologique et un miroir de l’âme humaine, construite autour des deux états de l’esprit criminel : l’un guidé par la bienveillance, la loyauté et la protection; l’autre par l’intention de nuire, la cupidité, le pouvoir, la peur ou la survie. Souvent, ces deux états appartiennent à une même personne — et c’est l’intention qui fait toute la différence.",
-        saga_subtitle2: "Une propriété intellectuelle originale et autonome, conçue comme une saga criminelle de grande envergure, déclinée sur plusieurs plateformes.",
-        saga_subtitle3: "Sa structure dramatique et son univers social sont définis par deux cadres distinctifs complémentaires, présentés ci-dessous.",
+        saga_title: "LA SAGA",
+        saga_immersive: "Une chronologie immersive et semi-historique sur cinq ans, conçue pour plonger le public au cœur de la famille Drago.",
+        saga_subtitle: "Créée par Dominik Mario Pigeon, La Nouvelle Famille Drago est à la fois une odyssée psychologique et un miroir de l’âme humaine, bâtie sur deux cadres distinctifs complémentaires. <span class=\"ndf-mark\" lang=\"fr\">La Dualité de l’Esprit <span class=\"ndf-mark-tail\">Criminel<sup class=\"ndf-mark-symbol\">MC</sup></span></span> définit la manière dont l’histoire est racontée : deux états de l’esprit criminel, guidés par des intentions différentes, peuvent coexister chez une même personne, et c’est l’intention qui fait toute la différence. Deux tandems créatifs dirigés par des réalisateurs rendent ce contraste visible.",
+        saga_subtitle2: "<span class=\"ndf-mark\" lang=\"fr\">La Société <span class=\"ndf-mark-tail\">Hyperbolique<sup class=\"ndf-mark-symbol\">MC</sup></span></span> définit le monde en mutation entourant les Drago dans les années 2000, où la technologie, la finance et un environnement social permissif amplifient l’ambition, le pouvoir et la richesse au-delà des limites traditionnelles.",
+        saga_subtitle3: "Une propriété intellectuelle originale et autonome, conçue comme une saga criminelle multiplateforme d’envergure.",
         saga_style: "Sunlit Noir",
         saga_btn: "En Savoir Plus",
-        framework_kicker: "CADRES DISTINCTIFS DE NDF5",
-        framework_title: "Deux cadres. Une seule saga.",
-        framework_intro: "La saga NDF repose sur deux cadres créatifs complémentaires : l’un définit la manière dont l’histoire est racontée; l’autre, la société dans laquelle elle se déploie.",
-        framework_duality_kicker: "CADRE DRAMATIQUE ET CINÉMATOGRAPHIQUE DISTINCTIF DE NDF5",
-        framework_duality_title: "<span class=\"ndf-mark\" lang=\"en\">The Duality of the Criminal <span class=\"ndf-mark-tail\">Mind<sup class=\"ndf-mark-symbol\">MC</sup></span></span>",
-        framework_duality_text: "Le principe créatif central de la saga. Il révèle les deux états de l’esprit criminel chez une même personne : un état généreux, familial et protecteur, et un état impitoyable mû par l’intention de nuire, la cupidité, le pouvoir, la peur ou la survie. Deux tandems créatifs dirigés par des réalisateurs et deux styles de présentation complémentaires rendent ce contraste visible.",
-        framework_society_kicker: "CADRE SOCIÉTAL DISTINCTIF DE NDF5",
-        framework_society_title: "<span class=\"ndf-mark\" lang=\"en\">Hyperbolic <span class=\"ndf-mark-tail\">Society<sup class=\"ndf-mark-symbol\">MC</sup></span></span>",
-        framework_society_text: "L’environnement social en mutation qui entoure les Drago. La technologie, la finance et l’influence amplifient la richesse, l’ambition et le pouvoir au-delà des limites traditionnelles, transformant la famille, la saga et le monde qui les entoure.",
         saga_tag: "Cinq Ans",
 
         // STORY
-        story_label: "Histoire",
+        story_label: "L’HISTOIRE",
         story_title: "La Nouvelle Famille Drago",
         story_fast_title: "En bref",
         story_fast_1: "Une saga criminelle de prestige fondée sur la dualité : conscience vs ambition.",
         story_fast_2: "Cinq chapitres annuels situés dans les années 2000 et plus, à travers continents et générations.",
         story_fast_3: "Un triangle intime de pouvoir, désir, secrets : Domenico, Lenny, Greta.",
-        story_fast_4: "Deux tandems créatifs dirigés par des réalisateurs expriment The Duality of the Criminal Mind au moyen de deux styles de présentation complémentaires, dans un langage Sunlit Noir unifié.",
+        story_fast_4: "Deux tandems créatifs dirigés par des réalisateurs expriment La Dualité de l’Esprit Criminel au moyen de deux styles de présentation complémentaires, dans un langage Sunlit Noir unifié.",
         story_p1: "À travers la déconstruction de l’esprit criminel, l’auteur façonne une saga criminelle psychologique spectaculaire, aventureuse et magnifiquement mise en scène, La Nouvelle Famille Drago, une franchise premium multiplateforme, déployée sur cinq ans qui transcende les continents et les générations.",
         story_p2: "Maîtres du monde financier et de l’ambiguïté morale, les Drago se trouvent au cœur d’un triangle extravagant : le charismatique Don Domenico Drago, déterminé à préserver l’identité familiale et l’empire ; Lenny,  l'ambitieux conseiller juridique en chef dont l’intellect dépasse la conscience ; et Greta, la navigatrice avisée, évoluant entre l’art, l’amour et le danger.",
-        story_p3: "À travers une trame multidimensionnelle tissée de secrets, de rebondissements et de révélations inattendues, deux tandems créatifs dirigés par des réalisateurs expriment des états complémentaires au sein de The Duality of the Criminal Mind, entraînant une odyssée de cinq ans, une chronologie annuelle ancrée dans les années 2000 — de l’Île Drago jusqu’au sommet ultime de la société américaine — un ouragan humain où la conscience pourrait céder à la cupidité et à l’ambition, dans la poursuite corrodée de ce rêve américain.",
+        story_p3: "À travers une trame multidimensionnelle tissée de secrets, de rebondissements et de révélations inattendues, deux tandems créatifs dirigés par des réalisateurs expriment des états complémentaires au sein de La Dualité de l’Esprit Criminel, entraînant une odyssée de cinq ans, une chronologie annuelle ancrée dans les années 2000 — de l’Île Drago jusqu’au sommet ultime de la société américaine — un ouragan humain où la conscience pourrait céder à la cupidité et à l’ambition, dans la poursuite corrodée de ce rêve américain.",
         story_desc: "À travers la déconstruction de l’esprit criminel, l’auteur façonne une saga criminelle psychologique spectaculaire, aventureuse et magnifiquement mise en scène, La Nouvelle Famille Drago, une franchise premium multiplateforme, déployée sur cinq ans qui transcende les continents et les générations. Maîtres du monde financier et de l’ambiguïté morale, les Drago se trouvent au cœur d’un triangle extravagant : le charismatique Don Domenico Drago, déterminé à préserver l’identité familiale et l’empire ; Lenny, l'ambitieux conseiller juridique en chef dont l’intellect dépasse la conscience ; et Greta, la navigatrice avisée, évoluant entre l’art, l’amour et le danger. À travers une trame multidimensionnelle tissée de secrets, de rebondissements et de révélations inattendues, deux réalisateurs de renom expriment les états d’esprit opposés de l’esprit criminel, entraînant une odyssée de cinq ans, une chronologie annuelle ancrée dans les années 2000 — de l’Île Drago jusqu’au sommet ultime de la société américaine — un ouragan humain où la conscience pourrait céder à la cupidité et à l’ambition, dans la poursuite corrodée de ce rêve américain.",
         story_btn: "En savoir plus",
 
@@ -1864,7 +1823,7 @@
         metric_locations_title: "Lieux de tournage",
         metric_locations_text: "Basé à Montréal, avec des lieux satellites clés en Californie, à New York, en Italie et en République dominicaine pour assurer une authenticité et une efficacité de coût optimale.",
         metric_cine_title: "Cinématographie",
-        metric_cine_text: "Deux tandems créatifs dirigés par des réalisateurs guident un langage visuel unifié, chacun exprimant une dimension complémentaire de The Duality of the Criminal Mind. L’ensemble sera capté en numérique grand format avec la Sony VENICE 2 8.6K Open Gate, ou l’équivalent.",
+        metric_cine_text: "Deux tandems créatifs dirigés par des réalisateurs guident un langage visuel unifié, chacun exprimant une dimension complémentaire de La Dualité de l’Esprit Criminel. L’ensemble sera capté en numérique grand format avec la Sony VENICE 2 8.6K Open Gate, ou l’équivalent.",
         prod_btn: "En savoir plus",
 
         // BUSINESS
@@ -1903,7 +1862,7 @@
         creator_title: "Créateur",
         creator_label: "Producteur Exécutif et Auteur",
         creator_name: "Dominik Mario Pigeon",
-        creator_quote: "« J’ai créé une saga criminelle familiale moderne, psychologique et aventureuse sur cinq ans, construite autour de The Duality of the Criminal Mind, où richesse, pouvoir, amour et ambition s’entrechoquent — et où la conscience cède à la cupidité dans la poursuite du rêve américain. Elle est conçue pour captiver le public d’aujourd’hui et unir vision artistique et réussite commerciale et financière. »",
+        creator_quote: "« J’ai créé une saga criminelle familiale moderne, psychologique et aventureuse sur cinq ans, construite autour de La Dualité de l’Esprit Criminel, où richesse, pouvoir, amour et ambition s’entrechoquent — et où la conscience cède à la cupidité dans la poursuite du rêve américain. Elle est conçue pour captiver le public d’aujourd’hui et unir vision artistique et réussite commerciale et financière. »",
         creator_setting: "Située en 2005, avant l’ère des trillions de dollars, la saga capture la naissance de l’ambition hyperbolique lorsque la richesse numérique, le contrôle des actifs et le compromis moral ont commencé à accélérer vers la société d’aujourd’hui, et vers les conséquences qui se profilent désormais.",
         creator_desc: "L’auteur et architecte de la saga possède une expérience en affaires, en fusions et acquisitions, en finance mondiale et en enseignement, détient un MBA de UCLA, et est comptable professionnel agréé (CPA), apportant à l’histoire comme au projet lui-même profondeur, réalisme et un point de vue distinctif. Il conjugue vision créative et rigueur stratégique, façonnant le projet pour qu’il résonne auprès du public tout en servant les intérêts de ses principaux partenaires.",
         standalone_ip: "Créée par Dominik Mario Pigeon en tant que propriété intellectuelle originale et autonome, La Nouvelle Famille Drago est conçue comme une saga criminelle de grande envergure, déclinée sur plusieurs plateformes.",
@@ -2416,7 +2375,7 @@
 
   <div class="ndf-legal-footer" role="contentinfo" aria-label="Trademark notice">
     <span class="ndf-locale-en"><span lang="en">THE DUALITY OF THE CRIMINAL MIND<sup class="ndf-mark-symbol">™</sup> and HYPERBOLIC SOCIETY<sup class="ndf-mark-symbol">™</sup> are trademarks of NDF5 Productions Inc.</span></span>
-    <span class="ndf-locale-fr"><span lang="en">THE DUALITY OF THE CRIMINAL MIND<sup class="ndf-mark-symbol">MC</sup> et HYPERBOLIC SOCIETY<sup class="ndf-mark-symbol">MC</sup></span> sont des marques de commerce de NDF5 Productions Inc.</span>
+    <span class="ndf-locale-fr"><span lang="fr">LA DUALITÉ DE L’ESPRIT CRIMINEL<sup class="ndf-mark-symbol">MC</sup> et LA SOCIÉTÉ HYPERBOLIQUE<sup class="ndf-mark-symbol">MC</sup> sont des marques de commerce de NDF5 Productions Inc.</span></span>
   </div>
   <script src="assets/ndf-trademark.js"></script>
 </body>

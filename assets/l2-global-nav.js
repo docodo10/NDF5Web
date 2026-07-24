@@ -1,6 +1,6 @@
 (() => {
   const sections = [
-    ['saga','The Saga','La Saga'], ['story','Story','Histoire'],
+    ['saga','SAGA','SAGA'], ['story','STORY','HISTOIRE'],
     ['locations','The Drago World','Le monde des Drago'], ['characters','Characters','Personnages'],
     ['timeline','Timeline','Chronologie'], ['production','Production','Production'],
     ['business','Business & Finance','Affaires et finance'], ['talent','Talent & Representatives','Talents et représentants'],
@@ -27,7 +27,7 @@
     'creator-l2.html':'creator', 'vault-l2.html':'business'
   };
 
-  const pageName = location.pathname.split('/').pop().toLowerCase();
+  const pageName = location.pathname.split('/').pop().toLowerCase().replace(/\.fr\.html$/, '.html');
   const currentLang = () => (new URLSearchParams(location.search).get('lang') || localStorage.getItem('ndf_lang') || document.documentElement.lang || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en';
   const withLang = path => {
     const [base, anchor] = path.split('#');

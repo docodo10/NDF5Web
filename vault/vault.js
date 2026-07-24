@@ -62,12 +62,12 @@
     }
   };
 
-  let currentLang = "en";
+  let currentLang = /\.fr\.html$/i.test(window.location.pathname) ? "fr" : "en";
 
   function $(id){ return document.getElementById(id); }
 
   function applyI18n(){
-    document.documentElement.lang = currentLang;
+    document.documentElement.lang = currentLang === "fr" ? "fr-CA" : "en-CA";
     const label = $("langLabel");
     if (label) label.textContent = currentLang === "en" ? "FR" : "EN";
 

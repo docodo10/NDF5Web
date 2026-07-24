@@ -2,6 +2,7 @@
 <html lang="fr-CA" class="scroll-smooth">
 <head>
   <meta name="ndf-route-locale" content="fr">
+  <script data-ndf-locale-bootstrap>try{localStorage.setItem('ndf_lang',/\.fr\.html$/i.test(location.pathname)?'fr':'en')}catch(_){}</script>
   <link rel="canonical" href="https://www.ndf5.com/locations-L2-assets/Locations-L2.fr.html">
   <link rel="alternate" hreflang="en-CA" href="https://www.ndf5.com/locations-L2-assets/Locations-L2.html">
   <link rel="alternate" hreflang="fr-CA" href="https://www.ndf5.com/locations-L2-assets/Locations-L2.fr.html">
@@ -70,13 +71,18 @@
 <body class="font-sans antialiased overflow-x-hidden">
   <header class="sticky top-0 z-50 border-b border-white/10 bg-ndf-deep/90 backdrop-blur-xl">
     <div class="max-w-7xl mx-auto h-20 px-5 md:px-8 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3 min-w-0">
-        <a id="backLink" href="../index.html?lang=en#locations" class="inline-flex items-center gap-2 px-3 py-2 border border-white/15 hover:bg-white hover:text-ndf-deep transition" aria-label="Back to World section">
-          <i data-lucide="arrow-left" class="w-4 h-4"></i><span class="hidden sm:inline text-xs font-mono uppercase tracking-widest" data-i18n="back">Back</span>
+      <div class="flex items-center gap-4 min-w-0">
+        <a href="../index.html?lang=en" class="shrink-0" aria-label="Return to the top of the Home Page">
+          <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png" alt="NDF5 Productions" class="h-11 md:h-14 w-auto block object-contain" decoding="async">
         </a>
-        <span class="hidden md:inline text-xs font-mono uppercase tracking-[.25em] text-white/55" data-i18n="page_label">World</span>
+        <div class="hidden sm:flex items-center gap-3">
+          <a id="backLink" href="../index.html?lang=en#locations" class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/70 hover:text-white transition" aria-label="Back to World section">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i><span data-i18n="back">Back</span>
+          </a>
+          <span class="text-white/30">/</span>
+          <span class="text-xs font-mono uppercase tracking-[.25em] text-white/55" data-i18n="page_label">World</span>
+        </div>
       </div>
-      <img src="https://raw.githubusercontent.com/docodo10/NDF5Web/main/assets/home/Logo_NDF5_Red_png_noline.png" alt="NDF5 Productions" class="h-11 w-auto object-contain" decoding="async">
       <div class="flex items-center gap-2">
         <button type="button" onclick="toggleLang()" class="px-3 py-2 border border-white/20 text-xs font-mono font-semibold uppercase tracking-widest hover:bg-white hover:text-ndf-deep"><span id="lang-btn">FR</span></button>
         <a id="mainLink" href="../index.html?lang=en" class="inline-flex items-center gap-2 px-3 py-2 bg-ndf-gold text-ndf-deep hover:bg-white transition">
@@ -270,7 +276,7 @@
         studies_k:'Selected Production Studies', studies_h:'Evidence of production planning', studies_p:'Selected preliminary studio set studies — intentionally obscured to protect confidential production planning.', plan1:'Dimansion — supplied frosted production study', plan2:'The Grande Paolo — supplied frosted production study', next_k:'Continue Exploring', next_h:'The world serves story, character, and production.', next_story:'Story', next_story_sub:'Return to the premise', next_char:'Characters', next_char_sub:'Meet the ensemble', next_prod:'Production', next_prod_sub:'See the execution logic', next_time:'Timeline', next_time_sub:'Follow the rollout', footer:'For industry presentation purposes.'
       },
       fr: {
-        back:'Retour', page_label:'Univers', main:'Accueil', hero_kicker:'Univers et lieux', hero_title:'Le monde des Drago', hero_intro:'Des environnements fictifs originaux définissent le monde Drago — d’un sanctuaire privé des Caraïbes au domaine familial de Santa Barbara et à son bastion new-yorkais.', start:'Commencer l’exploration', back_world:'Retour à la section Univers', metric1_k:'Propriétés signatures', metric1_v:'4 environnements principaux', metric2_k:'Territoires du récit', metric2_v:'6 univers récurrents', metric3_k:'Stratégie d’écran', metric3_v:'Production hybride', disclosure:'Visualisations cinématographiques originales de lieux fictifs de NDF. Les environnements finaux à l’écran devraient combiner décors pratiques, direction artistique, production virtuelle, images de synthèse et effets visuels.', world_framework:"Le monde des Drago se déploie dans l’univers <span class=\"ndf-mark\" lang=\"en\">Hyperbolic <span class=\"ndf-mark-tail\">Society<sup class=\"ndf-mark-symbol\">MC</sup></span></span>, le cadre sociétal distinctif de NDF5 pour un environnement où la technologie, la finance et l’influence accélèrent la richesse, l’ambition et le pouvoir au-delà des limites traditionnelles.",
+        back:'Retour', page_label:'Univers', main:'Accueil', hero_kicker:'Univers et lieux', hero_title:'Le monde des Drago', hero_intro:'Des environnements fictifs originaux définissent le monde Drago — d’un sanctuaire privé des Caraïbes au domaine familial de Santa Barbara et à son bastion new-yorkais.', start:'Commencer l’exploration', back_world:'Retour à la section Univers', metric1_k:'Propriétés signatures', metric1_v:'4 environnements principaux', metric2_k:'Territoires du récit', metric2_v:'6 univers récurrents', metric3_k:'Stratégie d’écran', metric3_v:'Production hybride', disclosure:'Visualisations cinématographiques originales de lieux fictifs de NDF. Les environnements finaux à l’écran devraient combiner décors pratiques, direction artistique, production virtuelle, images de synthèse et effets visuels.', world_framework:"Le monde des Drago se déploie dans l’univers <span class=\"ndf-mark\" lang=\"fr\">La Société <span class=\"ndf-mark-tail\">Hyperbolique<sup class=\"ndf-mark-symbol\">MC</sup></span></span>, le cadre sociétal distinctif de NDF5 pour un environnement où la technologie, la finance et l’influence accélèrent la richesse, l’ambition et le pouvoir au-delà des limites traditionnelles.",
         toc:'Sur cette page', toc_overview:'Aperçu', toc_properties:'Propriétés signatures', toc_territories:'Territoires du récit', toc_screen:'De la vision à l’écran', toc_studies:'Études sélectionnées', toc_next:'Étapes suivantes', rail_note:'Une propriété intellectuelle architecturale et visuelle pensée pour porter le récit, les personnages et des fonctions dramatiques récurrentes.',
         sig_k:'Propriétés signatures', sig_h:'Quatre environnements. Un monde reconnaissable.', sig_p:'L’Île Drago, Dimansion, The Grande Paolo et le Château Drago de New York sont des moteurs dramatiques récurrents. Dimansion et TGP se trouvent dans le vaste domaine Drago à Santa Barbara.', estate_short:'Le domaine',
         tdi_h:'L’Île Drago', tdi_p:'Le rassemblement annuel des Caraïbes : réseautage d’élite, plaisir, secret, surveillance, influence politique, ententes, échanges clandestins et danger dissimulé sous le paradis.', estate_k:'Santa Barbara', estate_h:'Le domaine Drago', estate_p:'L’environnement-cadre qui relie Dimansion, The Grande Paolo, les forêts, jardins, routes privées, zones de sécurité et la vie émotionnelle et opérationnelle de la famille.', home_k:'Le cœur émotionnel', dim_p:'Le centre domestique de la saga : romance, petits-déjeuners, repas de famille, Noël, convalescence privée, vie du personnel, surveillance, secrets et conflits internes.', command_k:'Le centre de commandement', tgp_p:'Le cerveau stratégique du domaine, où la famille gère finance, droit, crise, débats éthiques, représailles, renseignement et tensions de succession.', nydc_h:'Château Drago de New York', nydc_p:'La forteresse new-yorkaise et la base de pouvoir de l’Ancien Monde de la famille, reliant autorité criminelle, politique, pression policière, coffres privés, image et confrontation.',
@@ -314,8 +320,8 @@
   </script>
 
   <div class="ndf-legal-footer" role="contentinfo" aria-label="Trademark notice">
-    <span class="ndf-locale-en"><span lang="en">THE DUALITY OF THE CRIMINAL MIND<sup class="ndf-mark-symbol">™</sup> and HYPERBOLIC SOCIETY<sup class="ndf-mark-symbol">™</sup> are trademarks of NDF5 Productions Inc.</span></span>
-    <span class="ndf-locale-fr"><span lang="en">THE DUALITY OF THE CRIMINAL MIND<sup class="ndf-mark-symbol">MC</sup> et HYPERBOLIC SOCIETY<sup class="ndf-mark-symbol">MC</sup></span> sont des marques de commerce de NDF5 Productions Inc.</span>
+    <span class="ndf-locale-en"><span lang="en">LA DUALITÉ DE L’ESPRIT CRIMINEL<sup class="ndf-mark-symbol">™</sup> and LA SOCIÉTÉ HYPERBOLIQUE<sup class="ndf-mark-symbol">™</sup> are trademarks of NDF5 Productions Inc.</span></span>
+    <span class="ndf-locale-fr"><span lang="fr">LA DUALITÉ DE L’ESPRIT CRIMINEL<sup class="ndf-mark-symbol">MC</sup> et LA SOCIÉTÉ HYPERBOLIQUE<sup class="ndf-mark-symbol">MC</sup> sont des marques de commerce de NDF5 Productions Inc.</span></span>
   </div>
   <script src="../assets/ndf-trademark.js"></script>
 </body>
