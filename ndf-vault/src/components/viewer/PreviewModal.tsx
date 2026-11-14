@@ -171,9 +171,12 @@ export function PreviewModal() {
   useLayoutEffect(() => {
     if (!canvasEl || !fit) return;
     const apply = () => {
-      const pad = canvasEl.clientWidth < 640 ? 24 : 64;
+      // Read the real gutter instead of assuming one: it follows the viewport, not the canvas width.
+      const inner = canvasEl.firstElementChild;
+      const cs = inner ? getComputedStyle(inner) : null;
+      const pad = (cs ? parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) : 48) + 2;
       const byWidth = (canvasEl.clientWidth - pad) / PAGE_W;
-      const byHeight = (canvasEl.clientHeight - 48) / PAGE_H;
+      const byHeight = (canvasEl.clientHeight - 50) / PAGE_H;
       const next = fit === "width" ? byWidth : Math.min(byWidth, byHeight);
       setZoom(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, next)));
     };
@@ -247,7 +250,7 @@ export function PreviewModal() {
               <ChevronRight className="hidden size-4 shrink-0 text-neutral-400 md:block" strokeWidth={1.75} />
               <Dialog.Title className="truncate font-medium text-ink">{fullName(file)}</Dialog.Title>
             </nav>
-            <IconButton icon={fullscreen ? Minimize2 : Maximize2} label={fullscreen ? "Exit full screen" : "Full screen"} onClick={() => setFullscreen((f) => !f)} className="hidden md:inline-flex" />
+            <IconButton icon={fullscreen ? Minimize2 : Maximize2} label={fullscreen ? "Exit full screen" : "Full screen"} onClick={() => setFullscreen((f) => !f)} className="max-md:hidden" />
             <IconButton icon={X} label="Close preview" onClick={v.closePreview} />
           </div>
 
@@ -273,7 +276,7 @@ export function PreviewModal() {
             </div>
             <div className="ml-auto flex items-center gap-1">
               <IconButton icon={Search} label="Search in document" variant="ghost" size="sm" onClick={() => v.notReady("Search inside documents")} />
-              <IconButton icon={Printer} label="Print" variant="ghost" size="sm" onClick={() => v.notReady("Print")} className="hidden sm:inline-flex" />
+              <IconButton icon={Printer} label="Print" variant="ghost" size="sm" onClick={() => v.notReady("Print")} className="max-sm:hidden" />
               <IconButton icon={Download} label="Download" variant="ghost" size="sm" onClick={() => v.notReady("Download")} />
             </div>
           </div>

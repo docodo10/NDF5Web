@@ -90,7 +90,7 @@ type Seed = [
 
 // flags: f = favorite, p = pinned, x = private, s = shared with me, a = archived
 const SEEDS: Seed[] = [
-  ["FS1 Film Part 1 Screenplay", "pdf", "screenplays", "pb1", "u-story", "2026-11-12", "In Review", 1420, 6, ["screenplay", "film", "FS1"], "fp"],
+  ["FS1 Film Part 1 Screenplay", "pdf", "screenplays", "pb1", "u-story", "2026-11-12", "In Review", 1420, 6, ["screenplay", "film", "FS1"], "f"],
   ["FS1 Film Part 2 Screenplay", "pdf", "screenplays", "pb1", "u-story", "2026-11-10", "Draft", 1380, 6, ["screenplay", "film", "FS1"]],
   ["FS1 Series Episode 101 Script", "docx", "screenplays", "pb1", "u-story", "2026-11-09", "Draft", 412, 4, ["script", "series", "FS1"], "s"],
   ["FS1 Series Episode 102 Script", "docx", "screenplays", "pb1", "u-story", "2026-11-06", "Draft", 398, 4, ["script", "series", "FS1"], "s"],
@@ -131,6 +131,13 @@ const SEEDS: Seed[] = [
   ["Superseded Budget Draft", "xlsx", "archives", "pb1", "u-fin", "2026-05-20", "Archived", 502, 3, ["budget"], "a"],
 ];
 
+/** Sample files were "added" a few days before their last change, so the two dates differ. */
+function daysBefore(date: string, n: number): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
 export const FILES: VaultFile[] = SEEDS.map((s, i) => {
   const [name, ext, folderId, projectId, ownerId, modified, status, sizeKB, pages, tags, flags = ""] = s;
   const hour = 9 + (i % 8);
@@ -143,7 +150,7 @@ export const FILES: VaultFile[] = SEEDS.map((s, i) => {
     folderId,
     projectId,
     ownerId,
-    createdAt: `${modified}T0${(i % 4) + 8}:15:00`,
+    createdAt: `${daysBefore(modified, (i * 5) % 23)}T0${(i % 4) + 8}:15:00`,
     modifiedAt: `${modified}T${String(hour).padStart(2, "0")}:${String((i * 7) % 60).padStart(2, "0")}:00`,
     status,
     tags,

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Third-party reference screenshots: kept local, not published with the repository
+/docs/reference/

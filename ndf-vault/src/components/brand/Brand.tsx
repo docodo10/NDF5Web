@@ -32,8 +32,8 @@ export function VaultLockup() {
 /** Very faint logo behind the main content area. */
 export function AppWatermark() {
   return (
-    <div aria-hidden className="pointer-events-none absolute bottom-6 right-6 z-0 select-none text-ink opacity-[0.035]">
-      <Ndf5Logo className="h-auto w-[min(440px,46vw)]" title="" />
+    <div aria-hidden className="pointer-events-none absolute bottom-5 right-7 z-0 select-none text-ink opacity-[0.035]">
+      <Ndf5Logo className="h-auto w-[min(230px,34vw)]" title="" />
     </div>
   );
 }

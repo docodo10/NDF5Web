@@ -12,6 +12,8 @@ Construire **NDF Vault** (« The New Drago Family — Production & Document Mana
 | `image-2-preview-modal.webp` | Modal de preview de document (vignettes, zoom, barre d'outils) |
 | `image-3-dashboard.jpg` | Dashboard principal et sidebar (référence visuelle principale) |
 
+Ces trois captures viennent d'applications tierces : elles sont ignorées par git (`docs/reference/` dans `.gitignore`) et ne sont donc pas dans le dépôt. Les redemander à l'utilisateur si le dossier est vide.
+
 ## 2. Consignes de l'utilisateur (à respecter)
 
 - **Étape par étape.** Finir **toute l'interface d'abord**, la faire valider, et seulement ensuite coder les grosses fonctions (upload, IndexedDB, PDF.js, Supabase).
@@ -25,43 +27,43 @@ Construire **NDF Vault** (« The New Drago Family — Production & Document Mana
 
 ## 3. État actuel
 
-`npx tsc --noEmit` passe sans erreur. **Rien n'a encore été compilé ni ouvert dans un navigateur** : aucun `next build`, aucun `next dev`, aucune capture d'écran. Tout ce qui suit est écrit mais non vérifié visuellement.
+**L'étape « interface » est terminée et vérifiée, en attente de validation par l'utilisateur.** `npx tsc --noEmit` et `npm run build` passent. L'application a été lancée (dev et build de production), capturée à 1280, 1440, 1920, 820 (tablette) et 390 px (mobile), comparée aux trois références, et chaque action a été exercée dans un vrai navigateur sans erreur console.
 
-### Fait (écrit, typé)
+### Fait
 
 | Fichier | Contenu |
 |---|---|
 | `src/lib/types.ts` | Types `VaultFile`, `Folder`, `Project`, `User`, `ActivityItem`, `Route`, statuts |
 | `src/lib/sample-data.ts` | 39 fichiers d'exemple, arborescence NDF SAGA complète, projets PB1/PB2, 5 utilisateurs (des services, pas des personnes), activité |
 | `src/lib/format.ts` | Dates, tailles, libellés de type, chemin de dossier, descendants |
-| `src/lib/store.tsx` | `VaultProvider` + `useVault()` : état en mémoire, routage par hash, toasts, dialogues, preview, toutes les mutations |
-| `src/components/brand/logo-paths.ts` | Logo NDF5 vectorisé (généré, ne pas éditer à la main) |
-| `src/components/brand/Brand.tsx` | `Ndf5Mark`, `Ndf5Logo`, `VaultLockup`, `AppWatermark`, `PageWatermark` |
+| `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory` (catégorie d'un fichier dans un projet, déduite de son dossier) |
+| `src/lib/store.tsx` | `VaultProvider` + `useVault()` : état en mémoire, routage par hash (lu dès le premier rendu), toasts, dialogues, preview, toutes les mutations |
+| `src/components/brand/` | Logo NDF5 vectorisé, `VaultLockup`, `AppWatermark`, `PageWatermark` |
 | `src/components/ui.tsx` | `Button`, `IconButton`, `Checkbox`, `Avatar`, `StatusBadge`, `Chip`, `SegmentedTabs`, `TextTabs`, `Kbd`, `PageHeader`, `EmptyState`, `SampleNotice` |
-| `src/components/Shell.tsx` | Sidebar (10 entrées + arbre de dossiers repliable), topbar (recherche, cloche, menu compte), tiroir mobile, watermark |
-| `src/components/files/FileTable.tsx` | Table (variantes `full` 8 colonnes et `compact`), tri, pagination, sélection, barre d'actions groupées, `RowMenu` (11 actions), `FileIcon` |
-| `src/components/files/Explorer.tsx` | `useFileFilters`, `fileMatches`, `FilterButton` (projet, statut, date), `SearchField`, `ExplorerToolbar`, `KIND_GROUPS` |
-| `src/components/files/menu-styles.ts` | Classes partagées des menus et popovers |
+| `src/components/Shell.tsx` | Sidebar (10 entrées + arbre de dossiers repliable), topbar, tiroir mobile, watermark |
+| `src/components/files/FileTable.tsx` | Table `full` / `compact`, tri, pagination (`footer={false}` pour la masquer), sélection, barre d'actions groupées, `RowMenu`, mode `trash` (fichiers supprimés : Preview + Restore seulement) |
+| `src/components/files/Explorer.tsx` | `useFileFilters`, `fileMatches`, `FilterButton`, `SearchField`, `ExplorerToolbar`, `KIND_GROUPS` |
 | `src/components/Dialogs.tsx` | Rename, Edit Details, Move, Share, Version History, Delete, New Folder, New Project, Upload (interface seulement), `ToastHost`, `SwitchRow` |
-| `src/components/viewer/PreviewModal.tsx` | Modal de preview : fil d'Ariane, fichier précédent/suivant, plein écran, vignettes avec curseur de taille, zoom, fit width/page, navigation de pages, pages d'exemple avec watermark |
-| `src/components/CommandPalette.tsx` | Recherche globale ⌘K / Ctrl+K / « / » avec navigation clavier |
-| `src/app/globals.css`, `src/app/layout.tsx` | Tokens Tailwind v4, police Inter locale, métadonnées |
+| `src/components/viewer/PreviewModal.tsx` | Modal de preview : fil d'Ariane, fichier précédent/suivant, plein écran, vignettes, zoom, fit width/page, navigation de pages, pages d'exemple avec watermark |
+| `src/components/CommandPalette.tsx` | Recherche globale ⌘K / Ctrl+K / « / » |
+| `src/app/page.tsx`, `src/app/VaultApp.tsx` | Racine client : rien d'autre qu'un écran d'attente n'est rendu au prerender (`useSyncExternalStore`), puis `VaultProvider` → `Shell` → vue selon `route.view` |
+| `src/views/Home.tsx` | Accueil (image 3) : 4 cartes d'action, filtres par type, recherche, fichiers épinglés, onglets de portée, table compacte |
+| `src/views/FilesView.tsx` | All Files, Private, Shared With Me, Favorites, Recent, Archived (avec l'onglet **Deleted** et la restauration) |
+| `src/views/FolderView.tsx` | Fil d'Ariane, sous-dossiers en cartes, « This folder / Including subfolders », table |
+| `src/views/ProjectsView.tsx`, `src/views/ProjectView.tsx` | Cartes de projets ; espace projet avec Overview, Files, Financial Documents, Production, Legal, Team, Activity |
+| `src/views/ActivityView.tsx`, `src/views/SettingsView.tsx` | Activité groupée par jour ; réglages (watermark, stockage, état des étapes) |
+| `src/views/shared.tsx` | `kindTabs`, `Breadcrumbs`, `UploadButton`, `AddFileMenu`, `SectionTitle`, `ActivityList` |
 
-### Pas encore fait (interface, étape en cours)
+### Choix faits pendant la vérification (à confirmer par l'utilisateur)
 
-1. **`src/app/page.tsx` est encore la page par défaut de create-next-app** (elle référence des SVG supprimés de `public/`). À remplacer.
-2. **`src/app/VaultApp.tsx`** (composant client racine) : `VaultProvider` → `Shell` → vue selon `route.view`, plus `<Dialogs />`, `<ToastHost />`, `<PreviewModal />`, `<CommandPalette />`. Prévoir un garde « monté » (`useEffect` → `setReady(true)`) pour ne rien rendre au prerender : le routage lit `window.location.hash` et les filtres de date utilisent `new Date()`.
-3. **Les vues dans `src/views/`** — aucune n'existe :
-   - `Home.tsx` (image 3) : titre « Welcome to NDF Vault », `SampleNotice`, 4 cartes d'action (New Document, New Spreadsheet, New Folder, New Project), section « File explorer » avec filtres par type (`KIND_GROUPS` dans un `SegmentedTabs`) + recherche + Filters, 3 cartes de fichiers épinglés (`pinned`), onglets de portée (`TextTabs` : Recent files, Recently modified, Shared with me, All files), puis `<FileTable variant="compact" />`.
-   - `FilesView.tsx` (image 1), réutilisable pour All Files, Private, Shared With Me, Favorites, Recent, Archived : `PageHeader` avec « Upload File » (outline) et « Add File » (noir, menu : New document, New spreadsheet, New folder), `SegmentedTabs` par type, `TextTabs` View All / My Files / Shared Files, `ExplorerToolbar`, `<FileTable />`.
-   - Archived : ajouter un second onglet **Deleted** (fichiers `deleted: true`) avec restauration — le dialogue de suppression y renvoie déjà.
-   - `FolderView.tsx` : fil d'Ariane (`folderPath`), sous-dossiers en cartes, table des fichiers du dossier.
-   - `ProjectsView.tsx` : cartes PB1 / PB2, bouton New Project.
-   - `ProjectView.tsx` : `SegmentedTabs` Overview, Files, Financial Documents, Production, Legal, Team, Activity. Catégorie d'un fichier déduite de son dossier racine : `budgets`, `financing`, `plans` → financier ; `screenplays`, `scheduling`, `cast`, dossiers PB/FS → production ; `legal` → légal.
-   - `ActivityView.tsx` : liste groupée par jour.
-   - `SettingsView.tsx` : interrupteur du watermark (`watermark` / `setWatermark`, avec `SwitchRow`), état du stockage (« Local demo, in memory »), état des étapes.
-4. **`next.config.ts`** : encore celui du scaffold (voir section 7).
-5. **Vérification visuelle** : lancer, capturer à 1440×900 et en mobile, comparer aux trois références, corriger les écarts.
+- **Colonnes de la table complète selon la largeur** : les 8 colonnes à partir de 1420 px ; à 1280 px, « File Type » passe dans la deuxième ligne du nom (« XLSX · dossier ») pour que les noms restent lisibles ; le bouton « Download file » avec texte apparaît à partir de 1600 px.
+- **Watermark de l'espace de travail** réduit à 230 px (au lieu de 440) : en grand il recouvrait les lignes de la table. Opacité 0,035, désactivable dans Settings.
+- **« Pin to Home »** ajouté au menu trois-points (aucun bouton n'appelait `togglePinned` hors Edit Details) ; 3 fichiers épinglés dans les données d'exemple, comme sur l'image 3.
+- **Premier onglet de type nommé « All Types »** dans les vues de fichiers, pour ne pas avoir deux onglets « View all » superposés.
+
+### Pas encore fait dans l'interface
+
+- Renommer ou déplacer un **dossier**, modifier ou archiver un **projet** : le store n'a pas encore ces mutations, donc aucun bouton n'est affiché.
 
 ### Phase 2 — seulement après validation de l'interface
 
@@ -108,9 +110,10 @@ Note de fidélité : on reprend le langage visuel (layout, densité, composants)
 - **Next.js 16.4.6 n'est pas le Next.js habituel.** Lire `AGENTS.md` et le guide concerné dans `node_modules/next/dist/docs/` avant d'écrire du code Next.
 - `next.config.ts` (scaffold) active `cacheComponents` et `partialPrefetching`. Lire l'heure courante ou `window` pendant le prerender peut échouer : d'où le garde « monté » dans `VaultApp`.
 - Tailwind v4 passe par le loader `@tailwindcss/turbopack` déclaré dans `next.config.ts` ; les tokens sont dans `@theme inline` de `globals.css`, il n'y a pas de `tailwind.config`.
+- **Ne pas combiner `hidden` (ou une autre classe `display`) avec `Button` / `IconButton`** : ils posent déjà `inline-flex`, qui l'emporte. Utiliser `max-sm:hidden`, `max-md:hidden`, ou un `<span>` englobant.
+- Dossiers et projets partagent des identifiants (`pb1`, `pb2`) : préfixer toute clé React qui mélange les deux.
 - `lucide-react` est en v1.x : vérifier qu'une icône existe avant de l'importer (toutes celles déjà utilisées ont été vérifiées).
-- `PreviewModal` : le zoom « fit » dépend d'un `ResizeObserver` sur le canvas ; à vérifier en vrai navigateur, tout comme le suivi de la page courante au défilement.
-- `FileTable` : les colonnes se masquent par breakpoints (`sm`, `md`, `lg`, `xl`, `2xl`). À 1280 px, vérifier que les 8 colonnes tiennent ; le bouton « Download » avec texte n'apparaît qu'à partir de `2xl`.
+- `FileTable` : les seuils de colonnes tiennent compte des 264 px de sidebar (`sm`, `md`, `min-[1140px]`, `xl`, `min-[1420px]`, `min-[1600px]`). Les revoir si la sidebar ou les marges changent.
 - Pour un aperçu statique hébergé (export `output: "export"`), les chemins `/_next/...` sont absolus : prévoir un `assetPrefix` ou un post-traitement.
 
 ## 8. Commandes
@@ -128,12 +131,9 @@ npm run build
 Lis HANDOFF.md en entier, puis docs/brief.txt et les trois images de docs/reference/.
 Lis aussi AGENTS.md et les guides Next concernés dans node_modules/next/dist/docs/.
 
-Continue l'étape « interface » exactement là où elle s'est arrêtée :
-1. Remplace src/app/page.tsx et crée src/app/VaultApp.tsx.
-2. Crée les vues de src/views/ décrites en section 3, en réutilisant les composants existants.
-3. Lance l'app, prends des captures à 1440x900 et en mobile, compare-les aux trois
-   références et corrige les écarts visibles.
+L'interface est terminée. Si l'utilisateur l'a validée, commence la phase 2 dans l'ordre
+de la section 3 (upload réel et glisser-déposer, puis IndexedDB), en branchant tout
+derrière les mutations de src/lib/store.tsx sans toucher aux composants.
 
-Ne code pas encore l'upload, IndexedDB, PDF.js ni Supabase : montre-moi d'abord l'interface.
 Écris-moi l'avancement dans le chat pendant que tu travailles, en français.
 ```

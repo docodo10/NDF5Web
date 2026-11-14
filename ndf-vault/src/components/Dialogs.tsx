@@ -25,6 +25,12 @@ function Modal({ title, description, children, footer, onSubmit, width = 440 }: 
         <Dialog.Overlay className="fixed inset-0 z-[80] animate-fade bg-neutral-900/20 backdrop-blur-[2px]" />
         <Dialog.Content
           aria-describedby={undefined}
+          onOpenAutoFocus={(e) => {
+            // Land on the field to fill in (or the dialog itself), never on the close button.
+            e.preventDefault();
+            const root = e.currentTarget as HTMLElement;
+            (root.querySelector<HTMLElement>("[data-autofocus]") ?? root).focus();
+          }}
           className="fixed left-1/2 top-1/2 z-[81] flex max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-2xl border border-line bg-white shadow-modal focus:outline-none"
           style={{ maxWidth: width }}
         >
@@ -131,7 +137,7 @@ function RenameDialog({ file }: { file: VaultFile }) {
     >
       <Field label="File name">
         <div className="flex items-center gap-2">
-          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} onFocus={(e) => e.target.select()} />
+          <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} onFocus={(e) => e.target.select()} />
           <span className="shrink-0 text-[13px] text-neutral-500">.{file.ext}</span>
         </div>
       </Field>
@@ -393,7 +399,7 @@ function NewFolderDialog({ parentId }: { parentId: string }) {
       }
     >
       <Field label="Folder name">
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Location Scouting" />
+        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Location Scouting" />
       </Field>
       <Field label="Inside">
         <select value={parent} onChange={(e) => setParent(e.target.value)} className={INPUT}>
@@ -434,7 +440,7 @@ function NewProjectDialog() {
       }
     >
       <Field label="Project name">
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Production Blitz Three" />
+        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Production Blitz Three" />
       </Field>
       <div className="grid grid-cols-[120px_1fr] gap-3">
         <Field label="Code">

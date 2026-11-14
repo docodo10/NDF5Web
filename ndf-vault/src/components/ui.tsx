@@ -243,7 +243,7 @@ export function PageHeader({ title, description, actions, eyebrow }: { title: st
         <h1 className="text-[26px] font-semibold leading-8 tracking-[-0.02em] text-ink">{title}</h1>
         {description && <p className="mt-1.5 text-[13.5px] text-neutral-500">{description}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex max-w-full flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }

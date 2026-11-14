@@ -115,8 +115,9 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [folders, setFolders] = useState<Folder[]>(FOLDERS);
   const [projects, setProjects] = useState<Project[]>(PROJECTS);
   const [activity, setActivity] = useState<ActivityItem[]>(ACTIVITY);
-  const [route, setRoute] = useState<Route>({ view: "home" });
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // The provider only mounts in the browser (see VaultApp), so the first render can read the URL.
+  const [route, setRoute] = useState<Route>(() => (typeof window === "undefined" ? { view: "home" } : hashToRoute(window.location.hash)));
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === "undefined" || !window.matchMedia("(max-width: 1023px)").matches);
   const [watermark, setWatermark] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [dialog, openDialog] = useState<DialogState>(null);
@@ -127,8 +128,6 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   // Hash routing: one plain #name per view.
   useEffect(() => {
     const read = () => setRoute(hashToRoute(window.location.hash));
-    read();
-    if (window.matchMedia("(max-width: 1023px)").matches) setSidebarOpen(false);
     window.addEventListener("hashchange", read);
     return () => window.removeEventListener("hashchange", read);
   }, []);

@@ -23,6 +23,8 @@ import {
   History,
   Inbox,
   Pencil,
+  Pin,
+  PinOff,
   Presentation,
   RotateCcw,
   Share2,
@@ -83,19 +85,30 @@ export function RowMenu({ file, listIds, vertical }: { file: VaultFile; listIds:
       </Dropdown.Trigger>
       <Dropdown.Portal>
         <Dropdown.Content align="end" sideOffset={6} collisionPadding={12} className={MENU_CONTENT} onClick={(e) => e.stopPropagation()}>
-          {item(ExternalLink, "Open", () => v.openPreview(file.id, listIds, true))}
-          {item(Eye, "Preview", () => v.openPreview(file.id, listIds))}
-          <Dropdown.Separator className={MENU_SEPARATOR} />
-          {item(Pencil, "Rename", () => v.openDialog({ type: "rename", fileId: file.id }))}
-          {item(SquarePen, "Edit Details", () => v.openDialog({ type: "details", fileId: file.id }))}
-          {item(FolderInput, "Move", () => v.openDialog({ type: "move", fileIds: [file.id] }))}
-          {item(Copy, "Copy", () => v.copyFile(file.id))}
-          {item(Share2, "Share", () => v.openDialog({ type: "share", fileId: file.id }))}
-          {item(Download, "Download", () => v.notReady("Download"))}
-          {item(History, "Version History", () => v.openDialog({ type: "versions", fileId: file.id }))}
-          <Dropdown.Separator className={MENU_SEPARATOR} />
-          {file.archived ? item(RotateCcw, "Restore", () => v.restoreFiles([file.id])) : item(Archive, "Archive", () => v.archiveFiles([file.id]))}
-          {item(Trash2, "Delete", () => v.openDialog({ type: "delete", fileIds: [file.id] }), true)}
+          {file.deleted ? (
+            <>
+              {item(Eye, "Preview", () => v.openPreview(file.id, listIds))}
+              <Dropdown.Separator className={MENU_SEPARATOR} />
+              {item(RotateCcw, "Restore", () => v.restoreFiles([file.id]))}
+            </>
+          ) : (
+            <>
+              {item(ExternalLink, "Open", () => v.openPreview(file.id, listIds, true))}
+              {item(Eye, "Preview", () => v.openPreview(file.id, listIds))}
+              {!file.archived && (file.pinned ? item(PinOff, "Unpin from Home", () => v.togglePinned(file.id)) : item(Pin, "Pin to Home", () => v.togglePinned(file.id)))}
+              <Dropdown.Separator className={MENU_SEPARATOR} />
+              {item(Pencil, "Rename", () => v.openDialog({ type: "rename", fileId: file.id }))}
+              {item(SquarePen, "Edit Details", () => v.openDialog({ type: "details", fileId: file.id }))}
+              {item(FolderInput, "Move", () => v.openDialog({ type: "move", fileIds: [file.id] }))}
+              {item(Copy, "Copy", () => v.copyFile(file.id))}
+              {item(Share2, "Share", () => v.openDialog({ type: "share", fileId: file.id }))}
+              {item(Download, "Download", () => v.notReady("Download"))}
+              {item(History, "Version History", () => v.openDialog({ type: "versions", fileId: file.id }))}
+              <Dropdown.Separator className={MENU_SEPARATOR} />
+              {file.archived ? item(RotateCcw, "Restore", () => v.restoreFiles([file.id])) : item(Archive, "Archive", () => v.archiveFiles([file.id]))}
+              {item(Trash2, "Delete", () => v.openDialog({ type: "delete", fileIds: [file.id] }), true)}
+            </>
+          )}
         </Dropdown.Content>
       </Dropdown.Portal>
     </Dropdown.Root>
@@ -177,7 +190,7 @@ function Pagination({ page, pages, total, from, to, rows, rowOptions, setPage, s
 
 /* ----------------------------------------------------------------- Bulk bar */
 
-function BulkBar({ ids, clear }: { ids: string[]; clear: () => void }) {
+function BulkBar({ ids, clear, trash }: { ids: string[]; clear: () => void; trash?: boolean }) {
   const v = useVault();
   const act = (fn: () => void) => () => {
     fn();
@@ -189,34 +202,42 @@ function BulkBar({ ids, clear }: { ids: string[]; clear: () => void }) {
       <div role="toolbar" aria-label="Bulk actions" className="pointer-events-auto flex max-w-full animate-rise items-center gap-1 overflow-x-auto rounded-xl bg-ink p-1.5 pl-4 shadow-modal">
         <span className="mr-2 whitespace-nowrap text-[12.5px] font-medium text-white">{ids.length} selected</span>
         <span className="mr-1 h-5 w-px bg-white/15" />
-        <button type="button" className={btn} onClick={() => v.notReady("Bulk download")}>
-          <Download className="size-4" strokeWidth={1.75} /> Download
-        </button>
-        <button type="button" className={btn} onClick={() => v.openDialog({ type: "move", fileIds: ids })}>
-          <FolderInput className="size-4" strokeWidth={1.75} /> Move
-        </button>
-        <Dropdown.Root>
-          <Dropdown.Trigger asChild>
-            <button type="button" className={btn}>
-              Status <ChevronDown className="size-3.5" strokeWidth={2} />
+        {trash ? (
+          <button type="button" className={btn} onClick={act(() => v.restoreFiles(ids))}>
+            <RotateCcw className="size-4" strokeWidth={1.75} /> Restore
+          </button>
+        ) : (
+          <>
+            <button type="button" className={btn} onClick={() => v.notReady("Bulk download")}>
+              <Download className="size-4" strokeWidth={1.75} /> Download
             </button>
-          </Dropdown.Trigger>
-          <Dropdown.Portal>
-            <Dropdown.Content side="top" sideOffset={10} className={MENU_CONTENT}>
-              {STATUSES.map((s) => (
-                <Dropdown.Item key={s} className={MENU_ITEM} onSelect={act(() => v.setStatus(ids, s))}>
-                  {s}
-                </Dropdown.Item>
-              ))}
-            </Dropdown.Content>
-          </Dropdown.Portal>
-        </Dropdown.Root>
-        <button type="button" className={btn} onClick={act(() => v.archiveFiles(ids))}>
-          <Archive className="size-4" strokeWidth={1.75} /> Archive
-        </button>
-        <button type="button" className={btn} onClick={() => v.openDialog({ type: "delete", fileIds: ids })}>
-          <Trash2 className="size-4" strokeWidth={1.75} /> Delete
-        </button>
+            <button type="button" className={btn} onClick={() => v.openDialog({ type: "move", fileIds: ids })}>
+              <FolderInput className="size-4" strokeWidth={1.75} /> Move
+            </button>
+            <Dropdown.Root>
+              <Dropdown.Trigger asChild>
+                <button type="button" className={btn}>
+                  Status <ChevronDown className="size-3.5" strokeWidth={2} />
+                </button>
+              </Dropdown.Trigger>
+              <Dropdown.Portal>
+                <Dropdown.Content side="top" sideOffset={10} className={MENU_CONTENT}>
+                  {STATUSES.map((s) => (
+                    <Dropdown.Item key={s} className={MENU_ITEM} onSelect={act(() => v.setStatus(ids, s))}>
+                      {s}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown.Content>
+              </Dropdown.Portal>
+            </Dropdown.Root>
+            <button type="button" className={btn} onClick={act(() => v.archiveFiles(ids))}>
+              <Archive className="size-4" strokeWidth={1.75} /> Archive
+            </button>
+            <button type="button" className={btn} onClick={() => v.openDialog({ type: "delete", fileIds: ids })}>
+              <Trash2 className="size-4" strokeWidth={1.75} /> Delete
+            </button>
+          </>
+        )}
         <button type="button" aria-label="Clear selection" className={clsx(btn, "ml-1 !px-2")} onClick={clear}>
           <X className="size-4" strokeWidth={1.75} />
         </button>
@@ -237,18 +258,18 @@ interface Column {
 
 const FULL_COLUMNS: Column[] = [
   { key: "name", label: "File Name", className: "" },
-  { key: "kind", label: "File Type", className: "hidden w-[108px] lg:table-cell" },
+  { key: "kind", label: "File Type", className: "hidden w-[104px] min-[1420px]:table-cell" },
   { key: "project", label: "Project", className: "hidden w-[84px] md:table-cell" },
-  { key: "owner", label: "Uploaded By", className: "hidden w-[178px] xl:table-cell" },
+  { key: "owner", label: "Uploaded By", className: "hidden w-[170px] xl:table-cell" },
   { key: "modifiedAt", label: "Last Modified", className: "hidden w-[124px] md:table-cell" },
   { key: "status", label: "Status", className: "hidden w-[104px] sm:table-cell" },
-  { key: "size", label: "File Size", className: "hidden w-[92px] lg:table-cell" },
+  { key: "size", label: "File Size", className: "hidden w-[92px] min-[1140px]:table-cell" },
 ];
 
 const COMPACT_COLUMNS: Column[] = [
   { key: "name", label: "File name", className: "" },
   { key: "project", label: "Project", className: "hidden w-[110px] md:table-cell" },
-  { key: "owner", label: "Uploaded by", className: "hidden w-[220px] lg:table-cell" },
+  { key: "owner", label: "Uploaded by", className: "hidden w-[220px] xl:table-cell" },
   { key: "modifiedAt", label: "Last modified", className: "hidden w-[140px] sm:table-cell" },
 ];
 
@@ -256,12 +277,18 @@ export function FileTable({
   files,
   variant = "full",
   defaultRows,
+  trash,
+  footer = true,
   emptyTitle = "No files here yet",
   emptyHint = "Files that match this view will appear here.",
 }: {
   files: VaultFile[];
   variant?: "full" | "compact";
   defaultRows?: number;
+  /** Deleted-files list: rows only offer Preview and Restore. */
+  trash?: boolean;
+  /** Set to false to hide pagination (short summary lists). */
+  footer?: boolean;
   emptyTitle?: string;
   emptyHint?: string;
 }) {
@@ -366,7 +393,7 @@ export function FileTable({
                   </th>
                 );
               })}
-              <th scope="col" className={clsx(th, compact ? "w-12" : "w-[52px] sm:w-[100px] 2xl:w-[178px]", "pr-4 text-right")}>
+              <th scope="col" className={clsx(th, compact ? "w-12" : trash ? "w-[52px]" : "w-[52px] sm:w-[96px] min-[1600px]:w-[190px]", "pr-4 text-right")}>
                 <span className={compact ? "sr-only" : ""}>Actions</span>
               </th>
             </tr>
@@ -388,13 +415,14 @@ export function FileTable({
                     <div className="flex items-center gap-3">
                       <FileIcon kind={f.kind} />
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               v.openPreview(f.id, listIds);
                             }}
+                            title={fullName(f)}
                             className="truncate text-left text-[13.5px] font-medium text-ink underline-offset-2 hover:underline"
                           >
                             {f.name}
@@ -408,8 +436,9 @@ export function FileTable({
                               v.toggleFavorite(f.id);
                             }}
                             className={clsx(
-                              "flex size-6 shrink-0 items-center justify-center rounded-md transition-opacity duration-150 hover:bg-neutral-200/60",
-                              f.favorite ? "text-ink" : "text-neutral-400 opacity-0 focus-visible:opacity-100 group-hover:opacity-100",
+                              "flex h-6 shrink-0 items-center justify-center overflow-hidden rounded-md hover:bg-neutral-200/60",
+                              // Takes no room until the row is hovered, so long names keep their space.
+                              f.favorite ? "w-6 text-ink" : "w-0 text-neutral-400 focus-visible:w-6 group-hover:w-6",
                             )}
                           >
                             <Star className="size-3.5" strokeWidth={1.75} fill={f.favorite ? "currentColor" : "none"} />
@@ -422,8 +451,8 @@ export function FileTable({
                             </>
                           ) : (
                             <>
-                              <span className="lg:hidden">
-                                {f.ext.toUpperCase()} · {formatSize(f.size)} ·{" "}
+                              <span className="min-[1420px]:hidden">
+                                {f.ext.toUpperCase()} · <span className="min-[1140px]:hidden">{formatSize(f.size)} · </span>
                               </span>
                               {folderName.get(f.folderId) ?? "—"}
                             </>
@@ -432,11 +461,11 @@ export function FileTable({
                       </div>
                     </div>
                   </td>
-                  {!compact && <td className={clsx(td, "hidden text-[13px] text-neutral-700 lg:table-cell")}>{KIND_LABEL[f.kind]}</td>}
+                  {!compact && <td className={clsx(td, "hidden text-[13px] text-neutral-700 min-[1420px]:table-cell")}>{KIND_LABEL[f.kind]}</td>}
                   <td className={clsx(td, "hidden text-[13px] md:table-cell")}>
                     {f.projectId ? <span className="font-medium text-neutral-700">{projectCode.get(f.projectId)}</span> : <span className="text-neutral-400">—</span>}
                   </td>
-                  <td className={clsx(td, compact ? "hidden lg:table-cell" : "hidden xl:table-cell")}>
+                  <td className={clsx(td, "hidden xl:table-cell")}>
                     <div className="flex items-center gap-2.5">
                       <Avatar user={owner} size={30} />
                       <div className="min-w-0 leading-tight">
@@ -451,15 +480,19 @@ export function FileTable({
                       <StatusBadge status={f.status} />
                     </td>
                   )}
-                  {!compact && <td className={clsx(td, "hidden whitespace-nowrap text-[13px] tabular-nums text-neutral-600 lg:table-cell")}>{formatSize(f.size)}</td>}
+                  {!compact && <td className={clsx(td, "hidden whitespace-nowrap text-[13px] tabular-nums text-neutral-600 min-[1140px]:table-cell")}>{formatSize(f.size)}</td>}
                   <td className="pl-2 pr-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
-                      {!compact && (
+                      {!compact && !trash && (
                         <>
-                          <Button variant="soft" size="sm" icon={Download} className="hidden 2xl:inline-flex" onClick={() => v.notReady("Download")}>
-                            Download
-                          </Button>
-                          <IconButton icon={Download} label={`Download ${fullName(f)}`} variant="soft" size="sm" className="hidden sm:inline-flex 2xl:hidden" onClick={() => v.notReady("Download")} />
+                          <span className="hidden min-[1600px]:block">
+                            <Button variant="soft" size="sm" icon={Download} onClick={() => v.notReady("Download")}>
+                              Download file
+                            </Button>
+                          </span>
+                          <span className="max-sm:hidden min-[1600px]:hidden">
+                            <IconButton icon={Download} label={`Download ${fullName(f)}`} variant="soft" size="sm" onClick={() => v.notReady("Download")} />
+                          </span>
                         </>
                       )}
                       <RowMenu file={f} listIds={listIds} vertical={compact} />
@@ -473,9 +506,9 @@ export function FileTable({
         {sorted.length === 0 && <EmptyState icon={Inbox} title={emptyTitle} hint={emptyHint} />}
       </div>
 
-      <Pagination page={current} pages={pages} total={sorted.length} from={(current - 1) * rows + 1} to={Math.min(current * rows, sorted.length)} rows={rows} rowOptions={rowOptions} setPage={setPage} setRows={setRows} />
+      {footer && <Pagination page={current} pages={pages} total={sorted.length} from={(current - 1) * rows + 1} to={Math.min(current * rows, sorted.length)} rows={rows} rowOptions={rowOptions} setPage={setPage} setRows={setRows} />}
 
-      {selected.size > 0 && <BulkBar ids={[...selected]} clear={() => setSelected(new Set())} />}
+      {selected.size > 0 && <BulkBar ids={[...selected]} clear={() => setSelected(new Set())} trash={trash} />}
     </div>
   );
 }

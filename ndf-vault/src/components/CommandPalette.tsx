@@ -55,7 +55,7 @@ export function CommandPalette() {
     const ids = files.map((f) => f.id);
     return [
       ...files.map<Result>((f) => ({
-        key: f.id,
+        key: `file-${f.id}`,
         group: needle ? "Files" : "Recent files",
         icon: <FileIcon kind={f.kind} size={32} />,
         title: `${f.name}.${f.ext}`,
@@ -63,7 +63,7 @@ export function CommandPalette() {
         run: () => v.openPreview(f.id, ids),
       })),
       ...folders.map<Result>((d) => ({
-        key: d.id,
+        key: `folder-${d.id}`,
         group: "Folders",
         icon: (
           <span className="flex size-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-500">
@@ -75,7 +75,7 @@ export function CommandPalette() {
         run: () => v.navigate({ view: "folder", id: d.id }),
       })),
       ...projects.map<Result>((p) => ({
-        key: p.id,
+        key: `project-${p.id}`,
         group: "Projects",
         icon: (
           <span className="flex size-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-500">
