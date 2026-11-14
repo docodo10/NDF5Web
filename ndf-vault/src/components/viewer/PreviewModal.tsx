@@ -23,14 +23,17 @@ import {
   PanelLeft,
   Plus,
   Scan,
+  ShieldAlert,
+  Stamp,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useVault } from "@/lib/store";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useVault, type OriginalResult } from "@/lib/store";
 import type { VaultFile } from "@/lib/types";
-import { getBlob } from "@/lib/db";
+import { parseCsv } from "@/lib/csv";
+import { watermarkText } from "@/lib/stamp";
 import { formatDate, fullName, KIND_LABEL } from "@/lib/format";
-import { Ndf5Mark, PageWatermark } from "../brand/Brand";
+import { Ndf5Mark, PageWatermark, PersonalWatermark } from "../brand/Brand";
 import { FileIcon } from "../files/FileTable";
 import { Button, IconButton } from "../ui";
 import { openPdf, type PDFDocumentProxy } from "./pdf";
@@ -55,6 +58,7 @@ type Doc =
   | { kind: "image"; url: string; base: Size }
   | { kind: "text"; text: string; rows: string[][] | null; truncated: boolean }
   | { kind: "unsupported" }
+  | { kind: "altered" }
   | { kind: "missing" };
 
 /* ------------------------------------------------------------- Sample pages */
@@ -84,12 +88,13 @@ function GridSkeleton({ seed }: { seed: number }) {
 }
 
 /** Stand-in page for the built-in sample files, which have no stored original. */
-function SamplePage({ file, n, folderName, watermark }: { file: VaultFile; n: number; folderName: string; watermark: boolean }) {
+function SamplePage({ file, n, folderName, watermark, personal }: { file: VaultFile; n: number; folderName: string; watermark: boolean; personal: string | null }) {
   const seed = n + file.name.length;
   const isGrid = file.kind === "xlsx" || file.kind === "csv";
   return (
     <div className="relative flex h-full flex-col bg-white px-[88px] pb-[64px] pt-[72px] text-left">
       {watermark && <PageWatermark />}
+      {personal && <PersonalWatermark text={personal} />}
       <div className="relative flex items-center justify-between">
         <Ndf5Mark className="h-[22px] w-auto text-ink" />
         <span className="rounded-md border border-dashed border-neutral-300 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">Fichier d’exemple</span>
@@ -135,11 +140,11 @@ function SamplePage({ file, n, folderName, watermark }: { file: VaultFile; n: nu
   );
 }
 
-function ScaledSample({ file, n, scale, folderName, watermark }: { file: VaultFile; n: number; scale: number; folderName: string; watermark: boolean }) {
+function ScaledSample({ file, n, scale, folderName, watermark, personal }: { file: VaultFile; n: number; scale: number; folderName: string; watermark: boolean; personal: string | null }) {
   return (
     <div style={{ width: LETTER.w * scale, height: LETTER.h * scale }} className="overflow-hidden">
       <div style={{ width: LETTER.w, height: LETTER.h, transform: `scale(${scale})`, transformOrigin: "0 0" }}>
-        <SamplePage file={file} n={n} folderName={folderName} watermark={watermark} />
+        <SamplePage file={file} n={n} folderName={folderName} watermark={watermark} personal={personal} />
       </div>
     </div>
   );
@@ -148,7 +153,7 @@ function ScaledSample({ file, n, scale, folderName, watermark }: { file: VaultFi
 /* ---------------------------------------------------------------- PDF pages */
 
 /** One PDF page drawn to a canvas, rendered only once it is near the viewport. */
-function PdfPage({ pdf, n, width, base, watermark }: { pdf: PDFDocumentProxy; n: number; width: number; base: Size; watermark: boolean }) {
+function PdfPage({ pdf, n, width, base, watermark, personal }: { pdf: PDFDocumentProxy; n: number; width: number; base: Size; watermark: boolean; personal: string | null }) {
   const holder = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [near, setNear] = useState(false);
@@ -196,45 +201,14 @@ function PdfPage({ pdf, n, width, base, watermark }: { pdf: PDFDocumentProxy; n:
     <div ref={holder} className="relative overflow-hidden bg-white" style={{ width, height: Math.round(width * ratio) }}>
       <canvas ref={canvas} className="block h-full w-full" />
       {watermark && width > 300 && <PageWatermark />}
+      {personal && width > 300 && <PersonalWatermark text={personal} />}
     </div>
   );
 }
 
 /* ----------------------------------------------------------- Loading a file */
 
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-  for (let i = 0; i < text.length && rows.length < CSV_PREVIEW_ROWS; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') {
-        cell += '"';
-        i++;
-      } else if (c === '"') quoted = false;
-      else cell += c;
-    } else if (c === '"') quoted = true;
-    else if (c === "," || c === ";" || c === "\t") {
-      row.push(cell);
-      cell = "";
-    } else if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") i++;
-      row.push(cell);
-      rows.push(row);
-      row = [];
-      cell = "";
-    } else cell += c;
-  }
-  if (cell || row.length) {
-    row.push(cell);
-    rows.push(row);
-  }
-  return rows;
-}
-
-function useDocument(file: VaultFile | undefined): Doc {
+function useDocument(file: VaultFile | undefined, read: (file: VaultFile) => Promise<OriginalResult>): Doc {
   const [doc, setDoc] = useState<Doc>({ kind: "loading" });
   const id = file?.id;
   const sample = file?.sample;
@@ -250,9 +224,12 @@ function useDocument(file: VaultFile | undefined): Doc {
     let cleanup = () => {};
     setDoc({ kind: "loading" });
     (async () => {
-      const blob = await getBlob(id);
+      // The original is only shown when it is intact: its fingerprint is checked first.
+      const original = await read(file);
       if (!alive) return;
-      if (!blob) return setDoc({ kind: "missing" });
+      if (original.status === "altered" || original.status === "corrupt") return setDoc({ kind: "altered" });
+      if (original.status !== "ok") return setDoc({ kind: "missing" });
+      const blob = original.blob;
       try {
         if (kind === "pdf") {
           const pdf = await openPdf(blob);
@@ -269,7 +246,7 @@ function useDocument(file: VaultFile | undefined): Doc {
           img.src = url;
         } else if (kind === "txt" || kind === "csv") {
           const text = await blob.slice(0, TEXT_PREVIEW_BYTES).text();
-          const rows = kind === "csv" ? parseCsv(text) : null;
+          const rows = kind === "csv" ? parseCsv(text, CSV_PREVIEW_ROWS) : null;
           if (alive) setDoc({ kind: "text", text, rows, truncated: blob.size > TEXT_PREVIEW_BYTES || (rows !== null && rows.length >= CSV_PREVIEW_ROWS) });
         } else {
           setDoc({ kind: "unsupported" });
@@ -282,7 +259,9 @@ function useDocument(file: VaultFile | undefined): Doc {
       alive = false;
       cleanup();
     };
-  }, [id, sample, kind]);
+    // Reload when the file or its content changes (a new or restored version), not on every edit of its details.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, sample, kind, file?.sha256, read]);
 
   return doc;
 }
@@ -312,7 +291,7 @@ export function PreviewModal() {
   const v = useVault();
   const { preview } = v;
   const file = preview ? v.files.find((f) => f.id === preview.fileId) : undefined;
-  const doc = useDocument(file);
+  const doc = useDocument(file, v.readOriginal);
 
   const [fullscreen, setFullscreen] = useState(false);
   const [panel, setPanel] = useState(true);
@@ -370,6 +349,13 @@ export function PreviewModal() {
     return () => ro.disconnect();
   }, [canvasEl, fit, panel, fullscreen, fileId, baseW, baseH, docKind]);
 
+  // Who is looking and when, fixed at the moment the file is opened.
+  const personal = useMemo(
+    () => (v.personalMark && fileId ? watermarkText(v.profile) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fileId, v.personalMark, v.profile],
+  );
+
   const goToPage = useCallback((n: number) => {
     pageRefs.current[n - 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
     setPage(n);
@@ -399,8 +385,13 @@ export function PreviewModal() {
   const showPanel = panel && paged;
   const download = () => void v.downloadFile(file.id);
 
+  const stampable = !file.sample && (file.kind === "pdf" || file.kind === "image") && (doc.kind === "pdf" || doc.kind === "image");
   const renderPage = (n: number, width: number) =>
-    doc.kind === "pdf" ? <PdfPage pdf={doc.pdf} n={n} width={width} base={doc.base} watermark={v.watermark} /> : <ScaledSample file={file} n={n} scale={width / LETTER.w} folderName={folderName} watermark={v.watermark} />;
+    doc.kind === "pdf" ? (
+      <PdfPage pdf={doc.pdf} n={n} width={width} base={doc.base} watermark={v.watermark} personal={personal} />
+    ) : (
+      <ScaledSample file={file} n={n} scale={width / LETTER.w} folderName={folderName} watermark={v.watermark} personal={width > 300 ? personal : null} />
+    );
 
   return (
     <Dialog.Root open onOpenChange={(o) => !o && v.closePreview()}>
@@ -468,7 +459,8 @@ export function PreviewModal() {
               </>
             )}
             <div className="ml-auto flex items-center gap-1">
-              <IconButton icon={Download} label="Télécharger" variant="ghost" size="sm" onClick={download} />
+              {stampable && <IconButton icon={Stamp} label="Télécharger avec filigrane" variant="ghost" size="sm" onClick={() => void v.downloadFile(file.id, { stamped: true })} />}
+              <IconButton icon={Download} label="Télécharger" variant="ghost" size="sm" disabled={doc.kind === "altered"} onClick={download} />
             </div>
           </div>
 
@@ -516,6 +508,15 @@ export function PreviewModal() {
                   onDownload={download}
                 />
               )}
+              {doc.kind === "altered" && (
+                <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                  <ShieldAlert className="size-10 text-red-500" strokeWidth={1.5} />
+                  <p className="mt-4 text-[16px] font-semibold text-ink">Fichier altéré</p>
+                  <p className="mt-1.5 max-w-[400px] text-[13.5px] leading-[21px] text-neutral-500">
+                    Son contenu ne correspond plus à l’empreinte enregistrée au téléversement. Il n’est ni affiché ni téléchargeable. Supprimez-le et téléversez l’original de nouveau.
+                  </p>
+                </div>
+              )}
               {doc.kind === "missing" && (
                 <div className="flex h-full flex-col items-center justify-center px-6 text-center">
                   <FileQuestion className="size-10 text-neutral-300" strokeWidth={1.25} />
@@ -544,6 +545,7 @@ export function PreviewModal() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={doc.url} alt={fullName(file)} draggable={false} className="block" style={{ width: Math.round(base.w * zoom), height: Math.round(base.h * zoom), maxWidth: "none" }} />
                     {v.watermark && <PageWatermark />}
+                    {personal && <PersonalWatermark text={personal} />}
                   </div>
                 </div>
               )}
@@ -570,6 +572,7 @@ export function PreviewModal() {
                       <pre className="whitespace-pre-wrap break-words font-mono leading-[1.6] text-neutral-800">{doc.text}</pre>
                     )}
                     {doc.truncated && <p className="mt-[1.5em] border-t border-neutral-200 pt-[1em] text-neutral-500">Aperçu limité au début du fichier. Téléchargez l’original pour tout voir.</p>}
+                    {personal && <PersonalWatermark text={personal} />}
                   </div>
                 </div>
               )}

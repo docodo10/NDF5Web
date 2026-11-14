@@ -81,3 +81,31 @@ export function folderLabel(f: Folder): string {
   if (f.index) return `${f.index} ${f.name}`;
   return f.code ? `${f.name} (${f.code})` : f.name;
 }
+
+export const MAX_NAME_LEN = 120;
+
+/**
+ * Clean a name typed by the user or taken from an uploaded file, before it is
+ * stored. Control characters and bidirectional overrides are removed (the
+ * latter can make "exe.pdf" display as "fdp.exe"), path separators become
+ * dashes, runs of whitespace collapse, leading dots go (no hidden or "../"
+ * names) and the length is capped. Display is safe either way, since React
+ * escapes text; this keeps names safe as storage keys, ZIP paths and download
+ * filenames too.
+ */
+export function sanitizeName(raw: string): string {
+  return (
+    raw
+      .normalize("NFC")
+      .replace(/\s+/g, " ")
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, "")
+      .replace(/[\\/:]/g, "-")
+      .replace(/[<>"|?*]/g, "")
+      .replace(/ {2,}/g, " ")
+      .replace(/^[.\s]+/, "")
+      .trim()
+      .slice(0, MAX_NAME_LEN)
+      .trim()
+  );
+}

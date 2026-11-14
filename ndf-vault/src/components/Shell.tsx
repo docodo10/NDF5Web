@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
-import { Activity, Bell, ChevronDown, ChevronRight, CircleHelp, CloudUpload, PanelLeftClose, PanelLeftOpen, Plus, Search, Settings } from "lucide-react";
+import { Activity, Bell, ChevronDown, ChevronRight, CircleHelp, CloudUpload, LockKeyhole, PanelLeftClose, PanelLeftOpen, Plus, Search, Settings, ShieldAlert } from "lucide-react";
 import {
   ArchiveIcon,
   ClockIcon,
@@ -131,7 +131,7 @@ function FolderTree() {
 /* ------------------------------------------------------------------ Sidebar */
 
 function Sidebar() {
-  const { route, navigate, setSidebarOpen, openDialog, persistent } = useVault();
+  const { route, navigate, setSidebarOpen, openDialog, persistent, security } = useVault();
   const me = USERS.find((u) => u.id === CURRENT_USER_ID)!;
   return (
     <div className="flex h-full w-[264px] flex-col border-r border-line bg-subtle">
@@ -185,7 +185,7 @@ function Sidebar() {
           <Avatar user={me} size={30} />
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-[13px] font-medium text-ink">{me.name}</p>
-            <p className="truncate text-[11.5px] text-neutral-500">{persistent ? "Stocké sur cet appareil" : "Mémoire seulement"}</p>
+            <p className="truncate text-[11.5px] text-neutral-500">{!persistent ? "Mémoire seulement" : security.protected ? "Chiffré sur cet appareil" : "Stocké sur cet appareil"}</p>
           </div>
           <Ndf5Logo className="h-[18px] w-auto shrink-0 text-neutral-300" />
         </div>
@@ -197,7 +197,7 @@ function Sidebar() {
 /* ------------------------------------------------------------------- Topbar */
 
 function Topbar() {
-  const { sidebarOpen, setSidebarOpen, setPaletteOpen, navigate, startTour } = useVault();
+  const { sidebarOpen, setSidebarOpen, setPaletteOpen, navigate, startTour, security, lockNow, openDialog } = useVault();
   const me = USERS.find((u) => u.id === CURRENT_USER_ID)!;
   const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
   return (
@@ -218,10 +218,17 @@ function Topbar() {
         </span>
       </button>
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <span data-tour="lock">
+          {security.protected ? (
+            <IconButton icon={LockKeyhole} label="Verrouiller le Vault" onClick={() => void lockNow()} />
+          ) : (
+            <IconButton icon={ShieldAlert} label="Vault non protégé : ajouter une phrase secrète" disabled={!security.available} onClick={() => openDialog({ type: "protect" })} />
+          )}
+        </span>
         <span data-tour="help">
           <IconButton icon={CircleHelp} label="Visite guidée" onClick={startTour} />
         </span>
-        <IconButton icon={Bell} label="Activité" onClick={() => navigate({ view: "activity" })} />
+        <IconButton icon={Bell} label="Activité" onClick={() => navigate({ view: "activity" })} className="max-sm:hidden" />
         <span className="hidden h-6 w-px bg-line sm:block" />
         <Dropdown.Root>
           <Dropdown.Trigger asChild>

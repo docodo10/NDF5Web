@@ -29,6 +29,23 @@ export interface VaultFile {
   sample: boolean;
   /** MIME type of the stored original (uploaded files only). */
   mime?: string;
+  /** SHA-256 of the stored original, hex. Checked again when the file is opened or downloaded. */
+  sha256?: string;
+  /** When the current version was uploaded. */
+  versionAt?: string;
+  /** Earlier versions of this file, newest first. Each has its own stored original. */
+  versions?: FileVersion[];
+}
+
+export interface FileVersion {
+  /** Key of this version's stored original. */
+  id: string;
+  ext: string;
+  size: number;
+  sha256?: string;
+  /** When this version was uploaded. */
+  at: string;
+  ownerId: string;
 }
 
 export interface Folder {
@@ -67,6 +84,15 @@ export interface ActivityItem {
   verb: string;
   target: string;
   projectId: string | null;
+  /** "security" for lock, passphrase and integrity events; file activity otherwise. */
+  kind?: "file" | "security";
+}
+
+/** Who is using this vault on this device. Shown in the personal watermark. */
+export interface Profile {
+  name: string;
+  company: string;
+  email: string;
 }
 
 export type Route =

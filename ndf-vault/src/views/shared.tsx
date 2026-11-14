@@ -1,15 +1,16 @@
 "use client";
 
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
-import { ChevronDown, ChevronRight, CloudUpload, FileImage, FileSpreadsheet, FileText, FileType, FolderPlus, History, LayoutGrid, Plus, Presentation, Upload } from "lucide-react";
+import { Archive, ArchiveRestore, ChevronDown, ChevronRight, CloudUpload, Ellipsis, FileArchive, FileImage, FileSpreadsheet, FileText, FileType, FolderInput, FolderPlus, History, LayoutGrid, Pencil, Plus, Presentation, ShieldCheck, Trash2, Upload } from "lucide-react";
 import { Fragment, useMemo, type ComponentType, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
-import type { ActivityItem } from "@/lib/types";
+import type { ActivityItem, Folder, Project } from "@/lib/types";
+import { folderRules } from "@/lib/selectors";
 import { USERS } from "@/lib/sample-data";
 import { formatDate, formatTime } from "@/lib/format";
 import { KIND_GROUPS, type KindGroup } from "@/components/files/Explorer";
 import { MENU_CONTENT, MENU_ITEM, MENU_SEPARATOR } from "@/components/files/menu-styles";
-import { Avatar, Button, Chip, EmptyState, type TabItem } from "@/components/ui";
+import { Avatar, Button, Chip, EmptyState, IconButton, type TabItem } from "@/components/ui";
 
 type IconType = ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -101,6 +102,62 @@ export function AddFileMenu({ folderId = "root" }: { folderId?: string }) {
   );
 }
 
+/** The "⋯" menu of a folder page: rename, move, export, delete. */
+export function FolderMenu({ folder, fileIds }: { folder: Folder; fileIds: string[] }) {
+  const v = useVault();
+  const rules = folderRules(folder, v.folders, v.files, v.projects);
+  const icon = "size-4 text-neutral-500";
+  return (
+    <Dropdown.Root>
+      <Dropdown.Trigger asChild>
+        <IconButton icon={Ellipsis} label="Actions du dossier" className="data-[state=open]:bg-fill" />
+      </Dropdown.Trigger>
+      <Dropdown.Portal>
+        <Dropdown.Content align="end" sideOffset={6} collisionPadding={12} className={MENU_CONTENT}>
+          {/* A blocked action stays in the menu and says why, rather than silently missing. */}
+          <Dropdown.Item className={MENU_ITEM} onSelect={() => (rules.renamable ? v.openDialog({ type: "renameFolder", folderId: folder.id }) : v.notify(rules.moveBlocked ?? "Ce dossier ne peut pas être renommé."))}>
+            <Pencil className={icon} strokeWidth={1.75} /> Renommer
+          </Dropdown.Item>
+          <Dropdown.Item className={MENU_ITEM} onSelect={() => (rules.moveBlocked ? v.notify(rules.moveBlocked) : v.openDialog({ type: "moveFolder", folderId: folder.id }))}>
+            <FolderInput className={icon} strokeWidth={1.75} /> Déplacer
+          </Dropdown.Item>
+          <Dropdown.Item className={MENU_ITEM} onSelect={() => void v.exportZip(fileIds, folder.name)}>
+            <FileArchive className={icon} strokeWidth={1.75} /> Exporter en ZIP
+          </Dropdown.Item>
+          <Dropdown.Separator className={MENU_SEPARATOR} />
+          <Dropdown.Item className={`${MENU_ITEM} !text-red-600 data-[highlighted]:!bg-red-50`} onSelect={() => v.openDialog({ type: "deleteFolder", folderId: folder.id })}>
+            <Trash2 className="size-4 text-red-500" strokeWidth={1.75} /> Supprimer
+          </Dropdown.Item>
+        </Dropdown.Content>
+      </Dropdown.Portal>
+    </Dropdown.Root>
+  );
+}
+
+/** The "⋯" menu of a project page: edit, archive or restore. */
+export function ProjectMenu({ project }: { project: Project }) {
+  const v = useVault();
+  const icon = "size-4 text-neutral-500";
+  return (
+    <Dropdown.Root>
+      <Dropdown.Trigger asChild>
+        <IconButton icon={Ellipsis} label="Actions du projet" className="data-[state=open]:bg-fill" />
+      </Dropdown.Trigger>
+      <Dropdown.Portal>
+        <Dropdown.Content align="end" sideOffset={6} collisionPadding={12} className={MENU_CONTENT}>
+          <Dropdown.Item className={MENU_ITEM} onSelect={() => v.openDialog({ type: "editProject", projectId: project.id })}>
+            <Pencil className={icon} strokeWidth={1.75} /> Modifier le projet
+          </Dropdown.Item>
+          <Dropdown.Item className={MENU_ITEM} onSelect={() => v.setProjectArchived(project.id, !project.archived)}>
+            {project.archived ? <ArchiveRestore className={icon} strokeWidth={1.75} /> : <Archive className={icon} strokeWidth={1.75} />}
+            {project.archived ? "Restaurer le projet" : "Archiver le projet"}
+          </Dropdown.Item>
+        </Dropdown.Content>
+      </Dropdown.Portal>
+    </Dropdown.Root>
+  );
+}
+
 /* ------------------------------------------------------------ Section title */
 
 export function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
@@ -162,7 +219,13 @@ export function ActivityList({ items, emptyTitle = "Aucune activité pour l’in
               const file = files.find((f) => !f.deleted && `${f.name}.${f.ext}` === it.target);
               return (
                 <li key={it.id} className={`flex min-h-[56px] items-center gap-3 px-4 py-2.5 ${i > 0 ? "border-t border-hair" : ""}`}>
-                  {user && <Avatar user={user} size={30} />}
+                  {it.kind === "security" ? (
+                    <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-ink text-white">
+                      <ShieldCheck className="size-4" strokeWidth={1.75} />
+                    </span>
+                  ) : (
+                    user && <Avatar user={user} size={30} />
+                  )}
                   <p className="min-w-0 flex-1 text-[13px] leading-[19px] text-neutral-600">
                     <span className="font-medium text-ink">{user?.name ?? "Quelqu’un"}</span> {it.verb}{" "}
                     {file ? (
@@ -173,6 +236,7 @@ export function ActivityList({ items, emptyTitle = "Aucune activité pour l’in
                       <span className="break-words font-medium text-ink">{it.target}</span>
                     )}
                   </p>
+                  {it.kind === "security" && <Chip className="hidden sm:inline-flex">Sécurité</Chip>}
                   {it.projectId && projectCode.has(it.projectId) && <Chip className="hidden sm:inline-flex">{projectCode.get(it.projectId)}</Chip>}
                   <time dateTime={it.at} className="shrink-0 whitespace-nowrap text-[12.5px] tabular-nums text-neutral-400">
                     {formatTime(it.at)}

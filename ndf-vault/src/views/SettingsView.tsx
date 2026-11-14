@@ -1,12 +1,14 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import type { ReactNode } from "react";
+import { Download, LockKeyhole, RotateCcw } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
+import { requestPersistence, storageUsage } from "@/lib/db";
 import { USERS } from "@/lib/sample-data";
 import { formatSize } from "@/lib/format";
+import { watermarkText } from "@/lib/stamp";
 import { Ndf5Logo } from "@/components/brand/Brand";
-import { SwitchRow } from "@/components/Dialogs";
+import { INPUT, SwitchRow } from "@/components/dialog-kit";
 import { Avatar, Button, Chip, PageHeader } from "@/components/ui";
 
 function Panel({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
@@ -23,12 +25,12 @@ function Panel({ title, description, children }: { title: string; description?: 
 
 function Line({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
-    <div className="flex min-h-11 items-center justify-between gap-4 border-t border-hair py-2 first:border-t-0">
-      <div className="min-w-0">
+    <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-hair py-2 first:border-t-0">
+      <div className="min-w-0 flex-1 basis-[220px]">
         <p className="text-[13px] font-medium text-ink">{label}</p>
-        {hint && <p className="text-[12px] text-neutral-500">{hint}</p>}
+        {hint && <p className="text-[12px] leading-[17px] text-neutral-500">{hint}</p>}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className="flex shrink-0 items-center gap-2">{children}</div>
     </div>
   );
 }
@@ -37,13 +39,15 @@ type StepState = "done" | "partial" | "pending";
 
 const STEPS: { label: string; hint: string; state: StepState }[] = [
   { label: "Interface", hint: "Navigation, tables, dialogues, visionneuse, recherche", state: "done" },
-  { label: "Téléversement", hint: "Plusieurs fichiers, glisser-déposer, validation du format et de la taille", state: "done" },
+  { label: "Téléversement", hint: "Plusieurs fichiers, glisser-déposer, contrôle du format, de la taille et du contenu", state: "done" },
   { label: "Stockage persistant", hint: "Dans ce navigateur : vos changements survivent au rechargement", state: "done" },
-  { label: "Téléchargement des originaux", hint: "Pour chaque fichier téléversé", state: "done" },
+  { label: "Protection par phrase secrète", hint: "Chiffrement AES-256 de tout ce qui est stocké, verrouillage manuel et automatique", state: "done" },
+  { label: "Intégrité et journal", hint: "Empreinte SHA-256 vérifiée à chaque ouverture, journal des accès exportable", state: "done" },
+  { label: "Téléchargement et export", hint: "Originaux, copies filigranées (PDF et images), export ZIP", state: "done" },
+  { label: "Historique des versions", hint: "Nouvelles versions, restauration et téléchargement des précédentes", state: "done" },
   { label: "Aperçu réel", hint: "PDF, images, texte et CSV. Les fichiers Office se téléchargent pour l’instant", state: "partial" },
-  { label: "Historique des versions", hint: "Versions conservées par fichier", state: "pending" },
-  { label: "Accès des invités", hint: "Connexion par courriel, niveaux d’accès, conditions et NDA à signer, filigrane personnel", state: "pending" },
-  { label: "Serveur", hint: "Stockage privé partagé, base de données et journal d’activité", state: "pending" },
+  { label: "Accès des invités", hint: "Connexion par courriel, niveaux d’accès, conditions et NDA à signer", state: "pending" },
+  { label: "Serveur", hint: "Stockage privé partagé entre appareils et utilisateurs", state: "pending" },
 ];
 
 const STEP_CHIP: Record<StepState, ReactNode> = {
@@ -52,27 +56,136 @@ const STEP_CHIP: Record<StepState, ReactNode> = {
   pending: <Chip className="border-dashed text-neutral-500">À venir</Chip>,
 };
 
+const AUTO_LOCK = [
+  { value: 1, label: "1 minute" },
+  { value: 5, label: "5 minutes" },
+  { value: 15, label: "15 minutes" },
+  { value: 30, label: "30 minutes" },
+  { value: 60, label: "1 heure" },
+  { value: 0, label: "Jamais" },
+];
+
 export function SettingsView() {
-  const { watermark, setWatermark, files, folders, projects, persistent, openDialog, startTour } = useVault();
+  const v = useVault();
+  const { security, persistent, files, folders, projects } = v;
   const box = "rounded-xl border border-line bg-white px-4 py-1.5 shadow-xs";
   const uploaded = files.filter((f) => !f.sample);
-  const uploadedBytes = uploaded.reduce((n, f) => n + f.size, 0);
+  const uploadedBytes = uploaded.reduce((n, f) => n + f.size + (f.versions ?? []).reduce((m, x) => m + x.size, 0), 0);
+
+  const [usage, setUsage] = useState<{ usage: number; quota: number } | null>(null);
+  const [durable, setDurable] = useState<boolean | null>(null);
+  useEffect(() => {
+    void storageUsage().then(setUsage);
+    void navigator.storage?.persisted?.().then(setDurable, () => setDurable(null));
+  }, [files.length]);
+
+  const [name, setName] = useState(v.profile.name);
+  const [company, setCompany] = useState(v.profile.company);
+  const [email, setEmail] = useState(v.profile.email);
+  const dirty = name !== v.profile.name || company !== v.profile.company || email !== v.profile.email;
 
   return (
     <div className="max-w-[980px]">
-      <PageHeader title="Réglages" description="Préférences de l’espace de travail et état de cette version." />
+      <PageHeader title="Réglages" description="Sécurité, profil, stockage et état de cette version." />
 
       <div className="mt-8">
-        <Panel title="Apparence" description="La présence de la marque NDF5 dans l’espace de travail.">
+        <Panel title="Sécurité" description="Protégez ce qui est stocké sur cet appareil avec une phrase secrète.">
           <div className={box}>
-            <SwitchRow on={watermark} onChange={setWatermark} label="Filigrane NDF5" hint="Affiche la marque NDF5 Productions en fond de page et sur les pages des documents." />
+            <Line
+              label="Protection par phrase secrète"
+              hint={
+                !security.available
+                  ? "Indisponible : ce navigateur refuse le stockage ou le chiffrement."
+                  : security.protected
+                    ? "Tout ce qui est stocké est chiffré (AES-256). La phrase est demandée à chaque ouverture."
+                    : "Sans protection, toute personne ayant accès à cet appareil peut ouvrir le Vault."
+              }
+            >
+              {security.protected ? (
+                <>
+                  <Chip className="!border-emerald-300 !text-emerald-700">Activée</Chip>
+                  <Button size="sm" onClick={() => v.openDialog({ type: "passphrase" })}>
+                    Changer
+                  </Button>
+                  <Button size="sm" onClick={() => v.openDialog({ type: "unprotect" })}>
+                    Désactiver
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Chip className="border-dashed">Désactivée</Chip>
+                  <Button size="sm" variant="primary" disabled={!security.available} onClick={() => v.openDialog({ type: "protect" })}>
+                    Activer
+                  </Button>
+                </>
+              )}
+            </Line>
+            <Line label="Verrouillage automatique" hint="Verrouille le Vault après une période sans activité.">
+              <label className="sr-only" htmlFor="auto-lock">
+                Verrouillage automatique
+              </label>
+              <select id="auto-lock" value={security.autoLockMinutes} disabled={!security.protected} onChange={(e) => v.setAutoLock(Number(e.target.value))} className={`${INPUT} !h-8 !w-auto pr-8 disabled:opacity-50`}>
+                {AUTO_LOCK.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </Line>
+            <Line label="Verrouiller maintenant" hint="Ferme la session : la phrase secrète sera demandée pour rouvrir.">
+              <Button size="sm" icon={LockKeyhole} disabled={!security.protected} onClick={() => void v.lockNow()}>
+                Verrouiller
+              </Button>
+            </Line>
+          </div>
+        </Panel>
+
+        <Panel title="Profil" description="Qui consulte ce Vault. Ces informations servent au filigrane personnel.">
+          <form
+            className={box}
+            onSubmit={(e) => {
+              e.preventDefault();
+              v.setProfile({ name, company, email });
+            }}
+          >
+            <div className="grid gap-3 py-2.5 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1.5 block text-[12.5px] font-medium text-neutral-700">Nom</span>
+                <input id="profile-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" className={INPUT} />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-[12.5px] font-medium text-neutral-700">Société</span>
+                <input id="profile-company" value={company} onChange={(e) => setCompany(e.target.value)} maxLength={80} autoComplete="organization" className={INPUT} />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="mb-1.5 block text-[12.5px] font-medium text-neutral-700">Courriel</span>
+                <input id="profile-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} autoComplete="email" className={INPUT} />
+              </label>
+            </div>
+            <div className="flex justify-end border-t border-hair py-2.5">
+              <Button size="sm" variant="primary" type="submit" disabled={!dirty || !name.trim()}>
+                Enregistrer le profil
+              </Button>
+            </div>
+          </form>
+        </Panel>
+
+        <Panel title="Filigranes" description="Dissuadent la copie et rappellent d’où vient chaque page.">
+          <div className={box}>
+            <SwitchRow on={v.watermark} onChange={v.setWatermark} label="Filigrane NDF5" hint="La marque NDF5 Productions en fond de page et sur les pages des documents." />
+            <div className="border-t border-hair">
+              <SwitchRow on={v.personalMark} onChange={v.setPersonalMark} label="Filigrane personnel" hint="Votre nom, la date et l’heure sur chaque page consultée." />
+            </div>
+            <p className="border-t border-hair py-2.5 text-[12px] leading-[17px] text-neutral-500">
+              Texte actuel : <span className="text-neutral-700">{watermarkText(v.profile)}</span>
+            </p>
           </div>
         </Panel>
 
         <Panel title="Stockage" description="Où sont gardés vos fichiers et vos changements.">
           <div className={box}>
             <Line label="Emplacement" hint={persistent ? "Sur cet appareil seulement. Rien n’est envoyé sur un serveur ni partagé." : "Ce navigateur refuse le stockage : tout disparaît au rechargement et le téléversement est désactivé."}>
-              <Chip className={persistent ? "!border-emerald-300 !text-emerald-700" : "border-dashed"}>{persistent ? "Ce navigateur" : "Mémoire seulement"}</Chip>
+              <Chip className={persistent ? "!border-emerald-300 !text-emerald-700" : "border-dashed"}>{persistent ? (security.protected ? "Ce navigateur, chiffré" : "Ce navigateur") : "Mémoire seulement"}</Chip>
             </Line>
             <Line label="Fichiers téléversés">
               <span className="text-[13px] tabular-nums text-neutral-700">
@@ -88,8 +201,31 @@ export function SettingsView() {
                 {folders.length} · {projects.length}
               </span>
             </Line>
+            {usage && (
+              <Line label="Espace utilisé par ce site" hint="Estimation du navigateur, tout compris.">
+                <span className="text-[13px] tabular-nums text-neutral-700">
+                  {formatSize(usage.usage)} sur {formatSize(usage.quota)}
+                </span>
+              </Line>
+            )}
+            {persistent && durable !== null && (
+              <Line label="Stockage durable" hint={durable ? "Le navigateur ne supprimera pas ces données pour libérer de l’espace." : "Sans cela, le navigateur peut effacer ces données si le disque se remplit."}>
+                {durable ? (
+                  <Chip className="!border-emerald-300 !text-emerald-700">Accordé</Chip>
+                ) : (
+                  <Button size="sm" onClick={() => void requestPersistence().then((ok) => (setDurable(ok), v.notify(ok ? "Stockage durable accordé" : "Le navigateur n’a pas accordé le stockage durable.")))}>
+                    Demander
+                  </Button>
+                )}
+              </Line>
+            )}
+            <Line label="Exporter tout le Vault" hint="Une archive ZIP de vos originaux, rangés par dossier, avec un manifeste.">
+              <Button size="sm" icon={Download} disabled={uploaded.length === 0} onClick={() => void v.exportVault()}>
+                Exporter
+              </Button>
+            </Line>
             <Line label="Réinitialiser le Vault" hint="Efface tout ce qui a été ajouté dans ce navigateur et remet les données d’exemple.">
-              <Button size="sm" icon={RotateCcw} onClick={() => openDialog({ type: "reset" })}>
+              <Button size="sm" icon={RotateCcw} onClick={() => v.openDialog({ type: "reset" })}>
                 Réinitialiser
               </Button>
             </Line>
@@ -98,8 +234,8 @@ export function SettingsView() {
 
         <Panel title="Aide" description="Revoir le fonctionnement du Vault.">
           <div className={box}>
-            <Line label="Visite guidée" hint="Le tour de l’interface en six étapes, en moins d’une minute.">
-              <Button size="sm" onClick={startTour}>
+            <Line label="Visite guidée" hint="Le tour de l’interface, en moins d’une minute.">
+              <Button size="sm" onClick={v.startTour}>
                 Lancer la visite
               </Button>
             </Line>

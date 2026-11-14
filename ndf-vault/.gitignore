@@ -43,3 +43,7 @@ next-env.d.ts
 # Third-party reference screenshots: kept local, not published with the repository
 /docs/reference/
 dist/
+
+# test output
+/test-results/
+/playwright-report/

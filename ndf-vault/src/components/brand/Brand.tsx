@@ -49,3 +49,18 @@ export function PageWatermark() {
     </div>
   );
 }
+
+/** Who is looking and when, repeated across a page: the personal watermark of a data room. */
+export function PersonalWatermark({ text }: { text: string }) {
+  return (
+    <div aria-hidden data-personal-watermark className="pointer-events-none absolute inset-0 select-none overflow-hidden [container-type:inline-size]">
+      <div className="absolute left-[-25%] top-[-25%] flex h-[150%] w-[150%] -rotate-[28deg] flex-col justify-around text-ink opacity-[0.1]">
+        {Array.from({ length: 7 }, (_, i) => (
+          <p key={i} className="whitespace-nowrap text-center font-semibold" style={{ fontSize: "1.5cqw", paddingLeft: `${(i % 2) * 16}%` }}>
+            {text}&emsp;·&emsp;{text}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}

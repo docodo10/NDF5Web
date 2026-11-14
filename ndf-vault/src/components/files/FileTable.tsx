@@ -14,6 +14,7 @@ import {
   EllipsisVertical,
   ExternalLink,
   Eye,
+  FileArchive,
   FolderInput,
   History,
   Inbox,
@@ -23,6 +24,7 @@ import {
   RotateCcw,
   Share2,
   SquarePen,
+  Stamp,
   Star,
   Trash2,
   X,
@@ -99,6 +101,7 @@ export function RowMenu({ file, listIds, vertical }: { file: VaultFile; listIds:
               {item(Copy, "Copier", () => v.copyFile(file.id))}
               {item(Share2, "Partager", () => v.openDialog({ type: "share", fileId: file.id }))}
               {item(Download, "Télécharger", () => void v.downloadFile(file.id))}
+              {!file.sample && (file.kind === "pdf" || file.kind === "image") && item(Stamp, "Télécharger avec filigrane", () => void v.downloadFile(file.id, { stamped: true }))}
               {item(History, "Historique des versions", () => v.openDialog({ type: "versions", fileId: file.id }))}
               <Dropdown.Separator className={MENU_SEPARATOR} />
               {file.archived ? item(RotateCcw, "Restaurer", () => v.restoreFiles([file.id])) : item(Archive, "Archiver", () => v.archiveFiles([file.id]))}
@@ -209,6 +212,9 @@ function BulkBar({ ids, clear, trash }: { ids: string[]; clear: () => void; tras
           </>
         ) : (
           <>
+            <button type="button" className={btn} onClick={act(() => void v.exportZip(ids, "ndf-vault-selection"))}>
+              <FileArchive className="size-4" strokeWidth={1.75} /> Exporter (ZIP)
+            </button>
             <button type="button" className={btn} onClick={() => v.openDialog({ type: "move", fileIds: ids })}>
               <FolderInput className="size-4" strokeWidth={1.75} /> Déplacer
             </button>

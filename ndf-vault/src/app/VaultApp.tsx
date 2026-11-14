@@ -7,6 +7,7 @@ import { Dialogs, ToastHost } from "@/components/Dialogs";
 import { PreviewModal } from "@/components/viewer/PreviewModal";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Tour } from "@/components/Tour";
+import { LockScreen } from "@/components/security/LockScreen";
 import { VaultLockup } from "@/components/brand/Brand";
 import { Home } from "@/views/Home";
 import { FilesView } from "@/views/FilesView";
@@ -65,7 +66,7 @@ export function VaultApp() {
   if (!mounted) return splash;
 
   return (
-    <VaultProvider fallback={splash}>
+    <VaultProvider fallback={splash} lockScreen={(props) => <LockScreen {...props} />}>
       <Shell>
         <CurrentView />
       </Shell>

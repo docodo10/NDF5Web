@@ -11,7 +11,7 @@ import { count } from "@/lib/format";
 import { ExplorerToolbar, useFileFilters } from "@/components/files/Explorer";
 import { FileTable } from "@/components/files/FileTable";
 import { Avatar, Button, Chip, EmptyState, PageHeader, SegmentedTabs, StatusBadge, type TabItem } from "@/components/ui";
-import { ActivityList, Breadcrumbs, SectionTitle, UploadButton } from "./shared";
+import { ActivityList, Breadcrumbs, ProjectMenu, SectionTitle, UploadButton } from "./shared";
 
 type Tab = "overview" | "files" | "financial" | "production" | "legal" | "team" | "activity";
 
@@ -91,13 +91,14 @@ export function ProjectView({ id }: { id: string }) {
       <PageHeader
         eyebrow={<Breadcrumbs items={[{ label: "Tous les projets", onClick: () => v.navigate({ view: "projects" }) }, { label: project.code }]} />}
         title={project.name}
-        description={project.period}
+        description={project.archived ? `${project.period} · Projet archivé` : project.period}
         actions={
           <>
             <Button icon={FolderOpen} onClick={() => v.navigate({ view: "folder", id: project.folderId })}>
               Ouvrir le dossier
             </Button>
             <UploadButton folderId={project.folderId} />
+            <ProjectMenu project={project} />
           </>
         }
       />

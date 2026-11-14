@@ -1,6 +1,6 @@
 # NDF VAULT — Handoff pour Claude Code
 
-Date : 2026-11-14 · Projet : `ndf-vault/` · Stack : Next.js 16.4.6, React 19, TypeScript, Tailwind v4, Radix, Lucide
+Date : 2026-11-14 · Projet : `ndf-vault/` · Stack : Next.js 16.4.6, React 19, TypeScript, Tailwind v4, Radix, Lucide, Phosphor, PDF.js, pdf-lib · Tests : Vitest, Playwright
 
 ## 1. Objectif
 
@@ -40,74 +40,102 @@ L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », con
 
 ## 3. État actuel
 
-**Interface en français, premières vraies fonctions, et page hébergée.** `npx tsc --noEmit`, `npm run build` et `npm run build:page` passent.
+**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (87 tests unitaires) et `npm run test:e2e` (55 tests dans un vrai navigateur) passent.
 
-### Fonctions réelles (2026-11-14)
+### Sécurité (2026-11-14)
+
+Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc **ce qui est stocké sur l'appareil**, pas l'accès des invités (section 1 bis).
 
 | Fonction | Où | Notes |
 |---|---|---|
-| Téléversement | `UploadDialog` dans `Dialogs.tsx`, `src/lib/uploads.ts` | Plusieurs fichiers, glisser-déposer dans le dialogue **ou n'importe où dans la fenêtre** (`useWindowDrop` dans `Shell.tsx`), validation du format et de la taille (200 Mo) |
-| Stockage persistant | `src/lib/db.ts` | IndexedDB dans le navigateur : état (`state`) et originaux (`blobs`). Rien ne quitte l'appareil. Si le navigateur refuse le stockage, l'app reste en mémoire et le téléversement se désactive. Changer `SCHEMA` quand la forme sauvegardée ou les données d'exemple changent |
-| Téléchargement | `saveToDisk` dans `uploads.ts` | Passe par la capacité `downloads` de l'hébergeur quand elle existe, sinon téléchargement normal du navigateur. Les fichiers d'exemple n'ont pas d'original et le disent |
-| Aperçu réel | `viewer/PreviewModal.tsx`, `viewer/pdf.ts` | PDF via PDF.js (rendu sur le fil principal, chargé à la première ouverture), images, TXT, CSV. DOCX/XLSX/PPTX : pas d'aperçu, téléchargement proposé |
-| Suppression définitive, réinitialisation | store `purgeFiles`, `resetVault` | Avec confirmation |
-| Visite guidée | `src/components/Tour.tsx` | 6 étapes avec « Compris », au premier lancement (clé `localStorage` `ndf-vault-tour-done`), relançable par le bouton d'aide, la carte d'accueil et Réglages. Les cibles portent un attribut `data-tour` |
+| Chiffrement au repos | `src/lib/crypto.ts`, `src/lib/db.ts` | Web Crypto. Phrase secrète → PBKDF2-SHA-256 (600 000 itérations, sel aléatoire) → clé qui enveloppe une clé de données AES-GCM 256 bits aléatoire et **non extractible** (`KeyEnvelope`). Chaque enregistrement (état et chaque original) est chiffré avec un nonce aléatoire de 96 bits et son emplacement comme données associées (`"state"`, `` `blob:<id>` ``) : un enregistrement déplacé ou échangé ne se déchiffre pas |
+| Écran de verrouillage | `components/security/LockScreen.tsx` | Tant que le Vault est verrouillé, **rien de déchiffré n'est monté** : `VaultProvider` rend seulement l'écran (`Boot` : `loading` → `locked` → `ready`). Aucun nom de fichier ou de dossier n'y apparaît |
+| Délai après erreurs | `LockScreen.delayFor`, `Meta.failed` | Rien avant 3 erreurs, puis 5, 10, 20, 30 s. Le compteur est sur disque (`lastFailedAt`) : recharger la page ne l'efface pas |
+| Verrouillage | store `lockNow`, effet d'auto-verrouillage dans `store.tsx` | Bouton dans la barre du haut et dans Réglages ; automatique après inactivité (réglable, 15 min par défaut), y compris quand l'onglet revient au premier plan après le délai |
+| Activer, changer, désactiver | `components/security/SecurityDialogs.tsx` | Phrase de 10 caractères minimum, indicateur de force (`passphraseStrength`, il faut au moins « Moyenne »), case « j'ai compris qu'elle ne peut pas être récupérée ». Changer la phrase ré-enveloppe la clé sans re-chiffrer les fichiers |
+| Conversion reprenable | `db.convertAll`, `Meta.pending` | Chiffrer ou déchiffrer tout le Vault est idempotent : un enregistrement se lit selon sa forme (`{enc}` ou `Blob`), donc une conversion interrompue reste lisible et reprend au déverrouillage suivant |
+| Phrase oubliée | `LockScreen` → `db.wipeEverything` | Aucune récupération possible. Seule issue : taper `EFFACER` pour tout effacer |
+| Empreintes et intégrité | `sha256Hex`, store `readOriginal` | SHA-256 calculé au téléversement, revérifié à **chaque** ouverture et téléchargement. Un original altéré est refusé (`altered`) et consigné dans le journal de sécurité. Bloc « Empreinte SHA-256 » (copier, vérifier) dans Modifier les détails |
+| Contrôle du contenu | `uploads.detectContent`, `inspectUpload` | Les premiers octets doivent correspondre à l'extension (un exécutable renommé en `.pdf` est refusé). Exécutables et binaires inconnus refusés. 100 Mo par fichier. Doublons signalés par empreinte |
+| Noms sûrs | `format.sanitizeName` | Retire caractères de contrôle, marques de direction (usurpation `‮`), séparateurs de chemin, points en tête ; 120 caractères maximum. Appliqué aux fichiers, dossiers et projets |
+| Exports sûrs | `src/lib/csv.ts`, `src/lib/zip.ts` | CSV : les cellules commençant par `= + - @` sont neutralisées (injection de formules). ZIP : chemins nettoyés segment par segment (pas de `..`, pas de chemin absolu), noms en double numérotés |
+| Filigrane personnel | `lib/stamp.ts`, `brand/Brand.tsx` (`PersonalWatermark`) | « Nom · Société · courriel · date, heure · Confidentiel – NDF5 » sur chaque page consultée, et **incrusté dans le fichier** avec « Télécharger avec filigrane » (PDF via pdf-lib, images via canvas) |
+| Journal de sécurité | `ActivityItem.kind = "security"` | Activation, changement et retrait de la protection, déverrouillages (avec le nombre d'essais refusés avant), fichiers altérés. Onglet « Sécurité » dans Activité, export CSV. Les verrouillages eux-mêmes ne sont pas consignés |
+| Stockage durable | `db.requestPersistence`, Réglages → Stockage | Demande au navigateur de ne pas évincer les données |
+
+**Limites à dire à l'utilisateur, sans les enjoliver :** la protection vaut contre quelqu'un qui accède à l'appareil ou au profil du navigateur pendant que le Vault est verrouillé. Elle ne protège pas d'un logiciel malveillant sur une session déverrouillée, ni ne remplace l'authentification des invités, les permissions par dossier et le journal côté serveur, qui restent à construire. Une phrase oubliée est irrécupérable.
+
+### Fonctions réelles
+
+| Fonction | Où | Notes |
+|---|---|---|
+| Téléversement | `UploadDialog` dans `Dialogs.tsx`, `src/lib/uploads.ts` | Plusieurs fichiers, glisser-déposer dans le dialogue **ou n'importe où dans la fenêtre** (`useWindowDrop` dans `Shell.tsx`), vérification asynchrone (format, taille, contenu, doublon) |
+| Stockage persistant | `src/lib/db.ts` | IndexedDB (`ndf-vault` : `state`, `blobs`, et `meta` en clair pour l'état de la protection). Rien ne quitte l'appareil. `SCHEMA = 4` ; `migrate()` accepte encore le schéma 3 |
+| Sauvegarde immédiate | `saveNow()` dans `store.tsx` | File d'écritures ordonnée, déclenchée à chaque changement et à `pagehide`. **Ne pas remettre de délai (debounce)** : un rechargement juste après un téléversement perdait la liste des fichiers |
+| Téléchargement | `saveToDisk` dans `uploads.ts` | Capacité `downloads` de l'hébergeur quand elle existe, sinon téléchargement normal. Les fichiers d'exemple n'ont pas d'original et le disent |
+| Aperçu réel | `viewer/PreviewModal.tsx`, `viewer/pdf.ts` | PDF (PDF.js sur le fil principal), images, TXT, CSV. DOCX/XLSX/PPTX : téléchargement proposé |
+| Historique des versions | `VersionsDialog`, store `addVersion`, `restoreVersion`, `deleteVersion`, `downloadVersion` | Même format exigé, version identique refusée (empreinte), anciennes versions téléchargeables, restaurables, supprimables |
+| Dossiers | `FolderMenu` dans `views/shared.tsx`, `selectors.folderRules` | Renommer, déplacer, supprimer, exporter en ZIP. Règles : racine intouchable ; dossiers numérotés 00–10 renommables mais ni déplaçables ni supprimables ; dossier d'un projet non supprimable ; un dossier non vide (fichiers archivés ou supprimés compris) ne se supprime pas. Une action bloquée reste au menu et dit pourquoi |
+| Projets | `ProjectMenu`, `EditProjectDialog` | Modifier (nom, code, période, résumé), archiver, restaurer ; onglets Actifs / Archivés |
+| Exports | store `exportZip`, `exportVault`, `exportJournal` | Sélection ou dossier en ZIP ; Vault complet en ZIP avec `manifeste.json` (empreintes) ; journal en CSV |
+| Profil | Réglages → Profil | Nom, société, courriel : alimentent le filigrane personnel |
+| Suppression définitive, réinitialisation | store `purgeFiles`, `resetVault` | Avec confirmation. La réinitialisation garde la protection (`db.clearData`) |
+| Visite guidée | `src/components/Tour.tsx` | 8 étapes avec « Compris », dont « Protégez le Vault ». Clé `localStorage` `ndf-vault-tour-done`. Cibles : attribut `data-tour` |
+
+### Tests
+
+| Suite | Commande | Contenu |
+|---|---|---|
+| Unitaires (87) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `uploads` (octets magiques, exécutables déguisés), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
+| Navigateur (55) | `npm run test:e2e` | `tests/e2e/` : visite guidée, fichiers, téléversement, versions, dossiers et projets, exports, sécurité (20 tests : rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré, phrase oubliée…), téléphone |
+
+`npm run test:e2e` reconstruit d'abord `dist/` puis sert ce dossier (`scripts/serve-dist.mjs`, port 4173) : les tests s'exécutent sur **la page réellement publiée**, pas sur le serveur de développement. `tests/e2e/helpers.ts` contient les aides (`openVault`, `upload`, `protect`, `unlock`, `diskDump`, `tamperFirstOriginal`, `readZip`…).
 
 ### Page hébergée
 
 `npm run build:page` produit `dist/ndf-vault.html` : toute l'app en un seul fichier (JS via esbuild depuis `standalone/main.tsx`, CSS via la CLI Tailwind, police en data URI), au format attendu par un Artifact claude.ai (pas de `<html>`/`<head>`). `dist/preview.html` est le même contenu dans un document complet, pour l'ouvrir en local. Contraintes de cet hébergeur à respecter dans le code : pas d'impression, téléchargements seulement via `claude.use("downloads")`, routage par `#nom` simple.
 
-### Fait
+### Fichiers
 
 | Fichier | Contenu |
 |---|---|
-| `src/lib/types.ts` | Types `VaultFile`, `Folder`, `Project`, `User`, `ActivityItem`, `Route`, statuts |
-| `src/lib/sample-data.ts` | 42 fichiers d'exemple **en français**, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 services, activité |
-| `src/lib/format.ts` | Dates et tailles à la française, `KIND_LABEL`, `STATUS_LABEL` (les statuts gardent leurs identifiants anglais en interne), `count()` pour les pluriels |
-| `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory` (catégorie d'un fichier dans un projet, déduite de son dossier) |
-| `src/lib/store.tsx` | `VaultProvider` + `useVault()` : état en mémoire, routage par hash (lu dès le premier rendu), toasts, dialogues, preview, toutes les mutations |
-| `src/components/brand/` | Logo NDF5 vectorisé, `VaultLockup`, `AppWatermark`, `PageWatermark` |
-| `src/components/ui.tsx` | `Button`, `IconButton`, `Checkbox`, `Avatar`, `StatusBadge`, `Chip`, `SegmentedTabs`, `TextTabs`, `Kbd`, `PageHeader`, `EmptyState`, `SampleNotice` |
-| `src/components/Shell.tsx` | Sidebar (10 entrées + arbre de dossiers repliable), topbar, tiroir mobile, watermark |
-| `src/components/files/FileTable.tsx` | Table `full` / `compact`, tri, pagination (`footer={false}` pour la masquer), sélection, barre d'actions groupées, `RowMenu`, mode `trash` (fichiers supprimés : Preview + Restore seulement) |
-| `src/components/files/Explorer.tsx` | `useFileFilters`, `fileMatches`, `FilterButton`, `SearchField`, `ExplorerToolbar`, `KIND_GROUPS` |
-| `src/components/Dialogs.tsx` | Rename, Edit Details, Move, Share, Version History, Delete, New Folder, New Project, Upload (interface seulement), `ToastHost`, `SwitchRow` |
-| `src/components/viewer/PreviewModal.tsx` | Modal de preview : fil d'Ariane, fichier précédent/suivant, plein écran, vignettes, zoom, fit width/page, navigation de pages, pages d'exemple avec watermark |
-| `src/components/CommandPalette.tsx` | Recherche globale ⌘K / Ctrl+K / « / » |
-| `src/app/page.tsx`, `src/app/VaultApp.tsx` | Racine client : rien d'autre qu'un écran d'attente n'est rendu au prerender (`useSyncExternalStore`), puis `VaultProvider` → `Shell` → vue selon `route.view` |
-| `src/views/Home.tsx` | Accueil (image 3) : 4 cartes d'action, filtres par type, recherche, fichiers épinglés, onglets de portée, table compacte |
-| `src/views/FilesView.tsx` | All Files, Private, Shared With Me, Favorites, Recent, Archived (avec l'onglet **Deleted** et la restauration) |
-| `src/views/FolderView.tsx` | Fil d'Ariane, sous-dossiers en cartes, « This folder / Including subfolders », table |
-| `src/views/ProjectsView.tsx`, `src/views/ProjectView.tsx` | Cartes de projets ; espace projet avec Overview, Files, Financial Documents, Production, Legal, Team, Activity |
-| `src/views/ActivityView.tsx`, `src/views/SettingsView.tsx` | Activité groupée par jour ; réglages (watermark, stockage, état des étapes) |
-| `src/views/shared.tsx` | `kindTabs`, `Breadcrumbs`, `UploadButton`, `AddFileMenu`, `SectionTitle`, `ActivityList` |
+| `src/lib/types.ts` | `VaultFile` (avec `sha256`, `versions`), `FileVersion`, `Folder`, `Project`, `Profile`, `ActivityItem`, `Route`, statuts |
+| `src/lib/sample-data.ts` | 42 fichiers d'exemple en français, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 services, activité |
+| `src/lib/crypto.ts`, `db.ts`, `uploads.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
+| `src/lib/format.ts` | Dates et tailles à la française, `KIND_LABEL`, `STATUS_LABEL`, `count()`, `sanitizeName` |
+| `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory`, `folderRules` |
+| `src/lib/routes.ts` | `routeToHash`, `hashToRoute` |
+| `src/lib/store.tsx` | `VaultProvider` (démarrage, verrouillage) → `VaultSession` (tout l'état) ; `useVault()` : routage, toasts, dialogues, aperçu, mutations, sécurité, exports |
+| `src/components/brand/` | Logo NDF5 vectorisé, `VaultLockup`, `AppWatermark`, `PageWatermark`, `PersonalWatermark` |
+| `src/components/ui.tsx`, `dialog-kit.tsx` | Boutons, onglets, badges… ; `Modal`, `Field`, `Note`, `Toggle`, `PassphraseInput` |
+| `src/components/security/` | `LockScreen`, `ProtectDialog`, `PassphraseDialog`, `UnprotectDialog` |
+| `src/components/Shell.tsx` | Sidebar, topbar (verrou, aide), tiroir mobile, dépôt de fichiers sur toute la fenêtre |
+| `src/components/files/` | `FileTable` (complète, compacte, corbeille, actions groupées), `Explorer` (filtres, recherche) |
+| `src/components/Dialogs.tsx` | Tous les dialogues de fichiers, dossiers et projets, `ToastHost` |
+| `src/components/viewer/` | `PreviewModal`, `pdf.ts` |
+| `src/components/CommandPalette.tsx`, `Tour.tsx` | Recherche globale ⌘K / Ctrl+K / « / » ; visite guidée |
+| `src/views/` | `Home`, `FilesView`, `FolderView`, `ProjectsView`, `ProjectView`, `ActivityView`, `SettingsView`, `shared.tsx` |
 
 ### Choix faits pendant la vérification (à confirmer par l'utilisateur)
 
-- **Colonnes de la table complète selon la largeur** : les 8 colonnes à partir de 1420 px ; à 1280 px, « File Type » passe dans la deuxième ligne du nom (« XLSX · dossier ») pour que les noms restent lisibles ; le bouton « Download file » avec texte apparaît à partir de 1600 px.
-- **Watermark de l'espace de travail** réduit à 230 px (au lieu de 440) : en grand il recouvrait les lignes de la table. Opacité 0,035, désactivable dans Settings.
-- **« Pin to Home »** ajouté au menu trois-points (aucun bouton n'appelait `togglePinned` hors Edit Details) ; 3 fichiers épinglés dans les données d'exemple, comme sur l'image 3.
-- **Police et icônes refaites après retour de l'utilisateur** (« pas modernes, ne ressemblent pas aux images ») : Inter 13 px regular et icônes en contour fin remplacées par Geist medium et icônes pleines, voir section 6.
-- **Arborescence du brief remplacée par l'index 00–10 du plan** (section 1 bis). Les dossiers « Distribution », « Marketing », « Cast & Crew », etc. du brief ont été fusionnés dans les dossiers numérotés.
-- **Premier onglet de type nommé « All Types »** dans les vues de fichiers, pour ne pas avoir deux onglets « View all » superposés.
+- **Colonnes de la table complète selon la largeur** : les 8 colonnes à partir de 1420 px ; à 1280 px, le type passe dans la deuxième ligne du nom pour que les noms restent lisibles ; le bouton de téléchargement avec texte apparaît à partir de 1600 px.
+- **Watermark de l'espace de travail** réduit à 230 px : en grand il recouvrait les lignes de la table. Opacité 0,035, désactivable dans Réglages.
+- **« Épingler à l'accueil »** ajouté au menu trois-points ; 3 fichiers épinglés dans les données d'exemple, comme sur l'image 3.
+- **Police et icônes refaites après retour de l'utilisateur** : Geist medium et icônes pleines, voir section 6.
+- **Arborescence du brief remplacée par l'index 00–10 du plan** (section 1 bis).
+- **La protection est proposée, pas imposée** : le Vault s'ouvre sans phrase secrète tant que l'utilisateur ne l'active pas (visite guidée, bouton bouclier, Réglages).
 
-### Pas encore fait dans l'interface
+### Suite prévue
 
-- Renommer ou déplacer un **dossier**, modifier ou archiver un **projet** : le store n'a pas encore ces mutations, donc aucun bouton n'est affiché.
-
-### Phase 2 — seulement après validation de l'interface
-
-Dans l'ordre prévu par le brief : upload réel + glisser-déposer + validation → persistance locale → téléchargement des originaux → PDF.js dans le modal → aperçus Office → historique de versions → backend (authentification, base de données, stockage privé, URL signées).
-
-Le plan de data room (section 1 bis) ajoute l'expérience invité et la signature, et propose Cloudflare comme backend : faire confirmer l'ordre et le fournisseur avant de commencer.
+Aperçus Office (DOCX, XLSX, PPTX), puis le serveur : authentification des invités par code, permissions par dossier et par niveau (0 à 3), Terms of Access et NDA, journal « qui a ouvert quoi » côté serveur, expiration et révocation, questions, signature. Fournisseur à confirmer avec l'utilisateur (section 1 bis).
 
 ## 4. Architecture et décisions
 
 - **Une seule page, vues pilotées par l'état.** `route` vit dans le store et se synchronise avec `location.hash`. Noms de hash simples : `#home`, `#files`, `#projects`, `#private`, `#shared`, `#favorites`, `#recent`, `#archived`, `#activity`, `#preferences`, `#project-<id>`, `#folder-<id>`. La vue Settings s'appelle `preferences` dans le code (le hash `#settings` est réservé par l'hébergeur d'aperçu).
-- **Le store est la seule couture vers la persistance.** Les composants n'appellent que `useVault()`. En phase 2, brancher IndexedDB puis Supabase derrière les mutations du store (ou extraire une interface `VaultRepository`), sans toucher aux composants.
-- **État en mémoire pour l'instant** : tout se réinitialise au rechargement. C'est voulu à ce stade et doit rester indiqué dans l'interface.
-- **Actions déjà fonctionnelles en mémoire** : favoris, épingler, renommer, modifier les détails, déplacer, copier, archiver, restaurer, supprimer (avec Undo dans le toast), statut en lot, nouveau dossier, nouveau projet, tri, pagination, recherche, filtres.
-- **Retirés plutôt que simulés** : imprimer et chercher dans le document (boutons enlevés de la visionneuse), créer un document ou un tableur dans l'app (cartes remplacées par Téléverser et Visite guidée), téléchargement groupé.
+- **Le store est la seule couture vers la persistance.** Les composants n'appellent que `useVault()`. Pour le serveur, brancher le nouveau stockage derrière les mutations du store (ou extraire une interface `VaultRepository`), sans toucher aux composants.
+- **Deux étages dans le store** : `VaultProvider` gère le démarrage et le verrouillage ; `VaultSession` (remonté avec une nouvelle `key` à chaque déverrouillage) porte l'état déchiffré. Verrouiller démonte la session : rien de déchiffré ne survit en mémoire React.
+- **La clé de données ne vit qu'en mémoire** (`dataKey` dans `db.ts`, non extractible) et disparaît au verrouillage ou au rechargement.
+- **Retirés plutôt que simulés** : imprimer et chercher dans le document (boutons enlevés de la visionneuse), créer un document ou un tableur dans l'app (cartes remplacées par Téléverser et Visite guidée).
 - **Menu trois-points** : « Open » ouvre le modal en plein écran, « Preview » en fenêtre.
 - **Utilisateurs d'exemple** : des services (NDF5 Admin, Production Office, Legal Affairs, Finance Office, Story Department), avatars à initiales. Pas de fausses personnes ni de photos.
 
@@ -150,14 +178,25 @@ Note de fidélité : on reprend le langage visuel (layout, densité, composants)
 - `lucide-react` est en v1.x : vérifier qu'une icône existe avant de l'importer (toutes celles déjà utilisées ont été vérifiées).
 - `FileTable` : les seuils de colonnes tiennent compte des 264 px de sidebar (`sm`, `md`, `min-[1140px]`, `xl`, `min-[1420px]`, `min-[1600px]`). Les revoir si la sidebar ou les marges changent.
 - Pour un aperçu statique hébergé (export `output: "export"`), les chemins `/_next/...` sont absolus : prévoir un `assetPrefix` ou un post-traitement.
+- **Après `next dev`, faire `rm -rf .next` avant `next build`**, sinon la feuille de style peut être périmée.
+- **Styles globaux dans `@layer base`** : une règle CSS hors couche l'emporte sur toutes les classes utilitaires de Tailwind v4.
+- **Playwright est épinglé à 1.63.0**, la version du Chromium préinstallé. Ne pas lancer `playwright install`.
+- **Tests : locale UTF-8 obligatoire pour le navigateur.** Sans elle, un téléchargement au nom accentué s'appelle « download ». `playwright.config.ts` force `C.UTF-8` quand l'environnement n'en a pas.
+- **Tests de verrouillage automatique** : avec l'horloge simulée de Playwright le verrou tombe environ 2 s après l'échéance ; utiliser des attentes avec délai (`expect.poll`, `toBeVisible({ timeout })`), pas une vérification immédiate.
+- **`crypto.getRandomValues` refuse plus de 65 536 octets** par appel : générer les gros tampons de test autrement.
+- **Tests téléphone** : utiliser un profil d'appareil (`devices["Pixel 7"]`), pas seulement une petite fenêtre, sinon le survol de la souris est émulé et les clics tombent sur les boutons de survol.
 
 ## 8. Commandes
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
-npx tsc --noEmit   # doit rester sans erreur
-npm run build
+npm run dev         # http://localhost:3000
+npx tsc --noEmit    # doit rester sans erreur
+npm run build       # build Next.js
+npm run build:page  # dist/ndf-vault.html (page hébergée) et dist/preview.html
+npm test            # tests unitaires (Vitest)
+npm run test:e2e    # reconstruit la page puis lance les tests navigateur (Playwright)
+npm run test:all    # les deux
 ```
 
 ## 9. Prompt de démarrage pour Claude Code
@@ -166,12 +205,14 @@ npm run build
 Lis HANDOFF.md en entier, puis docs/brief.txt. Lis aussi AGENTS.md et les guides
 Next concernés dans node_modules/next/dist/docs/.
 
-L'interface est en français et les premières fonctions réelles marchent (téléversement,
-stockage dans le navigateur, téléchargement, aperçu PDF/images/texte, visite guidée).
+L'interface est en français. Fonctionnent déjà : téléversement, stockage chiffré dans
+le navigateur (phrase secrète, verrouillage), aperçus, versions, dossiers, projets,
+exports, filigrane personnel, journal de sécurité, visite guidée, et deux suites de tests.
 Demande à l'utilisateur ses ajustements après son essai sur PC, puis la suite :
-aperçus Office, historique des versions, puis l'accès des invités et le serveur
-(fournisseur à confirmer, voir section 1 bis).
+aperçus Office, puis l'accès des invités et le serveur (fournisseur à confirmer,
+voir section 1 bis).
 
-Après chaque changement : npx tsc --noEmit, npm run build:page, test dans un navigateur.
+Après chaque changement : npx tsc --noEmit, npm test, npm run test:e2e.
+Toute nouvelle fonction arrive avec ses tests.
 Écris-moi l'avancement dans le chat pendant que tu travailles, en français.
 ```

@@ -1,16 +1,24 @@
 "use client";
 
 import { ArrowUpRight, FolderKanban, Plus } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles, byModifiedDesc } from "@/lib/selectors";
 import { count, formatDate } from "@/lib/format";
-import { Button, Chip, EmptyState, PageHeader, SampleNotice } from "@/components/ui";
+import { Button, Chip, EmptyState, PageHeader, SampleNotice, TextTabs, type TabItem } from "@/components/ui";
 
 export function ProjectsView() {
   const v = useVault();
   const active = useMemo(() => activeFiles(v.files), [v.files]);
-  const projects = v.projects.filter((p) => !p.archived);
+  const [tab, setTab] = useState<"active" | "archived">("active");
+  const archivedCount = v.projects.filter((p) => p.archived).length;
+  // The Archived tab only exists while it has something to show.
+  const shown = archivedCount === 0 ? "active" : tab;
+  const projects = v.projects.filter((p) => p.archived === (shown === "archived"));
+  const tabs: TabItem<"active" | "archived">[] = [
+    { id: "active", label: "Actifs", count: v.projects.length - archivedCount },
+    { id: "archived", label: "Archivés", count: archivedCount },
+  ];
 
   return (
     <div className="space-y-6">
@@ -27,9 +35,11 @@ export function ProjectsView() {
         }
       />
 
+      {archivedCount > 0 && <TextTabs label="Projets actifs ou archivés" items={tabs} value={shown} onChange={setTab} />}
+
       {projects.length === 0 ? (
         <div className="rounded-xl border border-line bg-white">
-          <EmptyState icon={FolderKanban} title="Aucun projet pour l’instant" hint="Créez un projet pour donner à une production son propre espace." />
+          <EmptyState icon={FolderKanban} title="Aucun projet actif" hint="Créez un projet pour donner à une production son propre espace." />
         </div>
       ) : (
         <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

@@ -9,7 +9,7 @@ import { count, descendantIds, folderLabel, folderPath } from "@/lib/format";
 import { ExplorerToolbar, useFileFilters } from "@/components/files/Explorer";
 import { FileTable } from "@/components/files/FileTable";
 import { Button, EmptyState, PageHeader, TextTabs, type TabItem } from "@/components/ui";
-import { AddFileMenu, Breadcrumbs, SectionTitle, UploadButton } from "./shared";
+import { Breadcrumbs, FolderMenu, SectionTitle, UploadButton } from "./shared";
 
 type Depth = "direct" | "nested";
 
@@ -63,7 +63,7 @@ export function FolderView({ id }: { id: string }) {
               Nouveau dossier
             </Button>
             <UploadButton folderId={id} />
-            <AddFileMenu folderId={id} />
+            <FolderMenu folder={folder} fileIds={nested.map((f) => f.id)} />
           </>
         }
       />

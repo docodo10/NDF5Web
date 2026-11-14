@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
-import { CloudArrowUpIcon, CompassIcon, FolderIcon, HouseIcon, LifebuoyIcon, MagnifyingGlassIcon, RowsIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
+import { CloudArrowUpIcon, CompassIcon, FolderIcon, HouseIcon, LifebuoyIcon, LockKeyIcon, MagnifyingGlassIcon, RowsIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useVault } from "@/lib/store";
 import { Ndf5Mark } from "./brand/Brand";
@@ -25,7 +25,7 @@ const STEPS: Step[] = [
     target: null,
     icon: CompassIcon,
     title: "Bienvenue dans NDF Vault",
-    text: "Votre espace pour classer, consulter et partager les documents de la saga. Voici l’essentiel en six étapes, en moins d’une minute.",
+    text: "Votre espace pour classer, consulter et protéger les documents de la saga. Voici l’essentiel en quelques étapes, en une minute.",
   },
   {
     target: "nav",
@@ -60,6 +60,12 @@ const STEPS: Step[] = [
     title: "Vos fichiers",
     text: "Cliquez sur un fichier pour l’ouvrir dans la visionneuse. Le menu ⋮ au bout de la ligne permet de renommer, déplacer, partager, télécharger ou archiver.",
     maxHeight: 250,
+  },
+  {
+    target: "lock",
+    icon: LockKeyIcon,
+    title: "Protégez le Vault",
+    text: "Ajoutez une phrase secrète : tout ce qui est stocké est alors chiffré, et le Vault se verrouille seul après une période d’inactivité.",
   },
   {
     target: "help",
