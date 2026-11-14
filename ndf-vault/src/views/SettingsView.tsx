@@ -34,12 +34,13 @@ function Line({ label, hint, children }: { label: string; hint?: string; childre
 const STEPS: { label: string; hint: string; state: "review" | "pending" }[] = [
   { label: "Interface", hint: "Navigation, file tables, dialogs, document viewer, search", state: "review" },
   { label: "File upload", hint: "Multiple files, drag and drop, validation", state: "pending" },
-  { label: "Persistent storage", hint: "IndexedDB local demo mode", state: "pending" },
+  { label: "Persistent storage", hint: "Local demo mode that survives a reload", state: "pending" },
   { label: "Original downloads", hint: "Download the stored original of any file", state: "pending" },
   { label: "PDF rendering", hint: "PDF.js in the document viewer", state: "pending" },
   { label: "Office previews", hint: "DOCX, XLSX and PPTX where practical", state: "pending" },
   { label: "Version history", hint: "Stored versions per file", state: "pending" },
-  { label: "Backend", hint: "Supabase Auth, Postgres metadata, private Storage", state: "pending" },
+  { label: "Guest access", hint: "Email sign-in, access tiers, Terms of Access and NDA signing, personal watermark", state: "pending" },
+  { label: "Backend", hint: "Private file storage, database and activity log, outside the public repository", state: "pending" },
 ];
 
 export function SettingsView() {

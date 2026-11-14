@@ -14,26 +14,20 @@ import {
   EllipsisVertical,
   ExternalLink,
   Eye,
-  File as FileGlyph,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  FileType,
   FolderInput,
   History,
   Inbox,
   Pencil,
   Pin,
   PinOff,
-  Presentation,
   RotateCcw,
   Share2,
   SquarePen,
   Star,
-  Table2,
   Trash2,
   X,
 } from "lucide-react";
+import { ArticleIcon, FilePdfIcon, FileTextIcon, GridFourIcon, ImageIcon, PresentationChartIcon, TableIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useVault } from "@/lib/store";
 import type { FileKind, VaultFile } from "@/lib/types";
@@ -45,21 +39,22 @@ import { MENU_CONTENT, MENU_ITEM, MENU_SEPARATOR } from "./menu-styles";
 
 type IconType = ComponentType<{ className?: string; strokeWidth?: number }>;
 
-const KIND_ICON: Record<FileKind, IconType> = {
-  pdf: FileText,
-  docx: FileType,
-  xlsx: FileSpreadsheet,
-  pptx: Presentation,
-  txt: FileGlyph,
-  csv: Table2,
-  image: FileImage,
+const KIND_ICON: Record<FileKind, PhosphorIcon> = {
+  pdf: FilePdfIcon,
+  docx: FileTextIcon,
+  xlsx: GridFourIcon,
+  pptx: PresentationChartIcon,
+  txt: ArticleIcon,
+  csv: TableIcon,
+  image: ImageIcon,
 };
 
+/** Objects (files, folders) use a filled glyph in a soft tile; actions keep outlined icons. */
 export function FileIcon({ kind, size = 36 }: { kind: FileKind; size?: number }) {
   const Icon = KIND_ICON[kind];
   return (
-    <span className="flex shrink-0 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 shadow-xs" style={{ width: size, height: size }}>
-      <Icon className="size-[17px]" strokeWidth={1.6} />
+    <span className="flex shrink-0 items-center justify-center rounded-lg bg-fill text-neutral-700" style={{ width: size, height: size }}>
+      <Icon weight="fill" style={{ width: Math.round(size * 0.53), height: Math.round(size * 0.53) }} />
     </span>
   );
 }

@@ -14,6 +14,19 @@ Construire **NDF Vault** (« The New Drago Family — Production & Document Mana
 
 Ces trois captures viennent d'applications tierces : elles sont ignorées par git (`docs/reference/` dans `.gitignore`) et ne sont donc pas dans le dépôt. Les redemander à l'utilisateur si le dossier est vide.
 
+## 1 bis. Contexte ajouté le 2026-11-14 : le Vault est une data room pour invités
+
+L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », confidentiel, **ne pas le mettre dans le dépôt**). Ce qu'il change pour le produit :
+
+- **Public visé** : des invités externes (talents et agents, producteurs, studios, financiers, partenaires), en plus de l'administrateur. Expérience simple, une action par écran, utilisable au téléphone, en français et en anglais.
+- **Index numéroté** : dossiers 00 à 10 (Start Here, Saga Overview, Screenplays, Story Development, Production, Business and Finance, Legal and Chain of Title, Talent and Packaging, To Sign, Signed, Q&A), chacun avec un accès par défaut. **Déjà appliqué** dans `sample-data.ts` (`Folder.index`, `Folder.access`) ; l'accès n'est qu'un libellé « Planned access » tant que la connexion des invités n'existe pas.
+- **Niveaux d'accès** : 0 public, 1 invité (Terms of Access à accepter), 2 affaires (NDA), 3 deal room privée par contrepartie.
+- **Fonctions attendues côté invité** : connexion par code envoyé par courriel, écran Terms of Access, « What's new », filigrane personnel (nom, société, courriel, date) sur chaque page, consultation seule par défaut, date d'expiration et révocation, bouton « Ask a question », documents à signer et copies signées.
+- **Côté administrateur** : invitations, groupes, journal « qui a ouvert quoi, quand ».
+- **Backend** : le plan recommande Cloudflare (Access, Workers/Pages, R2, D1) plutôt que Supabase, et de servir le Vault hors de ce dépôt public. Le brief d'origine disait Supabase : **à faire confirmer par l'utilisateur avant la phase 2**. L'interface ne nomme plus aucun fournisseur.
+- **Aucun vrai document dans ce dépôt**, jamais : il est public.
+- Le plan évoque un habillage sombre pour l'espace invité ; l'utilisateur a par ailleurs demandé de coller aux trois captures claires. **L'interface reste claire** tant qu'il n'a pas tranché.
+
 ## 2. Consignes de l'utilisateur (à respecter)
 
 - **Étape par étape.** Finir **toute l'interface d'abord**, la faire valider, et seulement ensuite coder les grosses fonctions (upload, IndexedDB, PDF.js, Supabase).
@@ -34,7 +47,7 @@ Ces trois captures viennent d'applications tierces : elles sont ignorées par gi
 | Fichier | Contenu |
 |---|---|
 | `src/lib/types.ts` | Types `VaultFile`, `Folder`, `Project`, `User`, `ActivityItem`, `Route`, statuts |
-| `src/lib/sample-data.ts` | 39 fichiers d'exemple, arborescence NDF SAGA complète, projets PB1/PB2, 5 utilisateurs (des services, pas des personnes), activité |
+| `src/lib/sample-data.ts` | 42 fichiers d'exemple, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 utilisateurs (des services, pas des personnes), activité |
 | `src/lib/format.ts` | Dates, tailles, libellés de type, chemin de dossier, descendants |
 | `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory` (catégorie d'un fichier dans un projet, déduite de son dossier) |
 | `src/lib/store.tsx` | `VaultProvider` + `useVault()` : état en mémoire, routage par hash (lu dès le premier rendu), toasts, dialogues, preview, toutes les mutations |
@@ -59,6 +72,8 @@ Ces trois captures viennent d'applications tierces : elles sont ignorées par gi
 - **Colonnes de la table complète selon la largeur** : les 8 colonnes à partir de 1420 px ; à 1280 px, « File Type » passe dans la deuxième ligne du nom (« XLSX · dossier ») pour que les noms restent lisibles ; le bouton « Download file » avec texte apparaît à partir de 1600 px.
 - **Watermark de l'espace de travail** réduit à 230 px (au lieu de 440) : en grand il recouvrait les lignes de la table. Opacité 0,035, désactivable dans Settings.
 - **« Pin to Home »** ajouté au menu trois-points (aucun bouton n'appelait `togglePinned` hors Edit Details) ; 3 fichiers épinglés dans les données d'exemple, comme sur l'image 3.
+- **Police et icônes refaites après retour de l'utilisateur** (« pas modernes, ne ressemblent pas aux images ») : Inter 13 px regular et icônes en contour fin remplacées par Geist medium et icônes pleines, voir section 6.
+- **Arborescence du brief remplacée par l'index 00–10 du plan** (section 1 bis). Les dossiers « Distribution », « Marketing », « Cast & Crew », etc. du brief ont été fusionnés dans les dossiers numérotés.
 - **Premier onglet de type nommé « All Types »** dans les vues de fichiers, pour ne pas avoir deux onglets « View all » superposés.
 
 ### Pas encore fait dans l'interface
@@ -67,7 +82,9 @@ Ces trois captures viennent d'applications tierces : elles sont ignorées par gi
 
 ### Phase 2 — seulement après validation de l'interface
 
-Dans l'ordre : upload réel + glisser-déposer + validation → persistance IndexedDB → téléchargement des originaux → PDF.js dans le modal → aperçus Office → historique de versions → Supabase (Auth, Postgres, Storage privé, URL signées, RLS).
+Dans l'ordre prévu par le brief : upload réel + glisser-déposer + validation → persistance locale → téléchargement des originaux → PDF.js dans le modal → aperçus Office → historique de versions → backend (authentification, base de données, stockage privé, URL signées).
+
+Le plan de data room (section 1 bis) ajoute l'expérience invité et la signature, et propose Cloudflare comme backend : faire confirmer l'ordre et le fournisseur avant de commencer.
 
 ## 4. Architecture et décisions
 
@@ -90,7 +107,8 @@ Dans l'ordre : upload réel + glisser-déposer + validation → persistance Inde
 
 | Élément | Valeur |
 |---|---|
-| Police | Inter variable (locale, `--font-inter`), base 14 px / 20 px |
+| Police | Geist variable (locale, `--font-geist`), base 14 px / 20 px ; libellés de navigation et noms en graisse 500, élément actif en 600 |
+| Icônes | Deux familles, par rôle. **Objets et navigation** (sidebar, fichiers, dossiers, cartes d'action) : Phosphor en `weight="fill"`, dans une tuile `bg-fill` sans bordure, comme l'image 3. **Actions** (barres d'outils, menus, boutons) : Lucide en contour, comme les images 1 et 2 |
 | Encre, boutons primaires | `#0A0A0A` (`ink`) |
 | Bordures | `#E8E8E8` (`line`), filets de lignes `#F0F0F0` (`hair`) |
 | Surfaces | blanc, `#FAFAFA` (`subtle` : sidebar, en-tête de table, barre d'outils), `#F5F5F5` (`fill` : rails d'onglets, survol) |
@@ -112,6 +130,8 @@ Note de fidélité : on reprend le langage visuel (layout, densité, composants)
 - Tailwind v4 passe par le loader `@tailwindcss/turbopack` déclaré dans `next.config.ts` ; les tokens sont dans `@theme inline` de `globals.css`, il n'y a pas de `tailwind.config`.
 - **Ne pas combiner `hidden` (ou une autre classe `display`) avec `Button` / `IconButton`** : ils posent déjà `inline-flex`, qui l'emporte. Utiliser `max-sm:hidden`, `max-md:hidden`, ou un `<span>` englobant.
 - Dossiers et projets partagent des identifiants (`pb1`, `pb2`) : préfixer toute clé React qui mélange les deux.
+- `@phosphor-icons/react` 2.x : les composants portent le suffixe `Icon` (`HouseIcon`, `FolderIcon`…).
+- Le serveur de production s'appelle `next-server` : `pkill -f "next start"` ne le tue pas. Vérifier que le port est libre avant de relancer, sinon on regarde l'ancienne version.
 - `lucide-react` est en v1.x : vérifier qu'une icône existe avant de l'importer (toutes celles déjà utilisées ont été vérifiées).
 - `FileTable` : les seuils de colonnes tiennent compte des 264 px de sidebar (`sm`, `md`, `min-[1140px]`, `xl`, `min-[1420px]`, `min-[1600px]`). Les revoir si la sidebar ou les marges changent.
 - Pour un aperçu statique hébergé (export `output: "export"`), les chemins `/_next/...` sont absolus : prévoir un `assetPrefix` ou un post-traitement.

@@ -62,5 +62,28 @@ export function descendantIds(folders: Folder[], id: string): Set<string> {
 }
 
 export function folderLabel(f: Folder): string {
+  if (f.index) return `${f.index} ${f.name}`;
   return f.code ? `${f.name} (${f.code})` : f.name;
+}
+
+export const MAX_NAME_LEN = 120;
+export const MAX_NOTE_LEN = 2000;
+export const MAX_TAGS_LEN = 240;
+
+/**
+ * Clean a user-entered file / folder / project name before it enters the store.
+ * Collapses whitespace, strips control characters and path separators, and caps
+ * the length. Names become storage keys and download filenames once the backend
+ * exists, so this is the single choke point where they are made safe — it blocks
+ * path traversal (`../`), header/filename injection via control characters, and
+ * unbounded input. Display is already safe because React escapes text nodes.
+ */
+export function sanitizeName(raw: string): string {
+  return raw
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/[/\\]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_NAME_LEN);
 }

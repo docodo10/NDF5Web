@@ -2,7 +2,8 @@
 
 import clsx from "clsx";
 import * as Dialog from "@radix-ui/react-dialog";
-import { CornerDownLeft, Folder as FolderIcon, FolderKanban, Search } from "lucide-react";
+import { CornerDownLeft, Search } from "lucide-react";
+import { FolderIcon, KanbanIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import { formatDate, folderLabel, KIND_LABEL } from "@/lib/format";
@@ -66,8 +67,8 @@ export function CommandPalette() {
         key: `folder-${d.id}`,
         group: "Folders",
         icon: (
-          <span className="flex size-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-500">
-            <FolderIcon className="size-4" strokeWidth={1.75} />
+          <span className="flex size-8 items-center justify-center rounded-lg bg-fill text-neutral-700">
+            <FolderIcon weight="fill" className="size-[17px]" />
           </span>
         ),
         title: folderLabel(d),
@@ -78,8 +79,8 @@ export function CommandPalette() {
         key: `project-${p.id}`,
         group: "Projects",
         icon: (
-          <span className="flex size-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-500">
-            <FolderKanban className="size-4" strokeWidth={1.75} />
+          <span className="flex size-8 items-center justify-center rounded-lg bg-fill text-neutral-700">
+            <KanbanIcon weight="fill" className="size-[17px]" />
           </span>
         ),
         title: `${p.name} (${p.code})`,

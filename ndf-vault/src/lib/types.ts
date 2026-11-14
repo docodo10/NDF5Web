@@ -34,6 +34,10 @@ export interface Folder {
   name: string;
   parentId: string | null;
   code?: string;
+  /** Position in the numbered vault index ("00" to "10"). */
+  index?: string;
+  /** Who is meant to see this folder. A label only: nothing enforces it until guest access exists. */
+  access?: string;
 }
 
 export interface Project {

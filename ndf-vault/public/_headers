@@ -1,0 +1,14 @@
+# Security headers for the hosted NDF Vault build.
+# Read by Cloudflare Pages and Netlify from the deploy root (out/_headers after
+# `next build`). GitHub Pages ignores this file, so it is harmless there, but the
+# real gate and private storage must run on a host that applies these — see
+# SECURITY.md. frame-ancestors / HSTS / X-Frame-Options are header-only and
+# cannot be set from the page itself.
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), browsing-topics=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'

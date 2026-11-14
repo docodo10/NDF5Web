@@ -23,9 +23,9 @@ export const CATEGORY_LABEL: Record<ProjectCategory, string> = {
   other: "Other",
 };
 
-const FINANCIAL_FOLDERS = new Set(["budgets", "financing", "plans"]);
-const PRODUCTION_FOLDERS = new Set(["screenplays", "scheduling", "cast"]);
-const LEGAL_FOLDERS = new Set(["legal"]);
+const FINANCIAL_FOLDERS = new Set(["business"]);
+const PRODUCTION_FOLDERS = new Set(["screenplays", "story", "production", "talent"]);
+const LEGAL_FOLDERS = new Set(["legal", "to-sign", "signed"]);
 
 /**
  * A file's category inside a project workspace, derived from where it is filed:

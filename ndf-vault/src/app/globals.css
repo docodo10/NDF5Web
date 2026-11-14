@@ -7,7 +7,7 @@
  * Control heights: 32 (compact) · 36 (default). Table row: 60.
  */
 @theme inline {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
 
   --color-ink: #0a0a0a;
   --color-brand: #f51000;
@@ -50,7 +50,6 @@ body {
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 20px;
-  font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;

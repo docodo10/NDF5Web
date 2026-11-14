@@ -1,7 +1,8 @@
 "use client";
 
-import { FileSpreadsheet, FileType, FolderKanban, FolderPlus, Pin, PinOff, Plus } from "lucide-react";
-import { useMemo, useState, type ComponentType } from "react";
+import { Pin, PinOff, Plus } from "lucide-react";
+import { FileTextIcon, FolderIcon, GridFourIcon, KanbanIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
+import { useMemo, useState } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles, byCreatedDesc, byModifiedDesc } from "@/lib/selectors";
 import { formatSize } from "@/lib/format";
@@ -9,8 +10,6 @@ import { ExplorerToolbar, useFileFilters, type KindGroup } from "@/components/fi
 import { FileIcon, FileTable } from "@/components/files/FileTable";
 import { PageHeader, SampleNotice, SegmentedTabs, TextTabs, type TabItem } from "@/components/ui";
 import { kindTabs, SectionTitle } from "./shared";
-
-type IconType = ComponentType<{ className?: string; strokeWidth?: number }>;
 
 type Scope = "recent" | "modified" | "shared" | "all";
 
@@ -23,20 +22,20 @@ const SCOPES: TabItem<Scope>[] = [
 
 const RECENT_COUNT = 14;
 
-function ActionCard({ icon: Icon, label, onClick }: { icon: IconType; label: string; onClick: () => void }) {
+function ActionCard({ icon: Icon, label, onClick }: { icon: PhosphorIcon; label: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-[88px] flex-col justify-between rounded-[10px] border border-line bg-white p-3.5 text-left shadow-xs transition-colors duration-150 hover:border-neutral-300 hover:bg-subtle"
+      className="group flex h-[96px] flex-col justify-between rounded-xl border border-line bg-white p-3.5 text-left shadow-xs transition-colors duration-150 hover:border-neutral-300 hover:bg-subtle"
     >
       <span className="flex items-start justify-between">
-        <span className="flex size-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-700 shadow-xs">
-          <Icon className="size-4" strokeWidth={1.75} />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-fill text-neutral-700 transition-colors duration-150 group-hover:bg-neutral-200/70">
+          <Icon weight="fill" className="size-[19px]" />
         </span>
         <Plus className="size-4 text-neutral-400 transition-colors duration-150 group-hover:text-ink" strokeWidth={1.75} />
       </span>
-      <span className="text-[13px] font-medium text-ink">{label}</span>
+      <span className="text-[14px] font-medium text-ink">{label}</span>
     </button>
   );
 }
@@ -68,10 +67,10 @@ export function Home() {
       <PageHeader title="Welcome to NDF Vault" description="The New Drago Family — Production & Document Management" actions={<SampleNotice />} />
 
       <section aria-label="Quick actions" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <ActionCard icon={FileType} label="New Document" onClick={() => v.notReady("New Document")} />
-        <ActionCard icon={FileSpreadsheet} label="New Spreadsheet" onClick={() => v.notReady("New Spreadsheet")} />
-        <ActionCard icon={FolderPlus} label="New Folder" onClick={() => v.openDialog({ type: "newFolder", parentId: "root" })} />
-        <ActionCard icon={FolderKanban} label="New Project" onClick={() => v.openDialog({ type: "newProject" })} />
+        <ActionCard icon={FileTextIcon} label="New Document" onClick={() => v.notReady("New Document")} />
+        <ActionCard icon={GridFourIcon} label="New Spreadsheet" onClick={() => v.notReady("New Spreadsheet")} />
+        <ActionCard icon={FolderIcon} label="New Folder" onClick={() => v.openDialog({ type: "newFolder", parentId: "root" })} />
+        <ActionCard icon={KanbanIcon} label="New Project" onClick={() => v.openDialog({ type: "newProject" })} />
       </section>
 
       <section className="space-y-4">

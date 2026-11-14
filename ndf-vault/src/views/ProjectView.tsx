@@ -25,9 +25,9 @@ const TABS: TabItem<Tab>[] = [
 ];
 
 const CATEGORY_EMPTY: Record<"financial" | "production" | "legal", string> = {
-  financial: "Files stored under Production Budgets, Financing & Investors or Business Plans and linked to this project appear here.",
-  production: "Files stored under Screenplays, Production Scheduling, Cast & Crew or this project's own folders appear here.",
-  legal: "Files stored under Legal & Contracts and linked to this project appear here.",
+  financial: "Files stored under 05 Business and Finance and linked to this project appear here.",
+  production: "Files stored under 02 Screenplays, 03 Story Development, 04 Production or 07 Talent and Packaging appear here.",
+  legal: "Files stored under 06 Legal and Chain of Title and linked to this project appear here.",
 };
 
 function Card({ title, children }: { title: string; children: ReactNode }) {

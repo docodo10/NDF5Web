@@ -3,15 +3,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ActivityItem, FileStatus, Folder, Project, Route, VaultFile } from "./types";
 import { ACTIVITY, CURRENT_USER_ID, FILES, FOLDERS, PROJECTS } from "./sample-data";
-import { fullName } from "./format";
+import { fullName, sanitizeName, MAX_NAME_LEN, MAX_NOTE_LEN } from "./format";
 
 /**
  * Interface-stage store.
  *
  * State lives in memory only: it resets on reload. The mutation functions
- * below are the single seam where the persistence layer (IndexedDB demo mode,
- * then Supabase) plugs in during the storage step, so the components never
- * need to change.
+ * below are the single seam where the persistence layer (local demo storage,
+ * then the vault backend) plugs in during the storage step, so the components
+ * never need to change.
  */
 
 export type DialogState =
@@ -202,15 +202,20 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       },
       renameFile: (id, name) => {
         const f = byId(id);
-        if (!f || !name.trim()) return;
-        patchMany([id], () => ({ name: name.trim(), modifiedAt: nowIso() }));
-        log("renamed", `${name.trim()}.${f.ext}`, f.projectId);
+        const clean = sanitizeName(name);
+        if (!f || !clean) return;
+        patchMany([id], () => ({ name: clean, modifiedAt: nowIso() }));
+        log("renamed", `${clean}.${f.ext}`, f.projectId);
         notify("File renamed");
       },
       updateFile: (id, patch) => {
         const f = byId(id);
         if (!f) return;
-        patchMany([id], () => ({ ...patch, modifiedAt: nowIso() }));
+        const safe: Partial<VaultFile> = { ...patch };
+        if (safe.name !== undefined) safe.name = sanitizeName(safe.name) || f.name;
+        if (safe.notes !== undefined) safe.notes = safe.notes.slice(0, MAX_NOTE_LEN);
+        if (safe.tags !== undefined) safe.tags = safe.tags.map((t) => t.slice(0, 40)).slice(0, 20);
+        patchMany([id], () => ({ ...safe, modifiedAt: nowIso() }));
         log("updated details of", fullName(f), f.projectId);
         notify("Details saved");
       },
@@ -250,19 +255,25 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         notify(`Status set to ${status}`);
       },
       addFolder: (name, parentId) => {
+        const clean = sanitizeName(name);
+        if (!clean) return "";
         const id = uid("d");
-        setFolders((fs) => [...fs, { id, name: name.trim(), parentId }]);
-        log("created folder", name.trim());
-        notify(`Folder “${name.trim()}” created`);
+        setFolders((fs) => [...fs, { id, name: clean, parentId }]);
+        log("created folder", clean);
+        notify(`Folder “${clean}” created`);
         return id;
       },
       addProject: ({ name, code, period }) => {
+        const cleanName = sanitizeName(name);
+        if (!cleanName) return "";
+        const cleanCode = sanitizeName(code).toUpperCase().slice(0, 5);
+        const cleanPeriod = sanitizeName(period) || "Dates to be defined";
         const id = uid("p");
         const folderId = uid("d");
-        setFolders((fs) => [...fs, { id: folderId, name: name.trim(), code: code.trim() || undefined, parentId: "root" }]);
-        setProjects((ps) => [...ps, { id, code: code.trim() || name.trim().slice(0, 3).toUpperCase(), name: name.trim(), period: period.trim() || "Dates to be defined", summary: "New project workspace.", storyYears: [], folderId, archived: false }]);
-        log("created project", name.trim());
-        notify(`Project “${name.trim()}” created`);
+        setFolders((fs) => [...fs, { id: folderId, name: cleanName, code: cleanCode || undefined, parentId: fs.some((f) => f.id === "production") ? "production" : "root" }]);
+        setProjects((ps) => [...ps, { id, code: cleanCode || cleanName.slice(0, 3).toUpperCase(), name: cleanName, period: cleanPeriod, summary: "New project workspace.", storyYears: [], folderId, archived: false }]);
+        log("created project", cleanName);
+        notify(`Project “${cleanName}” created`);
         return id;
       },
     };

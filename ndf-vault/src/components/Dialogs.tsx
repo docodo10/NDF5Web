@@ -2,7 +2,8 @@
 
 import clsx from "clsx";
 import * as Dialog from "@radix-ui/react-dialog";
-import { CloudUpload, Folder as FolderIcon, Info, Lock, Users, X } from "lucide-react";
+import { CloudUpload, Info, Lock, Users, X } from "lucide-react";
+import { FolderIcon } from "@phosphor-icons/react";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import type { FileStatus, Folder, VaultFile } from "@/lib/types";
@@ -137,7 +138,7 @@ function RenameDialog({ file }: { file: VaultFile }) {
     >
       <Field label="File name">
         <div className="flex items-center gap-2">
-          <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} onFocus={(e) => e.target.select()} />
+          <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} onFocus={(e) => e.target.select()} />
           <span className="shrink-0 text-[13px] text-neutral-500">.{file.ext}</span>
         </div>
       </Field>
@@ -209,10 +210,10 @@ function DetailsDialog({ file }: { file: VaultFile }) {
         </select>
       </Field>
       <Field label="Tags" hint="Separate tags with commas.">
-        <input value={tags} onChange={(e) => setTags(e.target.value)} className={INPUT} placeholder="screenplay, FS1" />
+        <input value={tags} onChange={(e) => setTags(e.target.value)} maxLength={240} className={INPUT} placeholder="screenplay, FS1" />
       </Field>
       <Field label="Notes">
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={clsx(INPUT, "h-auto resize-none py-2 leading-5")} placeholder="Add a note for collaborators" />
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={2000} className={clsx(INPUT, "h-auto resize-none py-2 leading-5")} placeholder="Add a note for collaborators" />
       </Field>
       <div className="mt-1 divide-y divide-hair border-t border-hair pt-1">
         <Toggle on={favorite} onChange={setFavorite} label="Favorite" />
@@ -240,7 +241,7 @@ function FolderPicker({ value, onChange, exclude }: { value: string; onChange: (
               className={clsx("flex h-8 w-full items-center gap-2 rounded-md pr-2 text-left text-[13px] transition-colors duration-100 disabled:opacity-40", on ? "bg-ink text-white" : "text-neutral-700 hover:bg-fill")}
               style={{ paddingLeft: 10 + depth * 16 }}
             >
-              <FolderIcon className={clsx("size-[15px] shrink-0", on ? "text-white/80" : "text-neutral-400")} strokeWidth={1.75} />
+              <FolderIcon weight="fill" className={clsx("size-[17px] shrink-0", on ? "text-white/80" : "text-neutral-400")} />
               <span className="truncate">{folderLabel(folder)}</span>
             </button>
           </li>
@@ -320,7 +321,7 @@ function ShareDialog({ file }: { file: VaultFile }) {
         {option("team", Users, "Workspace", "Everyone in the NDF Vault workspace.")}
       </div>
       <div className="mt-4">
-        <Note>Inviting specific people and share links need user accounts. They arrive with authentication (Supabase Auth) in the backend step.</Note>
+        <Note>Inviting specific people and share links need user accounts. They arrive with guest sign-in in the backend step.</Note>
       </div>
     </Modal>
   );
@@ -387,7 +388,7 @@ function NewFolderDialog({ parentId }: { parentId: string }) {
         if (!name.trim()) return;
         const id = addFolder(name, parent);
         openDialog(null);
-        navigate({ view: "folder", id });
+        if (id) navigate({ view: "folder", id });
       }}
       footer={
         <>
@@ -399,7 +400,7 @@ function NewFolderDialog({ parentId }: { parentId: string }) {
       }
     >
       <Field label="Folder name">
-        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Location Scouting" />
+        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} placeholder="e.g. Location Scouting" />
       </Field>
       <Field label="Inside">
         <select value={parent} onChange={(e) => setParent(e.target.value)} className={INPUT}>
@@ -428,7 +429,7 @@ function NewProjectDialog() {
         if (!name.trim()) return;
         const id = addProject({ name, code, period });
         openDialog(null);
-        navigate({ view: "project", id });
+        if (id) navigate({ view: "project", id });
       }}
       footer={
         <>
@@ -440,14 +441,14 @@ function NewProjectDialog() {
       }
     >
       <Field label="Project name">
-        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Production Blitz Three" />
+        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} placeholder="e.g. Production Blitz Three" />
       </Field>
       <div className="grid grid-cols-[120px_1fr] gap-3">
         <Field label="Code">
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 5))} className={INPUT} placeholder="PB3" />
         </Field>
         <Field label="Period">
-          <input value={period} onChange={(e) => setPeriod(e.target.value)} className={INPUT} placeholder="Planned production window" />
+          <input value={period} onChange={(e) => setPeriod(e.target.value)} maxLength={120} className={INPUT} placeholder="Planned production window" />
         </Field>
       </div>
     </Modal>
@@ -469,7 +470,7 @@ function UploadDialog() {
         </Button>
       </div>
       <div className="mt-4">
-        <Note>This is the upload interface only. Real uploads with persistent storage (IndexedDB demo mode, then Supabase Storage) are the next build step, so the button is disabled for now.</Note>
+        <Note>This is the upload interface only. Real uploads with persistent, private storage are the next build step, so the button is disabled for now.</Note>
       </div>
     </Modal>
   );

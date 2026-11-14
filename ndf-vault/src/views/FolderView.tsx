@@ -1,6 +1,7 @@
 "use client";
 
-import { Folder as FolderIcon, FolderPlus, FolderSearch } from "lucide-react";
+import { FolderPlus, FolderSearch } from "lucide-react";
+import { FolderIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles } from "@/lib/selectors";
@@ -55,7 +56,7 @@ export function FolderView({ id }: { id: string }) {
       <PageHeader
         eyebrow={path.length > 1 ? <Breadcrumbs items={path.map((f) => ({ label: f.name, onClick: () => v.navigate({ view: "folder", id: f.id }) }))} /> : undefined}
         title={folderLabel(folder)}
-        description={`${nested.length} ${nested.length === 1 ? "file" : "files"} · ${subfolders.length} ${subfolders.length === 1 ? "subfolder" : "subfolders"}`}
+        description={`${nested.length} ${nested.length === 1 ? "file" : "files"} · ${subfolders.length} ${subfolders.length === 1 ? "subfolder" : "subfolders"}${folder.access ? ` · Planned access: ${folder.access}` : ""}`}
         actions={
           <>
             <Button icon={FolderPlus} onClick={() => v.openDialog({ type: "newFolder", parentId: id })}>
@@ -78,16 +79,18 @@ export function FolderView({ id }: { id: string }) {
                   <button
                     type="button"
                     onClick={() => v.navigate({ view: "folder", id: f.id })}
+                    title={f.access ? `Planned access: ${f.access}` : undefined}
                     className="flex h-[60px] w-full items-center gap-3 rounded-[10px] border border-line bg-white px-3 text-left shadow-xs transition-colors duration-150 hover:border-neutral-300 hover:bg-subtle"
                   >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 shadow-xs">
-                      <FolderIcon className="size-[17px]" strokeWidth={1.6} />
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-fill text-neutral-700">
+                      {f.index ? <span className="text-[13px] font-semibold tabular-nums">{f.index}</span> : <FolderIcon weight="fill" className="size-[19px]" />}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13.5px] font-medium text-ink">{f.name}</span>
                       <span className="block truncate text-[12.5px] text-neutral-500">
                         {f.code ? `${f.code} · ` : ""}
                         {n} {n === 1 ? "file" : "files"}
+                        {f.access ? ` · ${f.access}` : ""}
                       </span>
                     </span>
                   </button>

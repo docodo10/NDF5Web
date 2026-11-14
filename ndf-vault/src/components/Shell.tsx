@@ -2,28 +2,23 @@
 
 import clsx from "clsx";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
+import { Activity, Bell, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Plus, Search, Settings } from "lucide-react";
 import {
-  Activity,
-  Archive,
-  Bell,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  Files,
-  Folder as FolderIcon,
-  FolderKanban,
-  FolderOpen,
-  House,
-  Lock,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Plus,
-  Search,
-  Settings,
-  Star,
-  Users,
-} from "lucide-react";
-import { useMemo, useState, type ComponentType, type ReactNode } from "react";
+  ArchiveIcon,
+  ClockIcon,
+  FilesIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  GearSixIcon,
+  HouseIcon,
+  KanbanIcon,
+  LockSimpleIcon,
+  PulseIcon,
+  StarIcon,
+  UsersIcon,
+  type Icon as PhosphorIcon,
+} from "@phosphor-icons/react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import type { Folder, Route } from "@/lib/types";
 import { CURRENT_USER_ID, USERS } from "@/lib/sample-data";
@@ -32,19 +27,18 @@ import { AppWatermark, Ndf5Logo, VaultLockup } from "./brand/Brand";
 import { Avatar, IconButton, Kbd } from "./ui";
 import { MENU_CONTENT, MENU_ITEM } from "./files/menu-styles";
 
-type IconType = ComponentType<{ className?: string; strokeWidth?: number }>;
-
-const NAV: { view: Route["view"]; label: string; icon: IconType }[] = [
-  { view: "home", label: "Home", icon: House },
-  { view: "files", label: "All Files", icon: Files },
-  { view: "projects", label: "All Projects", icon: FolderKanban },
-  { view: "private", label: "Private Files", icon: Lock },
-  { view: "shared", label: "Shared With Me", icon: Users },
-  { view: "favorites", label: "Favorites", icon: Star },
-  { view: "recent", label: "Recent Files", icon: Clock },
-  { view: "archived", label: "Archived Files", icon: Archive },
-  { view: "activity", label: "Activity", icon: Activity },
-  { view: "preferences", label: "Settings", icon: Settings },
+// Navigation uses filled icons, as in the dashboard reference; actions elsewhere stay outlined.
+const NAV: { view: Route["view"]; label: string; icon: PhosphorIcon }[] = [
+  { view: "home", label: "Home", icon: HouseIcon },
+  { view: "files", label: "All Files", icon: FilesIcon },
+  { view: "projects", label: "All Projects", icon: KanbanIcon },
+  { view: "private", label: "Private Files", icon: LockSimpleIcon },
+  { view: "shared", label: "Shared With Me", icon: UsersIcon },
+  { view: "favorites", label: "Favorites", icon: StarIcon },
+  { view: "recent", label: "Recent Files", icon: ClockIcon },
+  { view: "archived", label: "Archived Files", icon: ArchiveIcon },
+  { view: "activity", label: "Activity", icon: PulseIcon },
+  { view: "preferences", label: "Settings", icon: GearSixIcon },
 ];
 
 /* -------------------------------------------------------------- Folder tree */
@@ -59,8 +53,8 @@ function TreeNode({ folder, depth, childrenOf, expanded, toggle }: { folder: Fol
     <li>
       <div
         className={clsx(
-          "group flex h-8 items-center rounded-md pr-1.5 text-[13px] transition-colors duration-150",
-          active ? "bg-neutral-200/60 font-medium text-ink" : "text-neutral-600 hover:bg-neutral-200/40 hover:text-ink",
+          "group flex h-[34px] items-center rounded-lg pr-1.5 text-[13.5px] font-medium transition-colors duration-150",
+          active ? "bg-neutral-200/60 text-ink" : "text-neutral-600 hover:bg-neutral-200/40 hover:text-ink",
         )}
         style={{ paddingLeft: 4 + depth * 14 }}
       >
@@ -74,13 +68,15 @@ function TreeNode({ folder, depth, childrenOf, expanded, toggle }: { folder: Fol
           <ChevronRight className={clsx("size-3.5 transition-transform duration-150", open && "rotate-90")} strokeWidth={2} />
         </button>
         <button type="button" onClick={() => navigate({ view: "folder", id: folder.id })} className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left">
-          {isRoot ? null : open && kids.length ? (
-            <FolderOpen className="size-[15px] shrink-0 text-neutral-400" strokeWidth={1.75} />
+          {isRoot ? null : folder.index ? (
+            <span className={clsx("w-[18px] shrink-0 text-center text-[12px] font-semibold tabular-nums", active ? "text-neutral-800" : "text-neutral-400")}>{folder.index}</span>
+          ) : open && kids.length ? (
+            <FolderOpenIcon weight="fill" className={clsx("size-[18px] shrink-0", active ? "text-neutral-700" : "text-neutral-400")} />
           ) : (
-            <FolderIcon className="size-[15px] shrink-0 text-neutral-400" strokeWidth={1.75} />
+            <FolderIcon weight="fill" className={clsx("size-[18px] shrink-0", active ? "text-neutral-700" : "text-neutral-400")} />
           )}
           <span className={clsx("truncate", isRoot && "text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-500")}>{folder.name}</span>
-          {folder.code && <span className="shrink-0 text-[11px] font-normal text-neutral-400">{folder.code}</span>}
+          {folder.code && <span className="shrink-0 text-[11.5px] font-medium text-neutral-400">{folder.code}</span>}
         </button>
       </div>
       {open && kids.length > 0 && (
@@ -96,7 +92,7 @@ function TreeNode({ folder, depth, childrenOf, expanded, toggle }: { folder: Fol
 
 function FolderTree() {
   const { folders, route } = useVault();
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(["root", "pb1"]));
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(["root"]));
   const childrenOf = useMemo(() => {
     const m = new Map<string, Folder[]>();
     for (const f of folders) {
@@ -148,7 +144,7 @@ function Sidebar() {
 
       <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto px-3 pb-4">
         <nav aria-label="Main">
-          <ul className="space-y-px">
+          <ul className="space-y-0.5">
             {NAV.map(({ view, label, icon: Icon }) => {
               const active = route.view === view || (view === "projects" && route.view === "project");
               return (
@@ -158,11 +154,11 @@ function Sidebar() {
                     aria-current={active ? "page" : undefined}
                     onClick={() => navigate({ view } as Route)}
                     className={clsx(
-                      "flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[13px] transition-colors duration-150",
-                      active ? "bg-neutral-200/60 font-medium text-ink" : "text-neutral-600 hover:bg-neutral-200/40 hover:text-ink",
+                      "flex h-9 w-full items-center gap-3 rounded-lg px-2.5 text-left text-[14px] transition-colors duration-150",
+                      active ? "bg-neutral-200/60 font-semibold text-ink" : "font-medium text-neutral-600 hover:bg-neutral-200/40 hover:text-ink",
                     )}
                   >
-                    <Icon className={clsx("size-4 shrink-0", active ? "text-ink" : "text-neutral-500")} strokeWidth={1.75} />
+                    <Icon weight="fill" className={clsx("size-5 shrink-0 transition-colors duration-150", active ? "text-neutral-800" : "text-neutral-400")} />
                     {label}
                   </button>
                 </li>
@@ -174,7 +170,7 @@ function Sidebar() {
         <div className="mx-1 my-4 h-px bg-line" />
 
         <div className="mb-1 flex h-7 items-center justify-between pl-2.5 pr-0.5">
-          <span className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-neutral-400">Browser</span>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">Browser</span>
           <IconButton icon={Plus} label="New folder" variant="ghost" size="sm" className="!size-6 !rounded-md" onClick={() => openDialog({ type: "newFolder", parentId: route.view === "folder" ? route.id : "root" })} />
         </div>
         <nav aria-label="Folders">
