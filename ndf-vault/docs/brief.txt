@@ -1,0 +1,441 @@
+NDF VAULT — PIXEL-PERFECT FILE MANAGEMENT WEB APPLICATION
+
+You are a senior frontend engineer, full-stack developer, and expert UI/UX designer specializing in pixel-perfect SaaS applications.
+
+I am providing THREE reference screenshots.
+
+Your task is to build a complete, beautiful, professional, and functional web application called:
+
+NDF VAULT
+The New Drago Family — Production & Document Management
+
+1. ABSOLUTE PRIORITY: VISUAL FIDELITY
+
+Study all three attached screenshots carefully before writing code.
+
+I want a near pixel-perfect reproduction of their design language, spacing, structure, typography, colors, controls, tables, interactions, and visual hierarchy.
+
+Do not simply create something vaguely inspired by them.
+
+Reproduce the visual experience as closely as possible.
+
+The only substantial changes should concern branding, labels, navigation categories, and the application’s underlying functionality.
+
+Use the supplied screenshots as visual references throughout implementation. Do not use screenshots as static webpage backgrounds. Recreate the actual interface using functional components.
+
+Maintain a consistent unified design system.
+
+2. HOW TO USE EACH REFERENCE IMAGE
+
+IMAGE 3 — MAIN DASHBOARD AND FILE EXPLORER
+
+Use the THIRD image as the primary design reference for the overall NDF Vault interface.
+
+Reproduce:
+
+* Very clean, minimalist, predominantly white interface.
+* Narrow left navigation sidebar.
+* Small logo at the top.
+* Main content area with large white backgrounds.
+* Compact navigation and typography.
+* Elegant, thin grey dividing lines.
+* Horizontal file-type filters.
+* Four rectangular quick-action cards.
+* Three horizontal featured/recent-file cards.
+* Search field and filter button.
+* Professional document table.
+* Small avatars or initials.
+* Pagination controls.
+* Subtle rounded corners.
+* Hover and selection states.
+* Spacious but compact and highly organized layout.
+
+Replace the generic app branding with NDF VAULT.
+
+The sidebar should include:
+
+Home
+All Files
+All Projects
+Private Files
+Shared With Me
+Favorites
+Recent Files
+Archived Files
+Activity
+Settings
+
+Add a collapsible folder navigation section underneath.
+
+Suggested initial NDF folder structure:
+
+NDF SAGA
+
+* Production Blitz One (PB1)
+    * Film & Series 1 (FS1)
+    * Film & Series 2 (FS2)
+* Production Blitz Two (PB2)
+    * Film & Series 3 (FS3)
+    * Film & Series 4 (FS4)
+    * Film & Series 5 (FS5)
+* Screenplays
+* Novels & Story Development
+* Production Budgets
+* Financing & Investors
+* Industry Bible
+* Business Plans
+* Cast & Crew
+* Production Scheduling
+* Legal & Contracts
+* Distribution & Streaming
+* Marketing & Presentations
+* Archives
+
+All folders must support nested folders and genuine navigation.
+
+IMAGE 1 — FILE MANAGEMENT TABLE
+
+Use the FIRST screenshot to build the advanced file management screen.
+
+Reproduce its visual organization extremely closely.
+
+The interface should include:
+
+* Main page title and small description beneath.
+* Horizontal navigation tabs with minimalist icons.
+* Upload File button.
+* Add File button.
+* Search bar.
+* Filters and sorting.
+* Checkbox selection.
+* Large, professionally aligned file table.
+* File icons and metadata.
+* Status labels using subtle outlines.
+* User information with avatars.
+* Date columns.
+* Download actions.
+* Three-dot action menus.
+* Contextual dropdowns.
+* Pagination in the bottom-right corner.
+
+For NDF, use these columns:
+
+File Name
+File Type
+Project
+Uploaded By
+Last Modified
+Status
+File Size
+Actions
+
+Possible status values:
+
+Draft
+In Review
+Approved
+Final
+Archived
+
+The three-dot menu should include:
+
+Open
+Preview
+Rename
+Edit Details
+Move
+Copy
+Share
+Download
+Version History
+Archive
+Delete
+
+Every available action must actually work.
+
+Use dropdown styling, shadows, positioning, and spacing that closely match Image 1.
+
+IMAGE 2 — DOCUMENT PREVIEW MODAL
+
+Use the SECOND screenshot as the exact design reference for the document preview experience.
+
+This is especially important.
+
+When a user clicks a PDF document, open a large centered modal with a soft translucent backdrop.
+
+Reproduce:
+
+* Wide floating document viewer.
+* Large rounded white modal.
+* Soft professional drop shadow.
+* Breadcrumb navigation along the top.
+* Back button.
+* Previous/next file navigation.
+* Filename in the top toolbar.
+* Fullscreen and close buttons.
+* Secondary toolbar.
+* Left-hand page thumbnails.
+* Vertical separator.
+* Main document canvas centered in the viewer.
+* Zoom percentage indicator.
+* Zoom in and zoom out.
+* Fit-to-width and fit-to-page.
+* Page navigation.
+* Search within PDF.
+* Print and download.
+* Smooth scrolling.
+
+Use a real PDF rendering engine such as PDF.js.
+
+For supported office files, provide genuine document previews where technically feasible.
+
+Do not fake document content with static images.
+
+The modal should visually match Image 2 as closely as possible, including its proportions, toolbar layout, thumbnail sizing, and background.
+
+3. SMALL VISUAL MODIFICATIONS
+
+The goal is to retain approximately 95% of the original visual language while making the application uniquely identifiable as NDF Vault.
+
+Only make these changes:
+
+1. Replace the generic logos with a sophisticated monochrome NDF monogram.
+2. Replace irrelevant participant/medical labels with project and document management labels.
+3. Replace sample content with relevant NDF files and folders.
+4. Add a subtle NDF VAULT brand identity.
+5. Improve small inconsistencies between the reference screenshots.
+
+Avoid unnecessary gradients, colorful dashboards, excessive animations, oversized cards, or decorative graphics.
+
+This is a premium professional workspace, not a gaming interface.
+
+4. MAIN DASHBOARD
+
+The homepage should display:
+
+* Welcome to NDF Vault.
+* Global search.
+* New Document.
+* New Spreadsheet.
+* New Folder.
+* New Project.
+* Recent Files.
+* Pinned Files.
+* All Files.
+* Recently Modified.
+* Shared With Me.
+
+Below the actions, display the file explorer table following Image 3.
+
+Keep it visually simple.
+
+5. REAL FILE MANAGEMENT
+
+The application must support:
+
+* Uploading files from the computer.
+* Multiple file uploads.
+* Drag-and-drop uploads.
+* Creating folders.
+* Nested folder management.
+* Renaming files and folders.
+* Moving files between folders.
+* Copying files.
+* Deleting and restoring files.
+* Downloading original files.
+* Searching filenames and metadata.
+* Sorting columns.
+* Filtering by file type, project, status, and date.
+* Selecting multiple files.
+* Bulk operations.
+* File favorites.
+* Activity history.
+* File metadata editing.
+* Tags and notes.
+* File version history.
+* Breadcrumb navigation.
+
+Support PDF, DOCX, XLSX, PPTX, TXT, CSV, and image files.
+
+Office documents should offer preview support where practical, and original downloads must remain available.
+
+Do not simulate a completed operation. If something is not implemented, clearly indicate that.
+
+6. PROJECT SYSTEM
+
+Provide separate workspaces for each major NDF production.
+
+PB1 — planned 2029 production.
+
+PB2 — planned 2031–2033 production activities.
+
+Allow project administrators to create, update, archive, and reorganize projects.
+
+Each project page should contain tabs for:
+
+Overview
+Files
+Financial Documents
+Production
+Legal
+Team
+Activity
+
+The tabs should use the minimal horizontal navigation style from Image 1.
+
+Do not invent actual financial figures, contracts, project approvals, or file contents.
+
+Use clearly labeled sample data until real documents are uploaded.
+
+7. SEARCH EXPERIENCE
+
+Create a professional global search system.
+
+Allow users to search by:
+
+Filename
+Folder
+Project
+Document type
+Tags
+Description
+Date
+Owner
+
+Search should feel instant and should show useful results.
+
+Include a keyboard shortcut for global search.
+
+8. TECHNICAL REQUIREMENTS
+
+Preferred stack:
+
+* Next.js with React and TypeScript.
+* Tailwind CSS.
+* shadcn/ui where useful, customized to match the screenshots.
+* Lucide icons.
+* PDF.js for real PDF viewing.
+* Supabase Auth for authentication.
+* Supabase PostgreSQL for metadata.
+* Supabase Storage for uploaded documents.
+
+If Supabase credentials are not available, provide a fully functional local demo mode using IndexedDB for persistent file data, not just temporary React state.
+
+The application should be able to run locally.
+
+All primary buttons, tabs, menus, modals, and navigation elements must be functional.
+
+Design the architecture to permit a real backend connection without rebuilding the frontend.
+
+Include proper upload validation, error messages, loading states, authentication, and permission-aware actions.
+
+For sensitive legal and financial documents, use private storage, authenticated downloads, and appropriate access controls. Never expose private storage credentials in frontend code.
+
+9. RESPONSIVE BEHAVIOR
+
+Desktop is the primary experience.
+
+Target desktop widths from 1280px to 1920px, with special attention to matching the supplied screenshots at their original proportions.
+
+The desktop version should be as faithful to the references as possible.
+
+On tablets and phones:
+
+* Collapse the sidebar.
+* Adapt file tables intelligently.
+* Preserve working search, upload, and navigation.
+* Keep the PDF viewer usable.
+* Provide touch-friendly controls.
+
+Do not sacrifice desktop fidelity just to simplify responsive design.
+
+10. QUALITY REQUIREMENTS
+
+Pay special attention to:
+
+* Font sizes.
+* Line heights.
+* Table density.
+* Column widths.
+* Sidebar proportions.
+* White space.
+* Border shades.
+* Icon sizes.
+* Button heights.
+* Corner radii.
+* Dropdown placement.
+* Hover behavior.
+* Modal dimensions.
+* Page-thumbnail spacing.
+* Visual alignment.
+
+The interface must feel like a production-ready SaaS platform.
+
+Use restrained animations of approximately 150–200 milliseconds where appropriate.
+
+No loud colors, glowing buttons, unnecessary charts, or generic AI-dashboard aesthetics.
+
+11. DEVELOPMENT WORKFLOW
+
+Follow these steps:
+
+STEP 1 — Analyze all three supplied screenshots and extract their common visual design system.
+
+STEP 2 — Define reusable typography, spacing, colors, borders, radii, and component dimensions.
+
+STEP 3 — Build the navigation shell based on Image 3.
+
+STEP 4 — Build the advanced file table based on Image 1.
+
+STEP 5 — Build the document viewer based on Image 2.
+
+STEP 6 — Implement real file-management functionality.
+
+STEP 7 — Connect project, folder, and document navigation.
+
+STEP 8 — Implement storage persistence and prepare backend integration.
+
+STEP 9 — Test all critical user interactions.
+
+STEP 10 — Compare the rendered interface directly with the screenshots and correct visual differences.
+
+If browser screenshot tools are available, use them to compare the implementation with the supplied reference images.
+
+Fix visible layout differences before declaring the project finished.
+
+12. ACCEPTANCE CRITERIA
+
+The result must satisfy all of these conditions:
+
+* The desktop dashboard closely resembles Image 3.
+* The detailed file-management page closely resembles Image 1.
+* The PDF preview modal closely resembles Image 2.
+* NDF branding is integrated elegantly without disrupting the original design.
+* Users can create and navigate nested folders.
+* Real documents can be uploaded and downloaded.
+* Uploaded files persist after refreshing the page.
+* PDF preview works with actual PDF files.
+* Search and filters work.
+* Sorting and pagination work.
+* Action menus are functional.
+* Responsive layouts work.
+* Real NDF documents can replace sample content without redesign.
+* There are no dead buttons, broken links, or misleading fake actions.
+
+FINAL INSTRUCTIONS
+
+Do not produce only a mockup.
+
+Do not stop at a design proposal.
+
+Actually build the application and provide the working source code.
+
+Start by creating the complete interface and then implement the functionality.
+
+Prioritize visual accuracy over creative reinterpretation.
+
+Use the three uploaded images as the primary visual specifications.
+
+The final result should look like these three reference applications were combined into one seamless, professional document-management platform designed specifically for The New Drago Family.
+
+Build NDF VAULT now.
