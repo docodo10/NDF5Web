@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
-import { Activity, Bell, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Plus, Search, Settings } from "lucide-react";
+import { Activity, Bell, ChevronDown, ChevronRight, CircleHelp, CloudUpload, PanelLeftClose, PanelLeftOpen, Plus, Search, Settings } from "lucide-react";
 import {
   ArchiveIcon,
   ClockIcon,
@@ -18,7 +18,7 @@ import {
   UsersIcon,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import type { Folder, Route } from "@/lib/types";
 import { CURRENT_USER_ID, USERS } from "@/lib/sample-data";
@@ -29,16 +29,16 @@ import { MENU_CONTENT, MENU_ITEM } from "./files/menu-styles";
 
 // Navigation uses filled icons, as in the dashboard reference; actions elsewhere stay outlined.
 const NAV: { view: Route["view"]; label: string; icon: PhosphorIcon }[] = [
-  { view: "home", label: "Home", icon: HouseIcon },
-  { view: "files", label: "All Files", icon: FilesIcon },
-  { view: "projects", label: "All Projects", icon: KanbanIcon },
-  { view: "private", label: "Private Files", icon: LockSimpleIcon },
-  { view: "shared", label: "Shared With Me", icon: UsersIcon },
-  { view: "favorites", label: "Favorites", icon: StarIcon },
-  { view: "recent", label: "Recent Files", icon: ClockIcon },
-  { view: "archived", label: "Archived Files", icon: ArchiveIcon },
-  { view: "activity", label: "Activity", icon: PulseIcon },
-  { view: "preferences", label: "Settings", icon: GearSixIcon },
+  { view: "home", label: "Accueil", icon: HouseIcon },
+  { view: "files", label: "Tous les fichiers", icon: FilesIcon },
+  { view: "projects", label: "Tous les projets", icon: KanbanIcon },
+  { view: "private", label: "Fichiers privés", icon: LockSimpleIcon },
+  { view: "shared", label: "Partagés avec moi", icon: UsersIcon },
+  { view: "favorites", label: "Favoris", icon: StarIcon },
+  { view: "recent", label: "Fichiers récents", icon: ClockIcon },
+  { view: "archived", label: "Fichiers archivés", icon: ArchiveIcon },
+  { view: "activity", label: "Activité", icon: PulseIcon },
+  { view: "preferences", label: "Réglages", icon: GearSixIcon },
 ];
 
 /* -------------------------------------------------------------- Folder tree */
@@ -60,7 +60,7 @@ function TreeNode({ folder, depth, childrenOf, expanded, toggle }: { folder: Fol
       >
         <button
           type="button"
-          aria-label={open ? `Collapse ${folder.name}` : `Expand ${folder.name}`}
+          aria-label={open ? `Replier ${folder.name}` : `Déplier ${folder.name}`}
           aria-expanded={kids.length ? open : undefined}
           onClick={() => kids.length && toggle(folder.id)}
           className={clsx("flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 hover:text-ink", !kids.length && "invisible")}
@@ -131,19 +131,19 @@ function FolderTree() {
 /* ------------------------------------------------------------------ Sidebar */
 
 function Sidebar() {
-  const { route, navigate, setSidebarOpen, openDialog } = useVault();
+  const { route, navigate, setSidebarOpen, openDialog, persistent } = useVault();
   const me = USERS.find((u) => u.id === CURRENT_USER_ID)!;
   return (
     <div className="flex h-full w-[264px] flex-col border-r border-line bg-subtle">
       <div className="flex h-14 shrink-0 items-center justify-between pl-5 pr-3">
-        <button type="button" onClick={() => navigate({ view: "home" })} aria-label="NDF Vault — Home" className="rounded-md py-1">
+        <button type="button" onClick={() => navigate({ view: "home" })} aria-label="NDF Vault — Accueil" className="rounded-md py-1">
           <VaultLockup />
         </button>
-        <IconButton icon={PanelLeftClose} label="Collapse sidebar" variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} />
+        <IconButton icon={PanelLeftClose} label="Réduire le menu" variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} />
       </div>
 
       <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto px-3 pb-4">
-        <nav aria-label="Main">
+        <nav aria-label="Navigation principale" data-tour="nav">
           <ul className="space-y-0.5">
             {NAV.map(({ view, label, icon: Icon }) => {
               const active = route.view === view || (view === "projects" && route.view === "project");
@@ -169,13 +169,15 @@ function Sidebar() {
 
         <div className="mx-1 my-4 h-px bg-line" />
 
-        <div className="mb-1 flex h-7 items-center justify-between pl-2.5 pr-0.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">Browser</span>
-          <IconButton icon={Plus} label="New folder" variant="ghost" size="sm" className="!size-6 !rounded-md" onClick={() => openDialog({ type: "newFolder", parentId: route.view === "folder" ? route.id : "root" })} />
+        <div data-tour="folders">
+          <div className="mb-1 flex h-7 items-center justify-between pl-2.5 pr-0.5">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">Explorateur</span>
+            <IconButton icon={Plus} label="Nouveau dossier" variant="ghost" size="sm" className="!size-6 !rounded-md" onClick={() => openDialog({ type: "newFolder", parentId: route.view === "folder" ? route.id : "root" })} />
+          </div>
+          <nav aria-label="Dossiers">
+            <FolderTree />
+          </nav>
         </div>
-        <nav aria-label="Folders">
-          <FolderTree />
-        </nav>
       </div>
 
       <div className="shrink-0 border-t border-line px-4 py-3">
@@ -183,7 +185,7 @@ function Sidebar() {
           <Avatar user={me} size={30} />
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-[13px] font-medium text-ink">{me.name}</p>
-            <p className="truncate text-[11.5px] text-neutral-500">Local demo workspace</p>
+            <p className="truncate text-[11.5px] text-neutral-500">{persistent ? "Stocké sur cet appareil" : "Mémoire seulement"}</p>
           </div>
           <Ndf5Logo className="h-[18px] w-auto shrink-0 text-neutral-300" />
         </div>
@@ -195,30 +197,35 @@ function Sidebar() {
 /* ------------------------------------------------------------------- Topbar */
 
 function Topbar() {
-  const { sidebarOpen, setSidebarOpen, setPaletteOpen, navigate } = useVault();
+  const { sidebarOpen, setSidebarOpen, setPaletteOpen, navigate, startTour } = useVault();
   const me = USERS.find((u) => u.id === CURRENT_USER_ID)!;
+  const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-white px-4 sm:px-6 lg:px-8">
-      {!sidebarOpen && <IconButton icon={PanelLeftOpen} label="Open sidebar" variant="ghost" onClick={() => setSidebarOpen(true)} className="-ml-2" />}
+      {!sidebarOpen && <IconButton icon={PanelLeftOpen} label="Ouvrir le menu" variant="ghost" onClick={() => setSidebarOpen(true)} className="-ml-2" />}
       <button
         type="button"
+        data-tour="search"
         onClick={() => setPaletteOpen(true)}
-        aria-label="Search the vault"
+        aria-label="Rechercher dans le Vault"
         className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg border border-line bg-white px-3 text-left text-[13px] text-neutral-400 shadow-xs transition-colors duration-150 hover:border-neutral-300 sm:max-w-[340px]"
       >
         <Search className="size-4 shrink-0" strokeWidth={1.75} />
-        <span className="flex-1 truncate">Search files, folders, projects…</span>
+        <span className="flex-1 truncate">Rechercher fichiers, dossiers, projets…</span>
         <span className="hidden items-center gap-1 sm:flex">
-          <Kbd>⌘</Kbd>
+          <Kbd>{mac ? "⌘" : "Ctrl"}</Kbd>
           <Kbd>K</Kbd>
         </span>
       </button>
-      <div className="ml-auto flex items-center gap-3">
-        <IconButton icon={Bell} label="Activity" onClick={() => navigate({ view: "activity" })} />
+      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <span data-tour="help">
+          <IconButton icon={CircleHelp} label="Visite guidée" onClick={startTour} />
+        </span>
+        <IconButton icon={Bell} label="Activité" onClick={() => navigate({ view: "activity" })} />
         <span className="hidden h-6 w-px bg-line sm:block" />
         <Dropdown.Root>
           <Dropdown.Trigger asChild>
-            <button type="button" className="flex items-center gap-2.5 rounded-lg py-1 pl-1 pr-1.5 transition-colors duration-150 hover:bg-fill" aria-label="Account menu">
+            <button type="button" className="flex items-center gap-2.5 rounded-lg py-1 pl-1 pr-1.5 transition-colors duration-150 hover:bg-fill" aria-label="Menu du compte">
               <Avatar user={me} size={32} />
               <span className="hidden text-left leading-tight sm:block">
                 <span className="block text-[13px] font-medium text-ink">{me.name}</span>
@@ -230,10 +237,13 @@ function Topbar() {
           <Dropdown.Portal>
             <Dropdown.Content align="end" sideOffset={6} className={MENU_CONTENT}>
               <Dropdown.Item className={MENU_ITEM} onSelect={() => navigate({ view: "preferences" })}>
-                <Settings className="size-4 text-neutral-500" strokeWidth={1.75} /> Settings
+                <Settings className="size-4 text-neutral-500" strokeWidth={1.75} /> Réglages
               </Dropdown.Item>
               <Dropdown.Item className={MENU_ITEM} onSelect={() => navigate({ view: "activity" })}>
-                <Activity className="size-4 text-neutral-500" strokeWidth={1.75} /> Activity
+                <Activity className="size-4 text-neutral-500" strokeWidth={1.75} /> Activité
+              </Dropdown.Item>
+              <Dropdown.Item className={MENU_ITEM} onSelect={startTour}>
+                <CircleHelp className="size-4 text-neutral-500" strokeWidth={1.75} /> Visite guidée
               </Dropdown.Item>
             </Dropdown.Content>
           </Dropdown.Portal>
@@ -243,10 +253,60 @@ function Topbar() {
   );
 }
 
+/* ---------------------------------------------------------------- Drop zone */
+
+/** Dropping files anywhere on the window opens the upload dialog with them. */
+function useWindowDrop(onFiles: (files: File[]) => void, enabled: boolean) {
+  const [over, setOver] = useState(false);
+  const depth = useRef(0);
+  const handler = useRef(onFiles);
+  handler.current = onFiles;
+  useEffect(() => {
+    if (!enabled) return;
+    const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files");
+    const enter = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      depth.current++;
+      setOver(true);
+    };
+    const leave = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      depth.current = Math.max(0, depth.current - 1);
+      if (depth.current === 0) setOver(false);
+    };
+    const dragover = (e: DragEvent) => {
+      if (hasFiles(e)) e.preventDefault();
+    };
+    const drop = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      depth.current = 0;
+      setOver(false);
+      const files = Array.from(e.dataTransfer?.files ?? []);
+      if (files.length) handler.current(files);
+    };
+    window.addEventListener("dragenter", enter);
+    window.addEventListener("dragleave", leave);
+    window.addEventListener("dragover", dragover);
+    window.addEventListener("drop", drop);
+    return () => {
+      window.removeEventListener("dragenter", enter);
+      window.removeEventListener("dragleave", leave);
+      window.removeEventListener("dragover", dragover);
+      window.removeEventListener("drop", drop);
+      depth.current = 0;
+      setOver(false);
+    };
+  }, [enabled]);
+  return over && enabled;
+}
+
 /* -------------------------------------------------------------------- Shell */
 
 export function Shell({ children }: { children: ReactNode }) {
-  const { sidebarOpen, setSidebarOpen, watermark } = useVault();
+  const { sidebarOpen, setSidebarOpen, watermark, dialog, openDialog, route } = useVault();
+  // While the upload dialog is open it handles drops itself.
+  const dropping = useWindowDrop((files) => openDialog({ type: "upload", folderId: route.view === "folder" ? route.id : null, files }), dialog?.type !== "upload");
   return (
     <div className="flex h-full overflow-hidden bg-white">
       {/* Desktop: in-flow sidebar. Tablet/phone: slide-over drawer. */}
@@ -255,7 +315,7 @@ export function Shell({ children }: { children: ReactNode }) {
       </aside>
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <button type="button" aria-label="Close sidebar" className="absolute inset-0 animate-fade bg-neutral-900/20 backdrop-blur-[2px]" onClick={() => setSidebarOpen(false)} />
+          <button type="button" aria-label="Fermer le menu" className="absolute inset-0 animate-fade bg-neutral-900/20 backdrop-blur-[2px]" onClick={() => setSidebarOpen(false)} />
           <aside className="relative h-full w-[264px] animate-fade shadow-modal">
             <Sidebar />
           </aside>
@@ -269,6 +329,18 @@ export function Shell({ children }: { children: ReactNode }) {
         </main>
         {watermark && <AppWatermark />}
       </div>
+
+      {dropping && (
+        <div className="pointer-events-none fixed inset-0 z-[95] flex animate-fade items-center justify-center bg-white/80 p-6 backdrop-blur-sm">
+          <div className="flex w-full max-w-[420px] flex-col items-center rounded-2xl border-2 border-dashed border-ink bg-white px-8 py-12 text-center shadow-modal">
+            <span className="mb-4 flex size-12 items-center justify-center rounded-xl bg-ink text-white">
+              <CloudUpload className="size-6" strokeWidth={1.75} />
+            </span>
+            <p className="text-[16px] font-semibold text-ink">Déposez pour téléverser</p>
+            <p className="mt-1 text-[13px] text-neutral-500">PDF, DOCX, XLSX, PPTX, TXT, CSV et images</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

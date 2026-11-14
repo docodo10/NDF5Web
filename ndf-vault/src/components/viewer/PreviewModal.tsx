@@ -12,32 +12,50 @@ import {
   CircleMinus,
   CirclePlus,
   Download,
+  FileQuestion,
   Folder as FolderIcon,
   Image as ImageIcon,
+  LoaderCircle,
   Maximize2,
   Minimize2,
   Minus,
   MoveHorizontal,
   PanelLeft,
   Plus,
-  Printer,
   Scan,
-  Search,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useVault } from "@/lib/store";
 import type { VaultFile } from "@/lib/types";
+import { getBlob } from "@/lib/db";
 import { formatDate, fullName, KIND_LABEL } from "@/lib/format";
 import { Ndf5Mark, PageWatermark } from "../brand/Brand";
+import { FileIcon } from "../files/FileTable";
 import { Button, IconButton } from "../ui";
+import { openPdf, type PDFDocumentProxy } from "./pdf";
 
-const PAGE_W = 816; // US Letter at 96 dpi
-const PAGE_H = 1056;
+const LETTER = { w: 816, h: 1056 }; // US Letter at 96 dpi
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 3;
+const TEXT_PREVIEW_BYTES = 300 * 1024;
+const CSV_PREVIEW_ROWS = 200;
 
 type FitMode = "page" | "width" | null;
+interface Size {
+  w: number;
+  h: number;
+}
+
+/** What the viewer is showing for the current file. */
+type Doc =
+  | { kind: "sample" }
+  | { kind: "loading" }
+  | { kind: "pdf"; pdf: PDFDocumentProxy; base: Size }
+  | { kind: "image"; url: string; base: Size }
+  | { kind: "text"; text: string; rows: string[][] | null; truncated: boolean }
+  | { kind: "unsupported" }
+  | { kind: "missing" };
 
 /* ------------------------------------------------------------- Sample pages */
 
@@ -65,30 +83,26 @@ function GridSkeleton({ seed }: { seed: number }) {
   );
 }
 
-/**
- * Placeholder page for the interface stage. It is laid out at the real page
- * size so zoom, fit and thumbnails behave exactly as they will once PDF.js
- * renders actual document pages into the same slot.
- */
-function SamplePage({ file, n, folderName }: { file: VaultFile; n: number; folderName: string }) {
+/** Stand-in page for the built-in sample files, which have no stored original. */
+function SamplePage({ file, n, folderName, watermark }: { file: VaultFile; n: number; folderName: string; watermark: boolean }) {
   const seed = n + file.name.length;
   const isGrid = file.kind === "xlsx" || file.kind === "csv";
   return (
     <div className="relative flex h-full flex-col bg-white px-[88px] pb-[64px] pt-[72px] text-left">
-      <PageWatermark />
+      {watermark && <PageWatermark />}
       <div className="relative flex items-center justify-between">
         <Ndf5Mark className="h-[22px] w-auto text-ink" />
-        <span className="rounded-md border border-dashed border-neutral-300 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">Sample placeholder</span>
+        <span className="rounded-md border border-dashed border-neutral-300 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">Fichier d’exemple</span>
       </div>
       <div className="relative mt-14">
         {n === 1 ? (
           <>
             <h2 className="text-[30px] font-semibold leading-9 tracking-[-0.02em] text-ink">{file.name}</h2>
             <p className="mt-3 text-[14px] text-neutral-500">
-              {KIND_LABEL[file.kind]} · {folderName} · Last modified {formatDate(file.modifiedAt)}
+              {KIND_LABEL[file.kind]} · {folderName} · Modifié le {formatDate(file.modifiedAt)}
             </p>
             <p className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-[13.5px] leading-[21px] text-neutral-600">
-              This page stands in for the document while the interface is being reviewed. It is not the file&rsquo;s content. Real page rendering with PDF.js replaces it in the viewer step.
+              Cette page tient lieu de document : c’est un fichier d’exemple, sans contenu réel. Téléversez un PDF, une image ou un fichier texte pour voir un vrai aperçu.
             </p>
           </>
         ) : (
@@ -112,23 +126,165 @@ function SamplePage({ file, n, folderName }: { file: VaultFile; n: number; folde
         )}
       </div>
       <div className="relative mt-8 flex items-center justify-between border-t border-neutral-200 pt-4 text-[11.5px] text-neutral-500">
-        <span>NDF5 Productions — Confidential</span>
+        <span>NDF5 Productions — Confidentiel</span>
         <span>
-          Page {n} of {file.pages}
+          Page {n} sur {file.pages}
         </span>
       </div>
     </div>
   );
 }
 
-function ScaledPage({ file, n, scale, folderName }: { file: VaultFile; n: number; scale: number; folderName: string }) {
+function ScaledSample({ file, n, scale, folderName, watermark }: { file: VaultFile; n: number; scale: number; folderName: string; watermark: boolean }) {
   return (
-    <div style={{ width: PAGE_W * scale, height: PAGE_H * scale }} className="overflow-hidden">
-      <div style={{ width: PAGE_W, height: PAGE_H, transform: `scale(${scale})`, transformOrigin: "0 0" }}>
-        <SamplePage file={file} n={n} folderName={folderName} />
+    <div style={{ width: LETTER.w * scale, height: LETTER.h * scale }} className="overflow-hidden">
+      <div style={{ width: LETTER.w, height: LETTER.h, transform: `scale(${scale})`, transformOrigin: "0 0" }}>
+        <SamplePage file={file} n={n} folderName={folderName} watermark={watermark} />
       </div>
     </div>
   );
+}
+
+/* ---------------------------------------------------------------- PDF pages */
+
+/** One PDF page drawn to a canvas, rendered only once it is near the viewport. */
+function PdfPage({ pdf, n, width, base, watermark }: { pdf: PDFDocumentProxy; n: number; width: number; base: Size; watermark: boolean }) {
+  const holder = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [near, setNear] = useState(false);
+  const [ratio, setRatio] = useState(base.h / base.w);
+
+  useEffect(() => {
+    const el = holder.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setNear(true), { rootMargin: "800px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!near) return;
+    let cancelled = false;
+    let task: { cancel: () => void; promise: Promise<unknown> } | null = null;
+    // Wait for zooming to settle; the canvas stretches in the meantime.
+    const timer = setTimeout(async () => {
+      try {
+        const page = await pdf.getPage(n);
+        if (cancelled || !canvas.current) return;
+        const unit = page.getViewport({ scale: 1 });
+        setRatio(unit.height / unit.width);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const pixels = Math.min(width * dpr, 3200);
+        const viewport = page.getViewport({ scale: pixels / unit.width });
+        const el = canvas.current;
+        el.width = Math.floor(viewport.width);
+        el.height = Math.floor(viewport.height);
+        task = page.render({ canvas: el, viewport });
+        await task.promise;
+      } catch {
+        /* cancelled, or a page that cannot be drawn: the white slot stays */
+      }
+    }, 90);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      task?.cancel();
+    };
+  }, [near, pdf, n, width]);
+
+  return (
+    <div ref={holder} className="relative overflow-hidden bg-white" style={{ width, height: Math.round(width * ratio) }}>
+      <canvas ref={canvas} className="block h-full w-full" />
+      {watermark && width > 300 && <PageWatermark />}
+    </div>
+  );
+}
+
+/* ----------------------------------------------------------- Loading a file */
+
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+  for (let i = 0; i < text.length && rows.length < CSV_PREVIEW_ROWS; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === "," || c === ";" || c === "\t") {
+      row.push(cell);
+      cell = "";
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+    } else cell += c;
+  }
+  if (cell || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function useDocument(file: VaultFile | undefined): Doc {
+  const [doc, setDoc] = useState<Doc>({ kind: "loading" });
+  const id = file?.id;
+  const sample = file?.sample;
+  const kind = file?.kind;
+
+  useEffect(() => {
+    if (!id || !kind) return;
+    if (sample) {
+      setDoc({ kind: "sample" });
+      return;
+    }
+    let alive = true;
+    let cleanup = () => {};
+    setDoc({ kind: "loading" });
+    (async () => {
+      const blob = await getBlob(id);
+      if (!alive) return;
+      if (!blob) return setDoc({ kind: "missing" });
+      try {
+        if (kind === "pdf") {
+          const pdf = await openPdf(blob);
+          cleanup = () => void pdf.loadingTask.destroy();
+          if (!alive) return cleanup();
+          const first = (await pdf.getPage(1)).getViewport({ scale: 96 / 72 });
+          if (alive) setDoc({ kind: "pdf", pdf, base: { w: first.width, h: first.height } });
+        } else if (kind === "image") {
+          const url = URL.createObjectURL(blob);
+          cleanup = () => URL.revokeObjectURL(url);
+          const img = new Image();
+          img.onload = () => alive && setDoc({ kind: "image", url, base: { w: img.naturalWidth || LETTER.w, h: img.naturalHeight || LETTER.h } });
+          img.onerror = () => alive && setDoc({ kind: "unsupported" });
+          img.src = url;
+        } else if (kind === "txt" || kind === "csv") {
+          const text = await blob.slice(0, TEXT_PREVIEW_BYTES).text();
+          const rows = kind === "csv" ? parseCsv(text) : null;
+          if (alive) setDoc({ kind: "text", text, rows, truncated: blob.size > TEXT_PREVIEW_BYTES || (rows !== null && rows.length >= CSV_PREVIEW_ROWS) });
+        } else {
+          setDoc({ kind: "unsupported" });
+        }
+      } catch {
+        if (alive) setDoc({ kind: "unsupported" });
+      }
+    })();
+    return () => {
+      alive = false;
+      cleanup();
+    };
+  }, [id, sample, kind]);
+
+  return doc;
 }
 
 /* -------------------------------------------------------------------- Modal */
@@ -137,10 +293,26 @@ function Divider() {
   return <span className="mx-1 h-5 w-px shrink-0 bg-line" aria-hidden />;
 }
 
+function Notice({ file, title, text, onDownload }: { file: VaultFile; title: string; text: string; onDownload?: () => void }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-6 py-12 text-center">
+      <FileIcon kind={file.kind} size={56} />
+      <p className="mt-5 text-[16px] font-semibold text-ink">{title}</p>
+      <p className="mt-1.5 max-w-[380px] text-[13.5px] leading-[21px] text-neutral-500">{text}</p>
+      {onDownload && (
+        <Button variant="primary" icon={Download} className="mt-5" onClick={onDownload}>
+          Télécharger l’original
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function PreviewModal() {
   const v = useVault();
   const { preview } = v;
   const file = preview ? v.files.find((f) => f.id === preview.fileId) : undefined;
+  const doc = useDocument(file);
 
   const [fullscreen, setFullscreen] = useState(false);
   const [panel, setPanel] = useState(true);
@@ -150,6 +322,12 @@ export function PreviewModal() {
   const [page, setPage] = useState(1);
   const [canvasEl, setCanvasEl] = useState<HTMLDivElement | null>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const base: Size = doc.kind === "pdf" || doc.kind === "image" ? doc.base : LETTER;
+  const pageCount = doc.kind === "pdf" ? doc.pdf.numPages : doc.kind === "sample" && file ? file.pages : 1;
+  // Zoom, fit and thumbnails apply to paged or image content; text reflows and notices are static.
+  const zoomable = doc.kind === "sample" || doc.kind === "pdf" || doc.kind === "image" || doc.kind === "text";
+  const paged = doc.kind === "sample" || doc.kind === "pdf";
 
   // Reset per-file state when the modal opens or the file changes.
   const fileId = file?.id;
@@ -168,6 +346,9 @@ export function PreviewModal() {
   }, [Boolean(preview)]);
 
   // Fit-to-page / fit-to-width track the canvas size.
+  const baseW = base.w;
+  const baseH = base.h;
+  const docKind = doc.kind;
   useLayoutEffect(() => {
     if (!canvasEl || !fit) return;
     const apply = () => {
@@ -175,16 +356,19 @@ export function PreviewModal() {
       const inner = canvasEl.firstElementChild;
       const cs = inner ? getComputedStyle(inner) : null;
       const pad = (cs ? parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) : 48) + 2;
-      const byWidth = (canvasEl.clientWidth - pad) / PAGE_W;
-      const byHeight = (canvasEl.clientHeight - 50) / PAGE_H;
-      const next = fit === "width" ? byWidth : Math.min(byWidth, byHeight);
+      const byWidth = (canvasEl.clientWidth - pad) / baseW;
+      const byHeight = (canvasEl.clientHeight - 50) / baseH;
+      // Text has no fixed page height, and a small image should not be blown up to fill the window.
+      let next = fit === "width" || docKind === "text" ? byWidth : Math.min(byWidth, byHeight);
+      if (docKind === "image" && fit === "page") next = Math.min(next, 1);
+      if (docKind === "text") next = Math.min(next, 1.25);
       setZoom(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, next)));
     };
     apply();
     const ro = new ResizeObserver(apply);
     ro.observe(canvasEl);
     return () => ro.disconnect();
-  }, [canvasEl, fit, panel, fullscreen, fileId]);
+  }, [canvasEl, fit, panel, fullscreen, fileId, baseW, baseH, docKind]);
 
   const goToPage = useCallback((n: number) => {
     pageRefs.current[n - 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -192,11 +376,11 @@ export function PreviewModal() {
   }, []);
 
   const onScroll = () => {
-    if (!canvasEl) return;
+    if (!canvasEl || !paged) return;
     const mid = canvasEl.scrollTop + canvasEl.clientHeight / 2;
     let best = 1;
     pageRefs.current.forEach((el, i) => {
-      if (el && el.offsetTop <= mid) best = i + 1;
+      if (el && i < pageCount && el.offsetTop <= mid) best = i + 1;
     });
     if (best !== page) setPage(best);
   };
@@ -211,7 +395,12 @@ export function PreviewModal() {
     setFit(null);
     setZoom((z) => Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round((z + dir * 0.1) * 10) / 10)));
   };
-  const pages = Array.from({ length: file.pages }, (_, i) => i + 1);
+  const pages = Array.from({ length: pageCount }, (_, i) => i + 1);
+  const showPanel = panel && paged;
+  const download = () => void v.downloadFile(file.id);
+
+  const renderPage = (n: number, width: number) =>
+    doc.kind === "pdf" ? <PdfPage pdf={doc.pdf} n={n} width={width} base={doc.base} watermark={v.watermark} /> : <ScaledSample file={file} n={n} scale={width / LETTER.w} folderName={folderName} watermark={v.watermark} />;
 
   return (
     <Dialog.Root open onOpenChange={(o) => !o && v.closePreview()}>
@@ -230,12 +419,12 @@ export function PreviewModal() {
           {/* Title bar */}
           <div className="flex h-16 shrink-0 items-center gap-2 px-3 sm:px-4">
             <Button icon={ArrowLeft} onClick={v.closePreview}>
-              Back
+              Retour
             </Button>
             <span className="mx-2 hidden h-6 w-px bg-line sm:block" />
-            <IconButton icon={ArrowUp} label="Previous file" disabled={!prevId} onClick={() => prevId && v.openPreview(prevId, preview.listIds, fullscreen)} />
-            <IconButton icon={ArrowDown} label="Next file" disabled={!nextId} onClick={() => nextId && v.openPreview(nextId, preview.listIds, fullscreen)} />
-            <nav aria-label="Location" className="ml-3 flex min-w-0 flex-1 items-center gap-2.5 text-[14.5px]">
+            <IconButton icon={ArrowUp} label="Fichier précédent" disabled={!prevId} onClick={() => prevId && v.openPreview(prevId, preview.listIds, fullscreen)} />
+            <IconButton icon={ArrowDown} label="Fichier suivant" disabled={!nextId} onClick={() => nextId && v.openPreview(nextId, preview.listIds, fullscreen)} />
+            <nav aria-label="Emplacement" className="ml-3 flex min-w-0 flex-1 items-center gap-2.5 text-[14.5px]">
               <button
                 type="button"
                 onClick={() => {
@@ -250,47 +439,49 @@ export function PreviewModal() {
               <ChevronRight className="hidden size-4 shrink-0 text-neutral-400 md:block" strokeWidth={1.75} />
               <Dialog.Title className="truncate font-medium text-ink">{fullName(file)}</Dialog.Title>
             </nav>
-            <IconButton icon={fullscreen ? Minimize2 : Maximize2} label={fullscreen ? "Exit full screen" : "Full screen"} onClick={() => setFullscreen((f) => !f)} className="max-md:hidden" />
-            <IconButton icon={X} label="Close preview" onClick={v.closePreview} />
+            <IconButton icon={fullscreen ? Minimize2 : Maximize2} label={fullscreen ? "Quitter le plein écran" : "Plein écran"} onClick={() => setFullscreen((f) => !f)} className="max-md:hidden" />
+            <IconButton icon={X} label="Fermer l’aperçu" onClick={v.closePreview} />
           </div>
 
           {/* Tool bar */}
           <div className="flex h-12 shrink-0 items-center gap-1 border-y border-line bg-subtle px-3 sm:px-4">
-            <IconButton icon={PanelLeft} label={panel ? "Hide page thumbnails" : "Show page thumbnails"} variant="ghost" size="sm" active={panel} onClick={() => setPanel((p) => !p)} />
+            <IconButton icon={PanelLeft} label={panel ? "Masquer les vignettes" : "Afficher les vignettes"} variant="ghost" size="sm" active={showPanel} disabled={!paged} onClick={() => setPanel((p) => !p)} />
             <Divider />
-            <IconButton icon={MoveHorizontal} label="Fit to width" variant="ghost" size="sm" active={fit === "width"} onClick={() => setFit("width")} />
-            <IconButton icon={Scan} label="Fit to page" variant="ghost" size="sm" active={fit === "page"} onClick={() => setFit("page")} />
+            <IconButton icon={MoveHorizontal} label="Ajuster à la largeur" variant="ghost" size="sm" active={zoomable && fit === "width"} disabled={!zoomable} onClick={() => setFit("width")} />
+            <IconButton icon={Scan} label="Ajuster à la page" variant="ghost" size="sm" active={zoomable && fit === "page"} disabled={!zoomable} onClick={() => setFit("page")} />
             <Divider />
-            <IconButton icon={CircleMinus} label="Zoom out" variant="ghost" size="sm" disabled={zoom <= ZOOM_MIN} onClick={() => step(-1)} />
+            <IconButton icon={CircleMinus} label="Zoom arrière" variant="ghost" size="sm" disabled={!zoomable || zoom <= ZOOM_MIN} onClick={() => step(-1)} />
             <span aria-live="polite" className="flex h-8 w-[68px] items-center justify-center rounded-lg bg-neutral-200/60 text-[13px] font-medium tabular-nums text-ink">
-              {Math.round(zoom * 100)}%
+              {zoomable ? `${Math.round(zoom * 100)} %` : "—"}
             </span>
-            <IconButton icon={CirclePlus} label="Zoom in" variant="ghost" size="sm" disabled={zoom >= ZOOM_MAX} onClick={() => step(1)} />
-            <Divider />
-            <div className="hidden items-center gap-1 sm:flex">
-              <IconButton icon={ChevronUp} label="Previous page" variant="ghost" size="sm" disabled={page <= 1} onClick={() => goToPage(page - 1)} />
-              <span className="min-w-[52px] text-center text-[13px] tabular-nums text-neutral-600">
-                <span className="font-medium text-ink">{page}</span> / {file.pages}
-              </span>
-              <IconButton icon={ChevronDown} label="Next page" variant="ghost" size="sm" disabled={page >= file.pages} onClick={() => goToPage(page + 1)} />
-            </div>
+            <IconButton icon={CirclePlus} label="Zoom avant" variant="ghost" size="sm" disabled={!zoomable || zoom >= ZOOM_MAX} onClick={() => step(1)} />
+            {paged && (
+              <>
+                <Divider />
+                <div className="hidden items-center gap-1 sm:flex">
+                  <IconButton icon={ChevronUp} label="Page précédente" variant="ghost" size="sm" disabled={page <= 1} onClick={() => goToPage(page - 1)} />
+                  <span data-page-indicator className="min-w-[52px] text-center text-[13px] tabular-nums text-neutral-600">
+                    <span className="font-medium text-ink">{page}</span> / {pageCount}
+                  </span>
+                  <IconButton icon={ChevronDown} label="Page suivante" variant="ghost" size="sm" disabled={page >= pageCount} onClick={() => goToPage(page + 1)} />
+                </div>
+              </>
+            )}
             <div className="ml-auto flex items-center gap-1">
-              <IconButton icon={Search} label="Search in document" variant="ghost" size="sm" onClick={() => v.notReady("Search inside documents")} />
-              <IconButton icon={Printer} label="Print" variant="ghost" size="sm" onClick={() => v.notReady("Print")} className="max-sm:hidden" />
-              <IconButton icon={Download} label="Download" variant="ghost" size="sm" onClick={() => v.notReady("Download")} />
+              <IconButton icon={Download} label="Télécharger" variant="ghost" size="sm" onClick={download} />
             </div>
           </div>
 
           {/* Body */}
           <div className="flex min-h-0 flex-1">
-            {panel && (
-              <aside aria-label="Page thumbnails" className="scroll-quiet w-[152px] shrink-0 overflow-y-auto border-r border-line bg-subtle sm:w-[272px]">
+            {showPanel && (
+              <aside aria-label="Vignettes des pages" className="scroll-quiet w-[152px] shrink-0 overflow-y-auto border-r border-line bg-subtle sm:w-[272px]">
                 <div className="sticky top-0 z-10 hidden items-center gap-3 bg-subtle px-5 pb-2 pt-4 sm:flex">
-                  <button type="button" aria-label="Smaller thumbnails" onClick={() => setThumbW((w) => Math.max(72, w - 12))} className="text-neutral-600 hover:text-ink">
+                  <button type="button" aria-label="Vignettes plus petites" onClick={() => setThumbW((w) => Math.max(72, w - 12))} className="text-neutral-600 hover:text-ink">
                     <Minus className="size-4" strokeWidth={1.75} />
                   </button>
-                  <input type="range" min={72} max={208} step={4} value={thumbW} onChange={(e) => setThumbW(Number(e.target.value))} aria-label="Thumbnail size" className="vault-range min-w-0 flex-1" />
-                  <button type="button" aria-label="Larger thumbnails" onClick={() => setThumbW((w) => Math.min(208, w + 12))} className="text-neutral-600 hover:text-ink">
+                  <input id="thumb-size" type="range" min={72} max={208} step={4} value={thumbW} onChange={(e) => setThumbW(Number(e.target.value))} aria-label="Taille des vignettes" className="vault-range min-w-0 flex-1" />
+                  <button type="button" aria-label="Vignettes plus grandes" onClick={() => setThumbW((w) => Math.min(208, w + 12))} className="text-neutral-600 hover:text-ink">
                     <Plus className="size-4" strokeWidth={1.75} />
                   </button>
                 </div>
@@ -299,9 +490,9 @@ export function PreviewModal() {
                     const on = n === page;
                     return (
                       <li key={n}>
-                        <button type="button" aria-label={`Go to page ${n}`} aria-current={on ? "page" : undefined} onClick={() => goToPage(n)} className="group block">
+                        <button type="button" aria-label={`Aller à la page ${n}`} aria-current={on ? "page" : undefined} onClick={() => goToPage(n)} className="group block">
                           <span className={clsx("block overflow-hidden rounded-[3px] bg-white transition-shadow duration-150", on ? "shadow-[0_0_0_2px_#0a0a0a]" : "shadow-[0_0_0_1px_#e4e4e4,0_2px_6px_-2px_rgb(10_10_10/0.1)] group-hover:shadow-[0_0_0_1px_#a3a3a3]")}>
-                            <ScaledPage file={file} n={n} scale={thumbW / PAGE_W} folderName={folderName} />
+                            {renderPage(n, thumbW)}
                           </span>
                           <span className={clsx("mt-2.5 block text-center text-[13px] tabular-nums", on ? "font-semibold text-ink" : "text-neutral-500")}>{n}</span>
                         </button>
@@ -311,20 +502,77 @@ export function PreviewModal() {
                 </ol>
               </aside>
             )}
-            <div ref={setCanvasEl} onScroll={onScroll} className="scroll-quiet min-w-0 flex-1 overflow-auto scroll-smooth bg-white">
-              <div className="mx-auto flex w-max min-w-full flex-col items-center gap-6 px-3 py-6 sm:px-8">
-                {pages.map((n) => (
-                  <div
-                    key={n}
-                    ref={(el) => {
-                      pageRefs.current[n - 1] = el;
-                    }}
-                    className="scroll-mt-6 border border-line shadow-page"
-                  >
-                    <ScaledPage file={file} n={n} scale={zoom} folderName={folderName} />
+            <div ref={setCanvasEl} data-viewer-canvas onScroll={onScroll} className="scroll-quiet min-w-0 flex-1 overflow-auto scroll-smooth bg-white">
+              {doc.kind === "loading" && (
+                <div className="flex h-full items-center justify-center text-neutral-400">
+                  <LoaderCircle className="size-6 animate-spin" strokeWidth={1.75} aria-label="Chargement" />
+                </div>
+              )}
+              {doc.kind === "unsupported" && (
+                <Notice
+                  file={file}
+                  title={`Pas d’aperçu pour ce format (.${file.ext})`}
+                  text="L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application."
+                  onDownload={download}
+                />
+              )}
+              {doc.kind === "missing" && (
+                <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                  <FileQuestion className="size-10 text-neutral-300" strokeWidth={1.25} />
+                  <p className="mt-4 text-[16px] font-semibold text-ink">Original introuvable</p>
+                  <p className="mt-1.5 max-w-[380px] text-[13.5px] leading-[21px] text-neutral-500">Ce fichier a été téléversé depuis un autre navigateur, ou les données de ce site ont été effacées.</p>
+                </div>
+              )}
+              {paged && (
+                <div className="mx-auto flex w-max min-w-full flex-col items-center gap-6 px-3 py-6 sm:px-8">
+                  {pages.map((n) => (
+                    <div
+                      key={n}
+                      ref={(el) => {
+                        pageRefs.current[n - 1] = el;
+                      }}
+                      className="scroll-mt-6 border border-line shadow-page"
+                    >
+                      {renderPage(n, Math.round(base.w * zoom))}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {doc.kind === "image" && (
+                <div className="mx-auto flex w-max min-w-full flex-col items-center px-3 py-6 sm:px-8">
+                  <div className="relative overflow-hidden border border-line shadow-page">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={doc.url} alt={fullName(file)} draggable={false} className="block" style={{ width: Math.round(base.w * zoom), height: Math.round(base.h * zoom), maxWidth: "none" }} />
+                    {v.watermark && <PageWatermark />}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+              {doc.kind === "text" && (
+                <div className="mx-auto flex w-max min-w-full flex-col items-center px-3 py-6 sm:px-8">
+                  <div className="relative border border-line bg-white shadow-page" style={{ width: Math.round(LETTER.w * zoom), fontSize: 13 * zoom, padding: `${3.2 * zoom}em ${3.6 * zoom}em` }}>
+                    {doc.rows ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse text-left">
+                          <tbody>
+                            {doc.rows.map((row, r) => (
+                              <tr key={r} className={clsx("border-b border-neutral-200", r === 0 && "bg-neutral-50 font-semibold text-ink")}>
+                                {row.map((cell, c) => (
+                                  <td key={c} className="whitespace-nowrap px-[0.7em] py-[0.45em] text-neutral-700">
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <pre className="whitespace-pre-wrap break-words font-mono leading-[1.6] text-neutral-800">{doc.text}</pre>
+                    )}
+                    {doc.truncated && <p className="mt-[1.5em] border-t border-neutral-200 pt-[1em] text-neutral-500">Aperçu limité au début du fichier. Téléchargez l’original pour tout voir.</p>}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </Dialog.Content>

@@ -27,6 +27,8 @@ export interface VaultFile {
   pages: number;
   /** True for built-in sample entries that have no stored file behind them. */
   sample: boolean;
+  /** MIME type of the stored original (uploaded files only). */
+  mime?: string;
 }
 
 export interface Folder {

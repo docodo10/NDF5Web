@@ -4,12 +4,13 @@ import clsx from "clsx";
 import * as Dialog from "@radix-ui/react-dialog";
 import { CloudUpload, Info, Lock, Users, X } from "lucide-react";
 import { FolderIcon } from "@phosphor-icons/react";
-import { useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import type { FileStatus, Folder, VaultFile } from "@/lib/types";
 import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
-import { folderLabel, formatDate, formatTime, fullName } from "@/lib/format";
+import { count, folderLabel, formatDate, formatSize, formatTime, fullName, STATUS_LABEL } from "@/lib/format";
+import { ACCEPT_ATTR, checkUpload, type UploadCheck } from "@/lib/uploads";
 import { Avatar, Button, Chip, IconButton } from "./ui";
 
 /* -------------------------------------------------------------- Modal shell */
@@ -42,7 +43,7 @@ function Modal({ title, description, children, footer, onSubmit, width = 440 }: 
                 {description && <p className="mt-1 text-[13px] text-neutral-500">{description}</p>}
               </div>
               <Dialog.Close asChild>
-                <IconButton icon={X} label="Close" variant="ghost" size="sm" className="-mr-1.5 -mt-1" />
+                <IconButton icon={X} label="Fermer" variant="ghost" size="sm" className="-mr-1.5 -mt-1" />
               </Dialog.Close>
             </div>
             <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
@@ -125,18 +126,18 @@ function RenameDialog({ file }: { file: VaultFile }) {
   };
   return (
     <Modal
-      title="Rename file"
+      title="Renommer le fichier"
       onSubmit={save}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Cancel</Button>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
           <Button variant="primary" type="submit" disabled={!name.trim() || name.trim() === file.name}>
-            Rename
+            Renommer
           </Button>
         </>
       }
     >
-      <Field label="File name">
+      <Field label="Nom du fichier">
         <div className="flex items-center gap-2">
           <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} onFocus={(e) => e.target.select()} />
           <span className="shrink-0 text-[13px] text-neutral-500">.{file.ext}</span>
@@ -168,20 +169,20 @@ function DetailsDialog({ file }: { file: VaultFile }) {
   };
   return (
     <Modal
-      title="Edit details"
+      title="Modifier les détails"
       description={fullName(file)}
       onSubmit={save}
       width={480}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Cancel</Button>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
           <Button variant="primary" type="submit">
-            Save details
+            Enregistrer
           </Button>
         </>
       }
     >
-      <Field label="Status">
+      <Field label="Statut">
         <div className="flex flex-wrap gap-1.5">
           {STATUSES.map((s) => (
             <button
@@ -194,14 +195,14 @@ function DetailsDialog({ file }: { file: VaultFile }) {
                 status === s ? "border-ink bg-ink text-white" : "border-line bg-white text-neutral-600 hover:border-neutral-300",
               )}
             >
-              {s}
+              {STATUS_LABEL[s]}
             </button>
           ))}
         </div>
       </Field>
-      <Field label="Project">
+      <Field label="Projet">
         <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className={INPUT}>
-          <option value="">No project</option>
+          <option value="">Sans projet</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>
               {p.code} — {p.name}
@@ -209,15 +210,15 @@ function DetailsDialog({ file }: { file: VaultFile }) {
           ))}
         </select>
       </Field>
-      <Field label="Tags" hint="Separate tags with commas.">
-        <input value={tags} onChange={(e) => setTags(e.target.value)} className={INPUT} placeholder="screenplay, FS1" />
+      <Field label="Étiquettes" hint="Séparez les étiquettes par des virgules.">
+        <input value={tags} onChange={(e) => setTags(e.target.value)} className={INPUT} placeholder="scénario, FS1" />
       </Field>
       <Field label="Notes">
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={clsx(INPUT, "h-auto resize-none py-2 leading-5")} placeholder="Add a note for collaborators" />
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={clsx(INPUT, "h-auto resize-none py-2 leading-5")} placeholder="Ajoutez une note pour vos collaborateurs" />
       </Field>
       <div className="mt-1 divide-y divide-hair border-t border-hair pt-1">
-        <Toggle on={favorite} onChange={setFavorite} label="Favorite" />
-        <Toggle on={pinned} onChange={setPinned} label="Pin to Home" />
+        <Toggle on={favorite} onChange={setFavorite} label="Favori" />
+        <Toggle on={pinned} onChange={setPinned} label="Épingler à l’accueil" />
       </div>
     </Modal>
   );
@@ -227,7 +228,7 @@ function FolderPicker({ value, onChange, exclude }: { value: string; onChange: (
   const { folders } = useVault();
   const flat = useFlatFolders(folders);
   return (
-    <ul className="scroll-quiet max-h-[280px] overflow-y-auto rounded-[10px] border border-line p-1" role="listbox" aria-label="Destination folder">
+    <ul className="scroll-quiet max-h-[280px] overflow-y-auto rounded-[10px] border border-line p-1" role="listbox" aria-label="Dossier de destination">
       {flat.map(({ folder, depth }) => {
         const on = value === folder.id;
         return (
@@ -258,8 +259,8 @@ function MoveDialog({ fileIds }: { fileIds: string[] }) {
   const [dest, setDest] = useState("");
   return (
     <Modal
-      title={fileIds.length === 1 && first ? "Move file" : `Move ${fileIds.length} files`}
-      description={fileIds.length === 1 && first ? fullName(first) : "Choose a destination folder."}
+      title={fileIds.length === 1 && first ? "Déplacer le fichier" : `Déplacer ${count(fileIds.length, "fichier")}`}
+      description={fileIds.length === 1 && first ? fullName(first) : "Choisissez le dossier de destination."}
       onSubmit={() => {
         if (!dest) return;
         moveFiles(fileIds, dest);
@@ -267,9 +268,9 @@ function MoveDialog({ fileIds }: { fileIds: string[] }) {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Cancel</Button>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
           <Button variant="primary" type="submit" disabled={!dest}>
-            Move here
+            Déplacer ici
           </Button>
         </>
       }
@@ -301,7 +302,7 @@ function ShareDialog({ file }: { file: VaultFile }) {
   );
   return (
     <Modal
-      title="Share"
+      title="Partager"
       description={fullName(file)}
       onSubmit={() => {
         if (visibility !== file.visibility) updateFile(file.id, { visibility });
@@ -309,19 +310,19 @@ function ShareDialog({ file }: { file: VaultFile }) {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Cancel</Button>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
           <Button variant="primary" type="submit">
-            Save access
+            Enregistrer l’accès
           </Button>
         </>
       }
     >
       <div className="space-y-2">
-        {option("private", Lock, "Private", "Only you can open this file.")}
-        {option("team", Users, "Workspace", "Everyone in the NDF Vault workspace.")}
+        {option("private", Lock, "Privé", "Vous seul pouvez ouvrir ce fichier.")}
+        {option("team", Users, "Espace de travail", "Toutes les personnes de l’espace NDF Vault.")}
       </div>
       <div className="mt-4">
-        <Note>Inviting specific people and share links need user accounts. They arrive with guest sign-in in the backend step.</Note>
+        <Note>Inviter des personnes précises et créer des liens de partage demande des comptes invités. Cela arrivera avec la connexion des invités.</Note>
       </div>
     </Modal>
   );
@@ -331,7 +332,7 @@ function VersionsDialog({ file }: { file: VaultFile }) {
   const { openDialog } = useVault();
   const owner = USERS.find((u) => u.id === file.ownerId)!;
   return (
-    <Modal title="Version history" description={fullName(file)} footer={<Button onClick={() => openDialog(null)}>Close</Button>}>
+    <Modal title="Historique des versions" description={fullName(file)} footer={<Button onClick={() => openDialog(null)}>Fermer</Button>}>
       <div className="flex items-center gap-3 rounded-[10px] border border-line px-3 py-2.5">
         <Avatar user={owner} size={30} />
         <div className="min-w-0 flex-1 leading-tight">
@@ -340,10 +341,10 @@ function VersionsDialog({ file }: { file: VaultFile }) {
             {owner.name} · {formatDate(file.modifiedAt)}, {formatTime(file.modifiedAt)}
           </p>
         </div>
-        <Chip>Current</Chip>
+        <Chip>Actuelle</Chip>
       </div>
       <div className="mt-4">
-        <Note>Earlier versions will be listed here once a file is replaced with a new upload. Version storage arrives with the storage step.</Note>
+        <Note>Les versions précédentes s’afficheront ici quand un fichier pourra être remplacé par un nouveau téléversement. Ce n’est pas encore disponible.</Note>
       </div>
     </Modal>
   );
@@ -352,25 +353,25 @@ function VersionsDialog({ file }: { file: VaultFile }) {
 function DeleteDialog({ fileIds }: { fileIds: string[] }) {
   const { files, deleteFiles, openDialog } = useVault();
   const first = files.find((f) => f.id === fileIds[0]);
-  const what = fileIds.length === 1 && first ? `“${fullName(first)}”` : `${fileIds.length} files`;
+  const what = fileIds.length === 1 && first ? `« ${fullName(first)} »` : count(fileIds.length, "fichier");
   return (
     <Modal
-      title={fileIds.length === 1 ? "Delete file?" : "Delete files?"}
+      title={fileIds.length === 1 ? "Supprimer le fichier ?" : "Supprimer les fichiers ?"}
       onSubmit={() => {
         deleteFiles(fileIds);
         openDialog(null);
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Cancel</Button>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
           <Button variant="primary" type="submit" className="!bg-red-600 hover:!bg-red-700">
-            Delete
+            Supprimer
           </Button>
         </>
       }
     >
       <p className="text-[13.5px] leading-[21px] text-neutral-600">
-        {what} will move to <span className="font-medium text-ink">Archived Files → Deleted</span>, where it can be restored.
+        {what} {fileIds.length === 1 ? "ira" : "iront"} dans <span className="font-medium text-ink">Fichiers archivés → Supprimés</span>, où une restauration reste possible.
       </p>
     </Modal>
   );
@@ -383,7 +384,7 @@ function NewFolderDialog({ parentId }: { parentId: string }) {
   const [parent, setParent] = useState(folders.some((f) => f.id === parentId) ? parentId : "root");
   return (
     <Modal
-      title="New folder"
+      title="Nouveau dossier"
       onSubmit={() => {
         if (!name.trim()) return;
         const id = addFolder(name, parent);
@@ -392,17 +393,17 @@ function NewFolderDialog({ parentId }: { parentId: string }) {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Cancel</Button>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
           <Button variant="primary" type="submit" disabled={!name.trim()}>
-            Create folder
+            Créer le dossier
           </Button>
         </>
       }
     >
-      <Field label="Folder name">
-        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Location Scouting" />
+      <Field label="Nom du dossier">
+        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="ex. Repérage des lieux" />
       </Field>
-      <Field label="Inside">
+      <Field label="Dans">
         <select value={parent} onChange={(e) => setParent(e.target.value)} className={INPUT}>
           {flat.map(({ folder, depth }) => (
             <option key={folder.id} value={folder.id}>
@@ -423,8 +424,8 @@ function NewProjectDialog() {
   const [period, setPeriod] = useState("");
   return (
     <Modal
-      title="New project"
-      description="Creates a project workspace and its folder under NDF SAGA."
+      title="Nouveau projet"
+      description="Crée un espace de projet et son dossier dans 04 Production."
       onSubmit={() => {
         if (!name.trim()) return;
         const id = addProject({ name, code, period });
@@ -433,45 +434,202 @@ function NewProjectDialog() {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Cancel</Button>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
           <Button variant="primary" type="submit" disabled={!name.trim()}>
-            Create project
+            Créer le projet
           </Button>
         </>
       }
     >
-      <Field label="Project name">
-        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="e.g. Production Blitz Three" />
+      <Field label="Nom du projet">
+        <input data-autofocus value={name} onChange={(e) => setName(e.target.value)} className={INPUT} placeholder="ex. Production Blitz Three" />
       </Field>
       <div className="grid grid-cols-[120px_1fr] gap-3">
         <Field label="Code">
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 5))} className={INPUT} placeholder="PB3" />
         </Field>
-        <Field label="Period">
-          <input value={period} onChange={(e) => setPeriod(e.target.value)} className={INPUT} placeholder="Planned production window" />
+        <Field label="Période">
+          <input value={period} onChange={(e) => setPeriod(e.target.value)} className={INPUT} placeholder="Période de production prévue" />
         </Field>
       </div>
     </Modal>
   );
 }
 
-function UploadDialog() {
-  const { openDialog } = useVault();
+function UploadDialog({ folderId, initial }: { folderId: string | null; initial?: File[] }) {
+  const { folders, projects, uploadFiles, openDialog, navigate, persistent } = useVault();
+  const flat = useFlatFolders(folders);
+  const [items, setItems] = useState<UploadCheck[]>(() => (initial ?? []).map(checkUpload));
+  const [dest, setDest] = useState(folderId && folders.some((f) => f.id === folderId) ? folderId : "root");
+  const [projectId, setProjectId] = useState("");
+  const [over, setOver] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+
+  const add = (list: FileList | File[] | null) => {
+    if (!list) return;
+    setItems((prev) => [...prev, ...Array.from(list).map(checkUpload)]);
+  };
+  const valid = items.filter((it) => !it.error);
+  const submit = async () => {
+    if (!valid.length || busy) return;
+    setBusy(true);
+    const added = await uploadFiles(valid, dest, projectId || null);
+    setBusy(false);
+    openDialog(null);
+    if (added) navigate({ view: "folder", id: dest });
+  };
+
   return (
-    <Modal title="Upload files" description="PDF, DOCX, XLSX, PPTX, TXT, CSV and images." footer={<Button onClick={() => openDialog(null)}>Close</Button>} width={500}>
-      <div className="flex flex-col items-center rounded-xl border border-dashed border-neutral-300 bg-subtle px-6 py-10 text-center">
+    <Modal
+      title="Téléverser des fichiers"
+      description="PDF, DOCX, XLSX, PPTX, TXT, CSV et images — 200 Mo maximum par fichier."
+      onSubmit={submit}
+      width={540}
+      footer={
+        <>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button variant="primary" type="submit" disabled={!valid.length || busy || !persistent}>
+            {busy ? "Téléversement…" : valid.length ? `Téléverser ${count(valid.length, "fichier")}` : "Téléverser"}
+          </Button>
+        </>
+      }
+    >
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setOver(true);
+        }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setOver(false);
+          add(e.dataTransfer.files);
+        }}
+        className={clsx(
+          "flex flex-col items-center rounded-xl border border-dashed px-6 text-center transition-colors duration-150",
+          items.length ? "py-5" : "py-9",
+          over ? "border-ink bg-fill" : "border-neutral-300 bg-subtle",
+        )}
+      >
         <span className="mb-3 flex size-10 items-center justify-center rounded-[10px] border border-line bg-white text-neutral-500 shadow-xs">
           <CloudUpload className="size-[18px]" strokeWidth={1.75} />
         </span>
-        <p className="text-[13.5px] font-medium text-ink">Drag and drop files here</p>
-        <p className="mt-1 text-[12.5px] text-neutral-500">or browse from your computer — multiple files supported</p>
-        <Button className="mt-4" disabled>
-          Browse files
+        <p className="text-[13.5px] font-medium text-ink">Glissez vos fichiers ici</p>
+        <p className="mt-1 text-[12.5px] text-neutral-500">ou choisissez-les sur votre ordinateur — plusieurs fichiers à la fois</p>
+        <input
+          ref={input}
+          id="upload-input"
+          type="file"
+          multiple
+          accept={ACCEPT_ATTR}
+          className="sr-only"
+          onChange={(e) => {
+            add(e.target.files);
+            e.target.value = "";
+          }}
+        />
+        <Button className="mt-4" onClick={() => input.current?.click()}>
+          Parcourir
         </Button>
       </div>
-      <div className="mt-4">
-        <Note>This is the upload interface only. Real uploads with persistent, private storage are the next build step, so the button is disabled for now.</Note>
+
+      {items.length > 0 && (
+        <ul aria-label="Fichiers choisis" className="scroll-quiet mt-3 max-h-[168px] overflow-y-auto rounded-[10px] border border-line">
+          {items.map((it, i) => (
+            <li key={`${it.file.name}-${i}`} className="flex min-h-[44px] items-center gap-3 border-t border-hair px-3 py-1.5 first:border-t-0">
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="truncate text-[13px] font-medium text-ink">{it.file.name}</p>
+                <p className={clsx("truncate text-[12px]", it.error ? "text-red-600" : "text-neutral-500")}>{it.error ?? formatSize(it.file.size)}</p>
+              </div>
+              <IconButton icon={X} label={`Retirer ${it.file.name}`} variant="ghost" size="sm" onClick={() => setItems((prev) => prev.filter((_, k) => k !== i))} />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <Field label="Dossier de destination">
+          <select id="upload-folder" value={dest} onChange={(e) => setDest(e.target.value)} className={INPUT}>
+            {flat.map(({ folder, depth }) => (
+              <option key={folder.id} value={folder.id}>
+                {"  ".repeat(depth)}
+                {folderLabel(folder)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Projet">
+          <select id="upload-project" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={INPUT}>
+            <option value="">Sans projet</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.code} — {p.name}
+              </option>
+            ))}
+          </select>
+        </Field>
       </div>
+
+      <div className="mt-4">
+        <Note>
+          {persistent
+            ? "Les fichiers restent dans ce navigateur, sur cet appareil. Rien n’est envoyé sur un serveur et personne d’autre ne les voit."
+            : "Ce navigateur refuse le stockage local (fenêtre privée ou données de site bloquées) : le téléversement est désactivé."}
+        </Note>
+      </div>
+    </Modal>
+  );
+}
+
+function PurgeDialog({ fileIds }: { fileIds: string[] }) {
+  const { files, purgeFiles, openDialog } = useVault();
+  const first = files.find((f) => f.id === fileIds[0]);
+  const what = fileIds.length === 1 && first ? `« ${fullName(first)} »` : count(fileIds.length, "fichier");
+  return (
+    <Modal
+      title="Supprimer définitivement ?"
+      onSubmit={() => {
+        purgeFiles(fileIds);
+        openDialog(null);
+      }}
+      footer={
+        <>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button variant="primary" type="submit" className="!bg-red-600 hover:!bg-red-700">
+            Supprimer définitivement
+          </Button>
+        </>
+      }
+    >
+      <p className="text-[13.5px] leading-[21px] text-neutral-600">
+        {what} et {fileIds.length === 1 ? "son original seront effacés" : "leurs originaux seront effacés"} de ce navigateur. Cette action est irréversible.
+      </p>
+    </Modal>
+  );
+}
+
+function ResetDialog() {
+  const { resetVault, openDialog } = useVault();
+  return (
+    <Modal
+      title="Réinitialiser le Vault ?"
+      onSubmit={() => {
+        openDialog(null);
+        void resetVault();
+      }}
+      footer={
+        <>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button variant="primary" type="submit" className="!bg-red-600 hover:!bg-red-700">
+            Tout réinitialiser
+          </Button>
+        </>
+      }
+    >
+      <p className="text-[13.5px] leading-[21px] text-neutral-600">
+        Tous les fichiers téléversés, dossiers et projets créés dans ce navigateur seront effacés, et les données d’exemple reviendront. Cette action est irréversible.
+      </p>
     </Modal>
   );
 }
@@ -497,8 +655,12 @@ export function Dialogs() {
       return <NewFolderDialog parentId={dialog.parentId} />;
     case "newProject":
       return <NewProjectDialog />;
+    case "purge":
+      return <PurgeDialog fileIds={dialog.fileIds} />;
+    case "reset":
+      return <ResetDialog />;
     case "upload":
-      return <UploadDialog />;
+      return <UploadDialog folderId={dialog.folderId} initial={dialog.files} />;
   }
 }
 
@@ -519,10 +681,10 @@ export function ToastHost() {
               dismissToast();
             }}
           >
-            Undo
+            Annuler
           </Button>
         )}
-        <IconButton icon={X} label="Dismiss" variant="ghost" size="sm" onClick={dismissToast} />
+        <IconButton icon={X} label="Fermer" variant="ghost" size="sm" onClick={dismissToast} />
       </div>
     </div>
   );

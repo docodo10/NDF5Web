@@ -14,16 +14,16 @@ export function ActivityView() {
   const mine = useMemo(() => activity.filter((a) => a.userId === CURRENT_USER_ID), [activity]);
 
   const items: TabItem<Who>[] = [
-    { id: "all", label: "All activity", count: activity.length },
-    { id: "mine", label: "My activity", count: mine.length },
+    { id: "all", label: "Toute l’activité", count: activity.length },
+    { id: "mine", label: "Mon activité", count: mine.length },
   ];
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Activity" description="A running history of changes across the vault." actions={<SampleNotice />} />
-      <TextTabs<Who> label="Activity scope" items={items} value={who} onChange={setWho} />
+      <PageHeader title="Activité" description="L’historique des changements dans le Vault." actions={<SampleNotice />} />
+      <TextTabs<Who> label="Portée de l’activité" items={items} value={who} onChange={setWho} />
       <div className="max-w-[880px]">
-        <ActivityList items={who === "all" ? activity : mine} emptyHint="Rename, move, archive or copy a file and it will be recorded here." />
+        <ActivityList items={who === "all" ? activity : mine} emptyHint="Renommez, déplacez, archivez ou copiez un fichier : ce sera consigné ici." />
       </div>
     </div>
   );

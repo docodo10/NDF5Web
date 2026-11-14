@@ -6,6 +6,7 @@ import { useVault } from "@/lib/store";
 import type { VaultFile } from "@/lib/types";
 import { CURRENT_USER_ID } from "@/lib/sample-data";
 import { activeFiles, byModifiedDesc } from "@/lib/selectors";
+import { count } from "@/lib/format";
 import { ExplorerToolbar, useFileFilters, type KindGroup } from "@/components/files/Explorer";
 import { FileTable } from "@/components/files/FileTable";
 import { PageHeader, SegmentedTabs, TextTabs, type TabItem } from "@/components/ui";
@@ -17,40 +18,40 @@ const RECENT_COUNT = 20;
 
 const MODES: Record<FilesMode, { title: string; description: string; emptyTitle: string; emptyHint: string }> = {
   files: {
-    title: "All Files",
-    description: "Every document in the vault, across all projects and folders.",
-    emptyTitle: "No files match this view",
-    emptyHint: "Try another file type, clear the search, or reset the filters.",
+    title: "Tous les fichiers",
+    description: "Tous les documents du Vault, tous projets et dossiers confondus.",
+    emptyTitle: "Aucun fichier ne correspond",
+    emptyHint: "Essayez un autre type, effacez la recherche ou réinitialisez les filtres.",
   },
   private: {
-    title: "Private Files",
-    description: "Files with restricted visibility. Only you can see them.",
-    emptyTitle: "No private files",
-    emptyHint: "Set a file to Private in Share or Edit Details and it will appear here.",
+    title: "Fichiers privés",
+    description: "Fichiers à visibilité restreinte. Vous seul les voyez.",
+    emptyTitle: "Aucun fichier privé",
+    emptyHint: "Passez un fichier en Privé depuis Partager et il apparaîtra ici.",
   },
   shared: {
-    title: "Shared With Me",
-    description: "Files that other departments have shared with you.",
-    emptyTitle: "Nothing shared with you",
-    emptyHint: "Files shared with you by other departments will appear here.",
+    title: "Partagés avec moi",
+    description: "Fichiers que d’autres services ont partagés avec vous.",
+    emptyTitle: "Rien n’est partagé avec vous",
+    emptyHint: "Les fichiers partagés par d’autres services apparaîtront ici.",
   },
   favorites: {
-    title: "Favorites",
-    description: "Files you starred for quick access.",
-    emptyTitle: "No favorites yet",
-    emptyHint: "Hover a file and click the star next to its name to add it here.",
+    title: "Favoris",
+    description: "Les fichiers marqués d’une étoile, pour y revenir vite.",
+    emptyTitle: "Aucun favori pour l’instant",
+    emptyHint: "Survolez un fichier et cliquez sur l’étoile à côté de son nom.",
   },
   recent: {
-    title: "Recent Files",
-    description: `The ${RECENT_COUNT} most recently added or updated files.`,
-    emptyTitle: "No recent files",
-    emptyHint: "Files you add or update will appear here.",
+    title: "Fichiers récents",
+    description: `Les ${RECENT_COUNT} fichiers ajoutés ou modifiés le plus récemment.`,
+    emptyTitle: "Aucun fichier récent",
+    emptyHint: "Les fichiers ajoutés ou modifiés apparaîtront ici.",
   },
   archived: {
-    title: "Archived Files",
-    description: "Archived and deleted files. Both can be restored.",
-    emptyTitle: "No archived files",
-    emptyHint: "Archive a file from its actions menu and it will appear here.",
+    title: "Fichiers archivés",
+    description: "Fichiers archivés et supprimés. Les deux peuvent être restaurés.",
+    emptyTitle: "Aucun fichier archivé",
+    emptyHint: "Archivez un fichier depuis son menu d’actions et il apparaîtra ici.",
   },
 };
 
@@ -94,23 +95,23 @@ export function FilesView({ mode }: { mode: FilesMode }) {
   const filters = useFileFilters(scoped);
 
   const ownerItems: TabItem<Owner>[] = [
-    { id: "all", label: "View All", icon: Files },
-    { id: "mine", label: "My Files", icon: User },
-    { id: "shared", label: "Shared Files", icon: Users },
+    { id: "all", label: "Tout voir", icon: Files },
+    { id: "mine", label: "Mes fichiers", icon: User },
+    { id: "shared", label: "Partagés", icon: Users },
   ];
   const binItems: TabItem<Bin>[] = [
-    { id: "archived", label: "Archived", icon: Archive, count: archived.length },
-    { id: "deleted", label: "Deleted", icon: Trash2, count: deleted.length },
+    { id: "archived", label: "Archivés", icon: Archive, count: archived.length },
+    { id: "deleted", label: "Supprimés", icon: Trash2, count: deleted.length },
   ];
 
   const left =
     mode === "archived" ? (
-      <TextTabs<Bin> label="Archived or deleted" items={binItems} value={bin} onChange={setBin} />
+      <TextTabs<Bin> label="Archivés ou supprimés" items={binItems} value={bin} onChange={setBin} />
     ) : ownerTabs ? (
-      <TextTabs<Owner> label="Ownership" items={ownerItems} value={owner} onChange={setOwner} />
+      <TextTabs<Owner> label="Propriétaire" items={ownerItems} value={owner} onChange={setOwner} />
     ) : (
       <p className="text-[13px] text-neutral-500">
-        <span className="font-medium tabular-nums text-ink">{filters.filtered.length}</span> {filters.filtered.length === 1 ? "file" : "files"}
+        <span className="font-medium tabular-nums text-ink">{count(filters.filtered.length, "fichier")}</span>
       </p>
     );
 
@@ -131,7 +132,7 @@ export function FilesView({ mode }: { mode: FilesMode }) {
         }
       />
 
-      <SegmentedTabs<KindGroup> label="File type" items={kindTabs(true)} value={filters.state.kind} onChange={(kind) => filters.setState((s) => ({ ...s, kind }))} />
+      <SegmentedTabs<KindGroup> label="Type de fichier" items={kindTabs(true)} value={filters.state.kind} onChange={(kind) => filters.setState((s) => ({ ...s, kind }))} />
 
       <div className="space-y-4">
         <ExplorerToolbar left={left} filters={filters} />
@@ -139,8 +140,8 @@ export function FilesView({ mode }: { mode: FilesMode }) {
           key={trash ? "deleted" : "files"}
           files={filters.filtered}
           trash={trash}
-          emptyTitle={trash ? "No deleted files" : base.length === 0 ? cfg.emptyTitle : "No files match this view"}
-          emptyHint={trash ? "Deleted files stay here until they are restored." : base.length === 0 ? cfg.emptyHint : "Try another file type, clear the search, or reset the filters."}
+          emptyTitle={trash ? "Aucun fichier supprimé" : base.length === 0 ? cfg.emptyTitle : "Aucun fichier ne correspond"}
+          emptyHint={trash ? "Les fichiers supprimés restent ici jusqu’à leur restauration ou leur suppression définitive." : base.length === 0 ? cfg.emptyHint : "Essayez un autre type, effacez la recherche ou réinitialisez les filtres."}
         />
       </div>
     </div>

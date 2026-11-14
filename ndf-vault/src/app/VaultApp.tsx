@@ -6,6 +6,7 @@ import { Shell } from "@/components/Shell";
 import { Dialogs, ToastHost } from "@/components/Dialogs";
 import { PreviewModal } from "@/components/viewer/PreviewModal";
 import { CommandPalette } from "@/components/CommandPalette";
+import { Tour } from "@/components/Tour";
 import { VaultLockup } from "@/components/brand/Brand";
 import { Home } from "@/views/Home";
 import { FilesView } from "@/views/FilesView";
@@ -54,18 +55,17 @@ export function VaultApp() {
     () => false,
   );
 
-  if (!mounted) {
-    return (
-      <div className="flex h-full items-center justify-center bg-white" aria-busy="true" aria-label="Loading NDF Vault">
-        <span className="opacity-40">
-          <VaultLockup />
-        </span>
-      </div>
-    );
-  }
+  const splash = (
+    <div className="flex h-full items-center justify-center bg-white" aria-busy="true" aria-label="Chargement de NDF Vault">
+      <span className="opacity-40">
+        <VaultLockup />
+      </span>
+    </div>
+  );
+  if (!mounted) return splash;
 
   return (
-    <VaultProvider>
+    <VaultProvider fallback={splash}>
       <Shell>
         <CurrentView />
       </Shell>
@@ -73,6 +73,7 @@ export function VaultApp() {
       <Dialogs />
       <CommandPalette />
       <ToastHost />
+      <Tour />
     </VaultProvider>
   );
 }

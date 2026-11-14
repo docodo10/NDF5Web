@@ -42,8 +42,9 @@ export function AppWatermark() {
 export function PageWatermark() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
-      <div className="-rotate-[32deg] text-ink opacity-[0.05]">
-        <Ndf5Logo className="h-auto w-[560px]" title="" />
+      {/* Sized from the page, so it fits a sample page, a real PDF page or an image alike. */}
+      <div className="w-[68%] -rotate-[32deg] text-ink opacity-[0.05]">
+        <Ndf5Logo className="h-auto w-full" title="" />
       </div>
     </div>
   );

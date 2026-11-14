@@ -2,8 +2,9 @@
 
 import clsx from "clsx";
 import { Check, Minus } from "lucide-react";
-import type { ButtonHTMLAttributes, ComponentType, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ComponentType, ReactNode, Ref } from "react";
 import type { FileStatus, User } from "@/lib/types";
+import { STATUS_LABEL } from "@/lib/format";
 
 type IconType = ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -25,7 +26,7 @@ export function Button({
   children,
   className,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: "sm" | "md"; icon?: IconType }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: "sm" | "md"; icon?: IconType; ref?: Ref<HTMLButtonElement> }) {
   return (
     <button
       type="button"
@@ -144,7 +145,7 @@ const STATUS_STYLE: Record<FileStatus, string> = {
 export function StatusBadge({ status }: { status: FileStatus }) {
   return (
     <span className={clsx("inline-flex h-[22px] items-center whitespace-nowrap rounded-md border bg-white px-2 text-[11.5px] font-medium", STATUS_STYLE[status])}>
-      {status}
+      {STATUS_LABEL[status]}
     </span>
   );
 }
@@ -262,6 +263,6 @@ export function EmptyState({ icon: Icon, title, hint }: { icon: IconType; title:
 
 export function SampleNotice() {
   return (
-    <Chip className="border-dashed text-neutral-500">Sample data — replaced when real documents are uploaded</Chip>
+    <Chip className="border-dashed text-neutral-500">Données d’exemple · vos fichiers téléversés s’y ajoutent</Chip>
   );
 }

@@ -5,7 +5,7 @@ import { FolderIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles } from "@/lib/selectors";
-import { descendantIds, folderLabel, folderPath } from "@/lib/format";
+import { count, descendantIds, folderLabel, folderPath } from "@/lib/format";
 import { ExplorerToolbar, useFileFilters } from "@/components/files/Explorer";
 import { FileTable } from "@/components/files/FileTable";
 import { Button, EmptyState, PageHeader, TextTabs, type TabItem } from "@/components/ui";
@@ -32,9 +32,9 @@ export function FolderView({ id }: { id: string }) {
   if (!folder) {
     return (
       <div className="rounded-xl border border-line bg-white">
-        <EmptyState icon={FolderSearch} title="Folder not found" hint="This folder does not exist or was removed." />
+        <EmptyState icon={FolderSearch} title="Dossier introuvable" hint="Ce dossier n’existe pas ou a été retiré." />
         <div className="-mt-8 flex justify-center pb-12">
-          <Button onClick={() => v.navigate({ view: "files" })}>Go to All Files</Button>
+          <Button onClick={() => v.navigate({ view: "files" })}>Voir tous les fichiers</Button>
         </div>
       </div>
     );
@@ -47,8 +47,8 @@ export function FolderView({ id }: { id: string }) {
   };
 
   const depthItems: TabItem<Depth>[] = [
-    { id: "direct", label: "This folder", count: direct.length },
-    { id: "nested", label: "Including subfolders", count: nested.length },
+    { id: "direct", label: "Ce dossier", count: direct.length },
+    { id: "nested", label: "Avec les sous-dossiers", count: nested.length },
   ];
 
   return (
@@ -56,11 +56,11 @@ export function FolderView({ id }: { id: string }) {
       <PageHeader
         eyebrow={path.length > 1 ? <Breadcrumbs items={path.map((f) => ({ label: f.name, onClick: () => v.navigate({ view: "folder", id: f.id }) }))} /> : undefined}
         title={folderLabel(folder)}
-        description={`${nested.length} ${nested.length === 1 ? "file" : "files"} · ${subfolders.length} ${subfolders.length === 1 ? "subfolder" : "subfolders"}${folder.access ? ` · Planned access: ${folder.access}` : ""}`}
+        description={`${count(nested.length, "fichier")} · ${count(subfolders.length, "sous-dossier")}${folder.access ? ` · Accès prévu : ${folder.access}` : ""}`}
         actions={
           <>
             <Button icon={FolderPlus} onClick={() => v.openDialog({ type: "newFolder", parentId: id })}>
-              New Folder
+              Nouveau dossier
             </Button>
             <UploadButton folderId={id} />
             <AddFileMenu folderId={id} />
@@ -70,7 +70,7 @@ export function FolderView({ id }: { id: string }) {
 
       {subfolders.length > 0 && (
         <section className="space-y-3">
-          <SectionTitle>Folders</SectionTitle>
+          <SectionTitle>Dossiers</SectionTitle>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {subfolders.map((f) => {
               const n = countIn(f.id);
@@ -79,7 +79,7 @@ export function FolderView({ id }: { id: string }) {
                   <button
                     type="button"
                     onClick={() => v.navigate({ view: "folder", id: f.id })}
-                    title={f.access ? `Planned access: ${f.access}` : undefined}
+                    title={f.access ? `Accès prévu : ${f.access}` : undefined}
                     className="flex h-[60px] w-full items-center gap-3 rounded-[10px] border border-line bg-white px-3 text-left shadow-xs transition-colors duration-150 hover:border-neutral-300 hover:bg-subtle"
                   >
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-fill text-neutral-700">
@@ -89,7 +89,7 @@ export function FolderView({ id }: { id: string }) {
                       <span className="block truncate text-[13.5px] font-medium text-ink">{f.name}</span>
                       <span className="block truncate text-[12.5px] text-neutral-500">
                         {f.code ? `${f.code} · ` : ""}
-                        {n} {n === 1 ? "file" : "files"}
+                        {count(n, "fichier")}
                         {f.access ? ` · ${f.access}` : ""}
                       </span>
                     </span>
@@ -102,12 +102,12 @@ export function FolderView({ id }: { id: string }) {
       )}
 
       <section className="space-y-4">
-        <SectionTitle>Files</SectionTitle>
-        <ExplorerToolbar left={subfolders.length > 0 ? <TextTabs<Depth> label="Folder depth" items={depthItems} value={depth} onChange={setDepth} /> : undefined} filters={filters} />
+        <SectionTitle>Fichiers</SectionTitle>
+        <ExplorerToolbar left={subfolders.length > 0 ? <TextTabs<Depth> label="Profondeur" items={depthItems} value={depth} onChange={setDepth} /> : undefined} filters={filters} />
         <FileTable
           files={filters.filtered}
-          emptyTitle={depth === "direct" && direct.length === 0 ? "This folder has no files yet" : "No files match this view"}
-          emptyHint={depth === "direct" && direct.length === 0 ? "Move files here from any actions menu. Uploads arrive with the storage step." : "Clear the search or reset the filters."}
+          emptyTitle={depth === "direct" && direct.length === 0 ? "Ce dossier est vide" : "Aucun fichier ne correspond"}
+          emptyHint={depth === "direct" && direct.length === 0 ? "Téléversez des fichiers ici, ou déplacez-en depuis un menu d’actions." : "Effacez la recherche ou réinitialisez les filtres."}
         />
       </section>
     </div>

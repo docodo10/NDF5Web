@@ -7,6 +7,7 @@ import type { FileStatus } from "@/lib/types";
 import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
 import { activeFiles, byModifiedDesc, CATEGORY_LABEL, fileCategory, type ProjectCategory } from "@/lib/selectors";
+import { count } from "@/lib/format";
 import { ExplorerToolbar, useFileFilters } from "@/components/files/Explorer";
 import { FileTable } from "@/components/files/FileTable";
 import { Avatar, Button, Chip, EmptyState, PageHeader, SegmentedTabs, StatusBadge, type TabItem } from "@/components/ui";
@@ -15,19 +16,19 @@ import { ActivityList, Breadcrumbs, SectionTitle, UploadButton } from "./shared"
 type Tab = "overview" | "files" | "financial" | "production" | "legal" | "team" | "activity";
 
 const TABS: TabItem<Tab>[] = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "files", label: "Files", icon: Files },
-  { id: "financial", label: "Financial Documents", icon: Landmark },
+  { id: "overview", label: "Aperçu", icon: LayoutDashboard },
+  { id: "files", label: "Fichiers", icon: Files },
+  { id: "financial", label: "Documents financiers", icon: Landmark },
   { id: "production", label: "Production", icon: Clapperboard },
-  { id: "legal", label: "Legal", icon: Scale },
-  { id: "team", label: "Team", icon: Users },
-  { id: "activity", label: "Activity", icon: Activity },
+  { id: "legal", label: "Juridique", icon: Scale },
+  { id: "team", label: "Équipe", icon: Users },
+  { id: "activity", label: "Activité", icon: Activity },
 ];
 
 const CATEGORY_EMPTY: Record<"financial" | "production" | "legal", string> = {
-  financial: "Files stored under 05 Business and Finance and linked to this project appear here.",
-  production: "Files stored under 02 Screenplays, 03 Story Development, 04 Production or 07 Talent and Packaging appear here.",
-  legal: "Files stored under 06 Legal and Chain of Title and linked to this project appear here.",
+  financial: "Les fichiers du dossier 05 Affaires et finances liés à ce projet apparaissent ici.",
+  production: "Les fichiers des dossiers 02 Scénarios, 03 Développement de l’histoire, 04 Production et 07 Talents et packaging apparaissent ici.",
+  legal: "Les fichiers du dossier 06 Juridique et chaîne de titres liés à ce projet apparaissent ici.",
 };
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
@@ -73,9 +74,9 @@ export function ProjectView({ id }: { id: string }) {
   if (!project) {
     return (
       <div className="rounded-xl border border-line bg-white">
-        <EmptyState icon={FolderSearch} title="Project not found" hint="This project does not exist or was removed." />
+        <EmptyState icon={FolderSearch} title="Projet introuvable" hint="Ce projet n’existe pas ou a été retiré." />
         <div className="-mt-8 flex justify-center pb-12">
-          <Button onClick={() => v.navigate({ view: "projects" })}>Go to All Projects</Button>
+          <Button onClick={() => v.navigate({ view: "projects" })}>Voir tous les projets</Button>
         </div>
       </div>
     );
@@ -88,29 +89,29 @@ export function ProjectView({ id }: { id: string }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={<Breadcrumbs items={[{ label: "All Projects", onClick: () => v.navigate({ view: "projects" }) }, { label: project.code }]} />}
+        eyebrow={<Breadcrumbs items={[{ label: "Tous les projets", onClick: () => v.navigate({ view: "projects" }) }, { label: project.code }]} />}
         title={project.name}
         description={project.period}
         actions={
           <>
             <Button icon={FolderOpen} onClick={() => v.navigate({ view: "folder", id: project.folderId })}>
-              Open Folder
+              Ouvrir le dossier
             </Button>
             <UploadButton folderId={project.folderId} />
           </>
         }
       />
 
-      <SegmentedTabs<Tab> label="Project sections" items={TABS} value={tab} onChange={setTab} />
+      <SegmentedTabs<Tab> label="Sections du projet" items={TABS} value={tab} onChange={setTab} />
 
       {tab === "overview" && (
         <div className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-3">
-            <Card title="About">
+            <Card title="À propos">
               <p className="mb-3 text-[13px] leading-[19px] text-neutral-600">{project.summary}</p>
               <Row label="Code">{project.code}</Row>
-              <Row label="Period">{project.period}</Row>
-              <Row label="Story years">
+              <Row label="Période">{project.period}</Row>
+              <Row label="Années">
                 {project.storyYears.length > 0 ? (
                   <span className="flex gap-1.5">
                     {project.storyYears.map((y) => (
@@ -118,13 +119,13 @@ export function ProjectView({ id }: { id: string }) {
                     ))}
                   </span>
                 ) : (
-                  <span className="font-normal text-neutral-400">Not set</span>
+                  <span className="font-normal text-neutral-400">Non défini</span>
                 )}
               </Row>
             </Card>
 
             <Card title="Documents">
-              <Row label="All files" onClick={() => setTab("files")}>
+              <Row label="Tous les fichiers" onClick={() => setTab("files")}>
                 {files.length}
               </Row>
               {(["financial", "production", "legal"] as const).map((c) => (
@@ -135,7 +136,7 @@ export function ProjectView({ id }: { id: string }) {
               {byCategory.other.length > 0 && <Row label={CATEGORY_LABEL.other}>{byCategory.other.length}</Row>}
             </Card>
 
-            <Card title="Status">
+            <Card title="Statuts">
               {STATUSES.filter((s) => s !== "Archived").map((s) => (
                 <Row key={s} label={<StatusBadge status={s} />}>
                   {statusCount(s)}
@@ -149,14 +150,14 @@ export function ProjectView({ id }: { id: string }) {
               aside={
                 files.length > recent.length ? (
                   <Button variant="ghost" size="sm" onClick={() => setTab("files")}>
-                    View all {files.length} files
+                    Voir les {count(files.length, "fichier")}
                   </Button>
                 ) : undefined
               }
             >
-              Recently updated
+              Modifiés récemment
             </SectionTitle>
-            <FileTable variant="compact" files={recent} footer={false} emptyTitle="No files in this project yet" emptyHint="Link a file to this project in Edit Details and it will appear here." />
+            <FileTable variant="compact" files={recent} footer={false} emptyTitle="Aucun fichier dans ce projet" emptyHint="Liez un fichier à ce projet dans Modifier les détails, ou téléversez-en un." />
           </section>
         </div>
       )}
@@ -168,7 +169,7 @@ export function ProjectView({ id }: { id: string }) {
             filters={filters}
             left={
               <p className="text-[13px] text-neutral-500">
-                <span className="font-medium tabular-nums text-ink">{filters.filtered.length}</span> {filters.filtered.length === 1 ? "file" : "files"}
+                <span className="font-medium tabular-nums text-ink">{count(filters.filtered.length, "fichier")}</span>
                 {tab !== "files" && <span> · {CATEGORY_LABEL[tab]}</span>}
               </p>
             }
@@ -176,8 +177,8 @@ export function ProjectView({ id }: { id: string }) {
           <FileTable
             key={tab}
             files={filters.filtered}
-            emptyTitle={tabFiles.length === 0 ? (tab === "files" ? "No files in this project yet" : `No ${CATEGORY_LABEL[tab].toLowerCase()} yet`) : "No files match this view"}
-            emptyHint={tabFiles.length === 0 ? (tab === "files" ? "Link a file to this project in Edit Details and it will appear here." : CATEGORY_EMPTY[tab]) : "Clear the search or reset the filters."}
+            emptyTitle={tabFiles.length === 0 ? (tab === "files" ? "Aucun fichier dans ce projet" : `${CATEGORY_LABEL[tab]} : rien pour l’instant`) : "Aucun fichier ne correspond"}
+            emptyHint={tabFiles.length === 0 ? (tab === "files" ? "Liez un fichier à ce projet dans Modifier les détails, ou téléversez-en un." : CATEGORY_EMPTY[tab]) : "Effacez la recherche ou réinitialisez les filtres."}
           />
         </div>
       )}
@@ -189,13 +190,13 @@ export function ProjectView({ id }: { id: string }) {
               <thead>
                 <tr className="bg-subtle">
                   <th scope="col" className="h-11 px-4 text-left text-[12.5px] font-medium text-neutral-500">
-                    Department
+                    Service
                   </th>
                   <th scope="col" className="hidden h-11 px-3 text-left text-[12.5px] font-medium text-neutral-500 sm:table-cell">
-                    Role
+                    Rôle
                   </th>
                   <th scope="col" className="h-11 w-[120px] px-4 text-right text-[12.5px] font-medium text-neutral-500">
-                    Project files
+                    Fichiers du projet
                   </th>
                 </tr>
               </thead>
@@ -214,13 +215,13 @@ export function ProjectView({ id }: { id: string }) {
                 ))}
               </tbody>
             </table>
-            {team.length === 0 && <EmptyState icon={Users} title="No contributors yet" hint="Departments that add files to this project appear here." />}
+            {team.length === 0 && <EmptyState icon={Users} title="Aucun contributeur" hint="Les services qui ajoutent des fichiers à ce projet apparaissent ici." />}
           </div>
-          <p className="text-[12.5px] text-neutral-500">Sample departments, listed because they own files in this project. Member management and permissions arrive with the authentication step.</p>
+          <p className="text-[12.5px] text-neutral-500">Services d’exemple, listés parce qu’ils possèdent des fichiers de ce projet. La gestion des membres et des permissions arrivera avec la connexion des invités.</p>
         </div>
       )}
 
-      {tab === "activity" && <ActivityList items={activity} emptyTitle="No activity for this project yet" emptyHint="Changes to this project's files will be listed here." />}
+      {tab === "activity" && <ActivityList items={activity} emptyTitle="Aucune activité pour ce projet" emptyHint="Les changements apportés aux fichiers de ce projet s’afficheront ici." />}
     </div>
   );
 }

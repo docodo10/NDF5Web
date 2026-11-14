@@ -4,7 +4,7 @@ import { ArrowUpRight, FolderKanban, Plus } from "lucide-react";
 import { useMemo } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles, byModifiedDesc } from "@/lib/selectors";
-import { formatDate } from "@/lib/format";
+import { count, formatDate } from "@/lib/format";
 import { Button, Chip, EmptyState, PageHeader, SampleNotice } from "@/components/ui";
 
 export function ProjectsView() {
@@ -15,13 +15,13 @@ export function ProjectsView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="All Projects"
-        description="A separate workspace for each major NDF production."
+        title="Tous les projets"
+        description="Un espace de travail distinct pour chaque grande production NDF."
         actions={
           <>
             <SampleNotice />
             <Button variant="primary" icon={Plus} onClick={() => v.openDialog({ type: "newProject" })}>
-              New Project
+              Nouveau projet
             </Button>
           </>
         }
@@ -29,7 +29,7 @@ export function ProjectsView() {
 
       {projects.length === 0 ? (
         <div className="rounded-xl border border-line bg-white">
-          <EmptyState icon={FolderKanban} title="No projects yet" hint="Create a project to give a production its own workspace." />
+          <EmptyState icon={FolderKanban} title="Aucun projet pour l’instant" hint="Créez un projet pour donner à une production son propre espace." />
         </div>
       ) : (
         <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -58,9 +58,9 @@ export function ProjectsView() {
                   )}
                   <span className="mt-5 flex w-full items-center justify-between border-t border-hair pt-3.5 text-[12.5px] text-neutral-500">
                     <span>
-                      <span className="font-medium tabular-nums text-ink">{files.length}</span> {files.length === 1 ? "file" : "files"}
+                      <span className="font-medium tabular-nums text-ink">{count(files.length, "fichier")}</span>
                     </span>
-                    <span>{files[0] ? `Updated ${formatDate(files[0].modifiedAt)}` : "No files yet"}</span>
+                    <span>{files[0] ? `Modifié le ${formatDate(files[0].modifiedAt)}` : "Aucun fichier"}</span>
                   </span>
                 </button>
               </li>

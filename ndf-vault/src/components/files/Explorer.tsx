@@ -8,28 +8,28 @@ import { useVault } from "@/lib/store";
 import type { FileKind, FileStatus, Folder, Project, VaultFile } from "@/lib/types";
 import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
-import { formatDate, KIND_LABEL } from "@/lib/format";
+import { formatDate, KIND_LABEL, STATUS_LABEL } from "@/lib/format";
 import { Button } from "../ui";
 import { POPOVER_CONTENT } from "./menu-styles";
 
 export type KindGroup = "all" | "documents" | "spreadsheets" | "pdfs" | "presentations" | "images";
 
 export const KIND_GROUPS: { id: KindGroup; label: string; kinds: FileKind[] }[] = [
-  { id: "all", label: "View all", kinds: [] },
+  { id: "all", label: "Tout voir", kinds: [] },
   { id: "documents", label: "Documents", kinds: ["docx", "txt"] },
-  { id: "spreadsheets", label: "Spreadsheets", kinds: ["xlsx", "csv"] },
-  { id: "pdfs", label: "PDFs", kinds: ["pdf"] },
-  { id: "presentations", label: "Presentations", kinds: ["pptx"] },
+  { id: "spreadsheets", label: "Tableurs", kinds: ["xlsx", "csv"] },
+  { id: "pdfs", label: "PDF", kinds: ["pdf"] },
+  { id: "presentations", label: "Présentations", kinds: ["pptx"] },
   { id: "images", label: "Images", kinds: ["image"] },
 ];
 
 export type DateRange = "any" | "7" | "30" | "year";
 
 const DATE_OPTIONS: { id: DateRange; label: string }[] = [
-  { id: "any", label: "Any time" },
-  { id: "7", label: "Last 7 days" },
-  { id: "30", label: "Last 30 days" },
-  { id: "year", label: "This year" },
+  { id: "any", label: "Toutes les dates" },
+  { id: "7", label: "7 derniers jours" },
+  { id: "30", label: "30 derniers jours" },
+  { id: "year", label: "Cette année" },
 ];
 
 export interface FilterState {
@@ -53,7 +53,7 @@ export function fileMatches(f: VaultFile, q: string, folders: Folder[], projects
     project ? `${project.code} ${project.name}` : "",
     f.tags.join(" "),
     f.notes,
-    f.status,
+    STATUS_LABEL[f.status],
     formatDate(f.modifiedAt),
     USERS.find((u) => u.id === f.ownerId)?.name ?? "",
   ]
@@ -123,26 +123,26 @@ export function FilterButton({ filters, hideProject }: { filters: Filters; hideP
     <Popover.Root>
       <Popover.Trigger asChild>
         <Button icon={ListFilter} className="data-[state=open]:bg-fill">
-          <span className="hidden sm:inline">Filters</span>
+          <span className="hidden sm:inline">Filtres</span>
           {activeCount > 0 && <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-ink px-1 text-[10.5px] font-semibold text-white">{activeCount}</span>}
         </Button>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content align="end" sideOffset={8} collisionPadding={12} className={clsx(POPOVER_CONTENT, "w-[320px] max-w-[calc(100vw-24px)]")}>
           <div className="flex h-11 items-center justify-between border-b border-hair px-4">
-            <p className="text-[13px] font-semibold text-ink">Filters</p>
+            <p className="text-[13px] font-semibold text-ink">Filtres</p>
             <button
               type="button"
               disabled={activeCount === 0}
               onClick={() => setState((s) => ({ ...s, projects: new Set(), statuses: new Set(), date: "any" }))}
               className="text-[12.5px] font-medium text-neutral-500 hover:text-ink disabled:opacity-40"
             >
-              Clear all
+              Tout effacer
             </button>
           </div>
           {!hideProject && (
             <div className={clsx(section, "border-b border-hair")}>
-              <p className={heading}>Project</p>
+              <p className={heading}>Projet</p>
               <div className="flex flex-wrap gap-1.5">
                 {projects.map((p) => (
                   <Pill key={p.id} on={state.projects.has(p.id)} onClick={() => setState((s) => ({ ...s, projects: toggled(s.projects, p.id) }))}>
@@ -150,23 +150,23 @@ export function FilterButton({ filters, hideProject }: { filters: Filters; hideP
                   </Pill>
                 ))}
                 <Pill on={state.projects.has("none")} onClick={() => setState((s) => ({ ...s, projects: toggled(s.projects, "none") }))}>
-                  No project
+                  Sans projet
                 </Pill>
               </div>
             </div>
           )}
           <div className={clsx(section, "border-b border-hair")}>
-            <p className={heading}>Status</p>
+            <p className={heading}>Statut</p>
             <div className="flex flex-wrap gap-1.5">
               {STATUSES.map((st) => (
                 <Pill key={st} on={state.statuses.has(st)} onClick={() => setState((s) => ({ ...s, statuses: toggled(s.statuses, st) }))}>
-                  {st}
+                  {STATUS_LABEL[st]}
                 </Pill>
               ))}
             </div>
           </div>
           <div className={section}>
-            <p className={heading}>Last modified</p>
+            <p className={heading}>Dernière modification</p>
             <div className="flex flex-wrap gap-1.5">
               {DATE_OPTIONS.map((d) => (
                 <Pill key={d.id} on={state.date === d.id} onClick={() => setState((s) => ({ ...s, date: d.id }))}>
@@ -181,7 +181,7 @@ export function FilterButton({ filters, hideProject }: { filters: Filters; hideP
   );
 }
 
-export function SearchField({ value, onChange, placeholder = "Search files" }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+export function SearchField({ value, onChange, placeholder = "Rechercher un fichier" }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <label className="relative block min-w-0 flex-1 sm:w-[248px] sm:flex-none">
       <span className="sr-only">{placeholder}</span>
@@ -194,7 +194,7 @@ export function SearchField({ value, onChange, placeholder = "Search files" }: {
         className="h-9 w-full rounded-lg border border-line bg-white pl-9 pr-8 text-[13px] text-ink shadow-xs transition-colors duration-150 placeholder:text-neutral-400 hover:border-neutral-300 focus:border-neutral-400 [&::-webkit-search-cancel-button]:hidden"
       />
       {value && (
-        <button type="button" aria-label="Clear search" onClick={() => onChange("")} className="absolute right-2 top-2 flex size-5 items-center justify-center rounded text-neutral-400 hover:text-ink">
+        <button type="button" aria-label="Effacer la recherche" onClick={() => onChange("")} className="absolute right-2 top-2 flex size-5 items-center justify-center rounded text-neutral-400 hover:text-ink">
           <X className="size-3.5" strokeWidth={2} />
         </button>
       )}

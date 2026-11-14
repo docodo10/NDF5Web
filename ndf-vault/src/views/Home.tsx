@@ -1,7 +1,7 @@
 "use client";
 
 import { Pin, PinOff, Plus } from "lucide-react";
-import { FileTextIcon, FolderIcon, GridFourIcon, KanbanIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
+import { CloudArrowUpIcon, CompassIcon, FolderIcon, KanbanIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles, byCreatedDesc, byModifiedDesc } from "@/lib/selectors";
@@ -14,20 +14,20 @@ import { kindTabs, SectionTitle } from "./shared";
 type Scope = "recent" | "modified" | "shared" | "all";
 
 const SCOPES: TabItem<Scope>[] = [
-  { id: "recent", label: "Recent files" },
-  { id: "modified", label: "Recently modified" },
-  { id: "shared", label: "Shared with me" },
-  { id: "all", label: "All files" },
+  { id: "recent", label: "Ajouts récents" },
+  { id: "modified", label: "Modifiés récemment" },
+  { id: "shared", label: "Partagés avec moi" },
+  { id: "all", label: "Tous les fichiers" },
 ];
 
 const RECENT_COUNT = 14;
 
-function ActionCard({ icon: Icon, label, onClick }: { icon: PhosphorIcon; label: string; onClick: () => void }) {
+function ActionCard({ icon: Icon, label, hint, onClick }: { icon: PhosphorIcon; label: string; hint: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-[96px] flex-col justify-between rounded-xl border border-line bg-white p-3.5 text-left shadow-xs transition-colors duration-150 hover:border-neutral-300 hover:bg-subtle"
+      className="group flex h-[104px] flex-col justify-between rounded-xl border border-line bg-white p-3.5 text-left shadow-xs transition-colors duration-150 hover:border-neutral-300 hover:bg-subtle"
     >
       <span className="flex items-start justify-between">
         <span className="flex size-9 items-center justify-center rounded-lg bg-fill text-neutral-700 transition-colors duration-150 group-hover:bg-neutral-200/70">
@@ -35,7 +35,10 @@ function ActionCard({ icon: Icon, label, onClick }: { icon: PhosphorIcon; label:
         </span>
         <Plus className="size-4 text-neutral-400 transition-colors duration-150 group-hover:text-ink" strokeWidth={1.75} />
       </span>
-      <span className="text-[14px] font-medium text-ink">{label}</span>
+      <span className="min-w-0">
+        <span className="block truncate text-[14px] font-medium text-ink">{label}</span>
+        <span className="block truncate text-[12.5px] text-neutral-500">{hint}</span>
+      </span>
     </button>
   );
 }
@@ -64,25 +67,25 @@ export function Home() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Welcome to NDF Vault" description="The New Drago Family — Production & Document Management" actions={<SampleNotice />} />
+      <PageHeader title="Bienvenue dans NDF Vault" description="The New Drago Family — gestion des documents et de la production" actions={<SampleNotice />} />
 
-      <section aria-label="Quick actions" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <ActionCard icon={FileTextIcon} label="New Document" onClick={() => v.notReady("New Document")} />
-        <ActionCard icon={GridFourIcon} label="New Spreadsheet" onClick={() => v.notReady("New Spreadsheet")} />
-        <ActionCard icon={FolderIcon} label="New Folder" onClick={() => v.openDialog({ type: "newFolder", parentId: "root" })} />
-        <ActionCard icon={KanbanIcon} label="New Project" onClick={() => v.openDialog({ type: "newProject" })} />
+      <section aria-label="Actions rapides" data-tour="actions" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <ActionCard icon={CloudArrowUpIcon} label="Téléverser" hint="PDF, Office, images" onClick={() => v.openDialog({ type: "upload", folderId: null })} />
+        <ActionCard icon={FolderIcon} label="Nouveau dossier" hint="Dans l’index du Vault" onClick={() => v.openDialog({ type: "newFolder", parentId: "root" })} />
+        <ActionCard icon={KanbanIcon} label="Nouveau projet" hint="Un espace par production" onClick={() => v.openDialog({ type: "newProject" })} />
+        <ActionCard icon={CompassIcon} label="Visite guidée" hint="Le tour en une minute" onClick={v.startTour} />
       </section>
 
       <section className="space-y-4">
-        <SectionTitle>File explorer</SectionTitle>
+        <SectionTitle>Explorateur de fichiers</SectionTitle>
 
         <ExplorerToolbar
-          left={<SegmentedTabs<KindGroup> label="File type" items={kindTabs(false)} value={filters.state.kind} onChange={(kind) => filters.setState((s) => ({ ...s, kind }))} />}
+          left={<SegmentedTabs<KindGroup> label="Type de fichier" items={kindTabs(false)} value={filters.state.kind} onChange={(kind) => filters.setState((s) => ({ ...s, kind }))} />}
           filters={filters}
         />
 
         {pinned.length > 0 ? (
-          <ul aria-label="Pinned files" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ul aria-label="Fichiers épinglés" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {pinned.map((f) => (
               <li key={f.id} className="group relative flex h-[60px] items-center gap-3 rounded-[10px] border border-line bg-white pl-3 pr-2 shadow-xs transition-colors duration-150 hover:border-neutral-300">
                 <FileIcon kind={f.kind} />
@@ -100,8 +103,8 @@ export function Home() {
                 </div>
                 <button
                   type="button"
-                  aria-label={`Unpin ${f.name}`}
-                  title="Unpin from Home"
+                  aria-label={`Désépingler ${f.name}`}
+                  title="Désépingler"
                   onClick={() => v.togglePinned(f.id)}
                   className="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors duration-150 hover:bg-fill hover:text-ink"
                 >
@@ -113,18 +116,13 @@ export function Home() {
           </ul>
         ) : (
           <p className="rounded-[10px] border border-dashed border-line bg-subtle px-4 py-3.5 text-[13px] text-neutral-500">
-            No pinned files. Use <span className="font-medium text-neutral-700">Pin to Home</span> in a file&rsquo;s actions menu to keep it here.
+            Aucun fichier épinglé. Choisissez <span className="font-medium text-neutral-700">Épingler à l’accueil</span> dans le menu d’un fichier pour le garder ici.
           </p>
         )}
 
-        <TextTabs<Scope> label="File scope" items={SCOPES} value={scope} onChange={setScope} />
+        <TextTabs<Scope> label="Portée" items={SCOPES} value={scope} onChange={setScope} />
 
-        <FileTable
-          variant="compact"
-          files={filters.filtered}
-          emptyTitle="No files match this view"
-          emptyHint="Try another file type, clear the search, or reset the filters."
-        />
+        <FileTable variant="compact" files={filters.filtered} emptyTitle="Aucun fichier ne correspond" emptyHint="Essayez un autre type, effacez la recherche ou réinitialisez les filtres." />
       </section>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
-import { ChevronDown, ChevronRight, FileImage, FileSpreadsheet, FileText, FileType, FolderPlus, History, LayoutGrid, Plus, Presentation, Upload } from "lucide-react";
+import { ChevronDown, ChevronRight, CloudUpload, FileImage, FileSpreadsheet, FileText, FileType, FolderPlus, History, LayoutGrid, Plus, Presentation, Upload } from "lucide-react";
 import { Fragment, useMemo, type ComponentType, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import type { ActivityItem } from "@/lib/types";
@@ -26,7 +26,7 @@ const KIND_ICON: Record<KindGroup, IconType> = {
 
 export function kindTabs(withIcons: boolean): TabItem<KindGroup>[] {
   // With icons this sits right above the "View All / My Files" row, so the first tab is named differently.
-  return KIND_GROUPS.map((g) => ({ id: g.id, label: withIcons && g.id === "all" ? "All Types" : g.label, icon: withIcons ? KIND_ICON[g.id] : undefined }));
+  return KIND_GROUPS.map((g) => ({ id: g.id, label: withIcons && g.id === "all" ? "Tous les types" : g.label, icon: withIcons ? KIND_ICON[g.id] : undefined }));
 }
 
 /* -------------------------------------------------------------- Breadcrumbs */
@@ -38,7 +38,7 @@ export interface Crumb {
 
 export function Breadcrumbs({ items }: { items: Crumb[] }) {
   return (
-    <nav aria-label="Breadcrumb">
+    <nav aria-label="Fil d’Ariane">
       <ol className="flex flex-wrap items-center gap-1 text-[13px]">
         {items.map((c, i) => {
           const last = i === items.length - 1;
@@ -70,33 +70,30 @@ export function UploadButton({ folderId = null }: { folderId?: string | null }) 
   const { openDialog } = useVault();
   return (
     <Button icon={Upload} onClick={() => openDialog({ type: "upload", folderId })}>
-      Upload File
+      Téléverser
     </Button>
   );
 }
 
-/** Black "Add File" button with its menu: New document, New spreadsheet, New folder. */
+/** Black "Ajouter" button with its menu: upload files, new folder. */
 export function AddFileMenu({ folderId = "root" }: { folderId?: string }) {
-  const { openDialog, notReady } = useVault();
+  const { openDialog } = useVault();
   return (
     <Dropdown.Root>
       <Dropdown.Trigger asChild>
         <Button variant="primary" icon={Plus}>
-          Add File
+          Ajouter
           <ChevronDown className="-mr-1 size-3.5 opacity-70" strokeWidth={2} />
         </Button>
       </Dropdown.Trigger>
       <Dropdown.Portal>
         <Dropdown.Content align="end" sideOffset={6} collisionPadding={12} className={MENU_CONTENT}>
-          <Dropdown.Item className={MENU_ITEM} onSelect={() => notReady("New Document")}>
-            <FileType className="size-4 text-neutral-500" strokeWidth={1.75} /> New document
-          </Dropdown.Item>
-          <Dropdown.Item className={MENU_ITEM} onSelect={() => notReady("New Spreadsheet")}>
-            <FileSpreadsheet className="size-4 text-neutral-500" strokeWidth={1.75} /> New spreadsheet
+          <Dropdown.Item className={MENU_ITEM} onSelect={() => openDialog({ type: "upload", folderId: folderId === "root" ? null : folderId })}>
+            <CloudUpload className="size-4 text-neutral-500" strokeWidth={1.75} /> Téléverser des fichiers
           </Dropdown.Item>
           <Dropdown.Separator className={MENU_SEPARATOR} />
           <Dropdown.Item className={MENU_ITEM} onSelect={() => openDialog({ type: "newFolder", parentId: folderId })}>
-            <FolderPlus className="size-4 text-neutral-500" strokeWidth={1.75} /> New folder
+            <FolderPlus className="size-4 text-neutral-500" strokeWidth={1.75} /> Nouveau dossier
           </Dropdown.Item>
         </Dropdown.Content>
       </Dropdown.Portal>
@@ -124,7 +121,7 @@ function todayIso(offsetDays = 0): string {
 }
 
 /** Activity entries grouped by day, newest first. */
-export function ActivityList({ items, emptyTitle = "No activity yet", emptyHint }: { items: ActivityItem[]; emptyTitle?: string; emptyHint?: string }) {
+export function ActivityList({ items, emptyTitle = "Aucune activité pour l’instant", emptyHint }: { items: ActivityItem[]; emptyTitle?: string; emptyHint?: string }) {
   const { files, projects, openPreview } = useVault();
 
   const days = useMemo(() => {
@@ -156,7 +153,7 @@ export function ActivityList({ items, emptyTitle = "No activity yet", emptyHint 
       {days.map(({ day, items: dayItems }) => (
         <section key={day}>
           <h3 className="mb-2 flex items-baseline gap-2 text-[12.5px] font-medium text-neutral-500">
-            {day === today ? "Today" : day === yesterday ? "Yesterday" : formatDate(day)}
+            {day === today ? "Aujourd’hui" : day === yesterday ? "Hier" : formatDate(day)}
             {(day === today || day === yesterday) && <span className="font-normal text-neutral-400">{formatDate(day)}</span>}
           </h3>
           <ul className="overflow-hidden rounded-xl border border-line bg-white">
@@ -167,7 +164,7 @@ export function ActivityList({ items, emptyTitle = "No activity yet", emptyHint 
                 <li key={it.id} className={`flex min-h-[56px] items-center gap-3 px-4 py-2.5 ${i > 0 ? "border-t border-hair" : ""}`}>
                   {user && <Avatar user={user} size={30} />}
                   <p className="min-w-0 flex-1 text-[13px] leading-[19px] text-neutral-600">
-                    <span className="font-medium text-ink">{user?.name ?? "Someone"}</span> {it.verb}{" "}
+                    <span className="font-medium text-ink">{user?.name ?? "Quelqu’un"}</span> {it.verb}{" "}
                     {file ? (
                       <button type="button" onClick={() => openPreview(file.id)} className="break-words text-left font-medium text-ink underline-offset-2 hover:underline">
                         {it.target}

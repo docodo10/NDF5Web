@@ -17,10 +17,10 @@ export function byCreatedDesc(a: VaultFile, b: VaultFile): number {
 export type ProjectCategory = "financial" | "production" | "legal" | "other";
 
 export const CATEGORY_LABEL: Record<ProjectCategory, string> = {
-  financial: "Financial Documents",
+  financial: "Documents financiers",
   production: "Production",
-  legal: "Legal",
-  other: "Other",
+  legal: "Juridique",
+  other: "Autres",
 };
 
 const FINANCIAL_FOLDERS = new Set(["business"]);

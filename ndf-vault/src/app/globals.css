@@ -66,15 +66,18 @@ button:disabled {
   cursor: not-allowed;
 }
 
-:focus-visible {
-  outline: 2px solid #0a0a0a;
-  outline-offset: 2px;
-}
+/* In the base layer so a component can opt out with an outline utility. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid #0a0a0a;
+    outline-offset: 2px;
+  }
 
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: none;
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+  }
 }
 
 /* Thin, quiet scrollbars */

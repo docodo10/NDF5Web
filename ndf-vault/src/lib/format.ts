@@ -1,35 +1,51 @@
-import type { FileKind, Folder, VaultFile } from "./types";
+import type { FileKind, FileStatus, Folder, VaultFile } from "./types";
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "août", "sept.", "oct.", "nov.", "déc."];
 
 export function formatDate(iso: string): string {
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
-  return `${MONTHS[m - 1]} ${d}, ${y}`;
+  return `${d === 1 ? "1er" : d} ${MONTHS[m - 1]} ${y}`;
 }
 
 export function formatTime(iso: string): string {
   const [h, min] = iso.slice(11, 16).split(":").map(Number);
-  const suffix = h >= 12 ? "PM" : "AM";
-  return `${((h + 11) % 12) + 1}:${String(min).padStart(2, "0")} ${suffix}`;
+  return `${h} h ${String(min).padStart(2, "0")}`;
 }
 
+const decimal = (n: number) => n.toFixed(1).replace(".", ",");
+
 export function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024) return `${bytes} o`;
   const kb = bytes / 1024;
-  if (kb < 1024) return `${Math.round(kb)} KB`;
+  if (kb < 1024) return `${Math.round(kb)} Ko`;
   const mb = kb / 1024;
-  return `${mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB`;
+  if (mb < 1024) return `${mb < 10 ? decimal(mb) : Math.round(mb)} Mo`;
+  return `${decimal(mb / 1024)} Go`;
 }
 
 export const KIND_LABEL: Record<FileKind, string> = {
   pdf: "PDF",
   docx: "Document",
-  xlsx: "Spreadsheet",
-  pptx: "Presentation",
-  txt: "Text",
+  xlsx: "Tableur",
+  pptx: "Présentation",
+  txt: "Texte",
   csv: "CSV",
   image: "Image",
 };
+
+/** Statuses keep their internal English ids; this is what the interface shows. */
+export const STATUS_LABEL: Record<FileStatus, string> = {
+  Draft: "Brouillon",
+  "In Review": "En révision",
+  Approved: "Approuvé",
+  Final: "Final",
+  Archived: "Archivé",
+};
+
+/** "1 fichier", "3 fichiers". */
+export function count(n: number, singular: string, plural = `${singular}s`): string {
+  return `${n} ${n > 1 ? plural : singular}`;
+}
 
 export function fullName(f: Pick<VaultFile, "name" | "ext">): string {
   return `${f.name}.${f.ext}`;

@@ -32,7 +32,7 @@ L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », con
 - **Étape par étape.** Finir **toute l'interface d'abord**, la faire valider, et seulement ensuite coder les grosses fonctions (upload, IndexedDB, PDF.js, Supabase).
 - **Logo et watermark NDF5** partout où c'est pertinent (déjà intégrés, voir section 5).
 - **Écrire dans le chat pendant le travail** : donner l'avancement au fur et à mesure, ne pas rester silencieux jusqu'à la fin.
-- Répondre **en français**. Le code, les noms de fichiers, les commits et les textes de l'interface restent **en anglais américain** (« license », pas « licence »).
+- Répondre **en français**. **L'interface est en français** (demande du 2026-11-14, vocabulaire québécois : téléverser, courriel). Le code, les noms de fichiers et les commits restent en anglais américain.
 - **Ne rien inventer** : pas de chiffres financiers, de contrats, d'approbations ou de contenu de documents. Tout contenu d'exemple est étiqueté « Sample ».
 - **Ne jamais écrire les titres des parties des films NDF** dans l'interface ou les données. Utiliser seulement « FS1 Film Part 1 », « FS1 Film Part 2 », etc.
 - Pas de bouton mort ni de fausse action : ce qui n'est pas branché doit le dire clairement (voir `notReady()` dans le store).
@@ -40,15 +40,30 @@ L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », con
 
 ## 3. État actuel
 
-**L'étape « interface » est terminée et vérifiée, en attente de validation par l'utilisateur.** `npx tsc --noEmit` et `npm run build` passent. L'application a été lancée (dev et build de production), capturée à 1280, 1440, 1920, 820 (tablette) et 390 px (mobile), comparée aux trois références, et chaque action a été exercée dans un vrai navigateur sans erreur console.
+**Interface en français, premières vraies fonctions, et page hébergée.** `npx tsc --noEmit`, `npm run build` et `npm run build:page` passent.
+
+### Fonctions réelles (2026-11-14)
+
+| Fonction | Où | Notes |
+|---|---|---|
+| Téléversement | `UploadDialog` dans `Dialogs.tsx`, `src/lib/uploads.ts` | Plusieurs fichiers, glisser-déposer dans le dialogue **ou n'importe où dans la fenêtre** (`useWindowDrop` dans `Shell.tsx`), validation du format et de la taille (200 Mo) |
+| Stockage persistant | `src/lib/db.ts` | IndexedDB dans le navigateur : état (`state`) et originaux (`blobs`). Rien ne quitte l'appareil. Si le navigateur refuse le stockage, l'app reste en mémoire et le téléversement se désactive. Changer `SCHEMA` quand la forme sauvegardée ou les données d'exemple changent |
+| Téléchargement | `saveToDisk` dans `uploads.ts` | Passe par la capacité `downloads` de l'hébergeur quand elle existe, sinon téléchargement normal du navigateur. Les fichiers d'exemple n'ont pas d'original et le disent |
+| Aperçu réel | `viewer/PreviewModal.tsx`, `viewer/pdf.ts` | PDF via PDF.js (rendu sur le fil principal, chargé à la première ouverture), images, TXT, CSV. DOCX/XLSX/PPTX : pas d'aperçu, téléchargement proposé |
+| Suppression définitive, réinitialisation | store `purgeFiles`, `resetVault` | Avec confirmation |
+| Visite guidée | `src/components/Tour.tsx` | 6 étapes avec « Compris », au premier lancement (clé `localStorage` `ndf-vault-tour-done`), relançable par le bouton d'aide, la carte d'accueil et Réglages. Les cibles portent un attribut `data-tour` |
+
+### Page hébergée
+
+`npm run build:page` produit `dist/ndf-vault.html` : toute l'app en un seul fichier (JS via esbuild depuis `standalone/main.tsx`, CSS via la CLI Tailwind, police en data URI), au format attendu par un Artifact claude.ai (pas de `<html>`/`<head>`). `dist/preview.html` est le même contenu dans un document complet, pour l'ouvrir en local. Contraintes de cet hébergeur à respecter dans le code : pas d'impression, téléchargements seulement via `claude.use("downloads")`, routage par `#nom` simple.
 
 ### Fait
 
 | Fichier | Contenu |
 |---|---|
 | `src/lib/types.ts` | Types `VaultFile`, `Folder`, `Project`, `User`, `ActivityItem`, `Route`, statuts |
-| `src/lib/sample-data.ts` | 42 fichiers d'exemple, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 utilisateurs (des services, pas des personnes), activité |
-| `src/lib/format.ts` | Dates, tailles, libellés de type, chemin de dossier, descendants |
+| `src/lib/sample-data.ts` | 42 fichiers d'exemple **en français**, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 services, activité |
+| `src/lib/format.ts` | Dates et tailles à la française, `KIND_LABEL`, `STATUS_LABEL` (les statuts gardent leurs identifiants anglais en interne), `count()` pour les pluriels |
 | `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory` (catégorie d'un fichier dans un projet, déduite de son dossier) |
 | `src/lib/store.tsx` | `VaultProvider` + `useVault()` : état en mémoire, routage par hash (lu dès le premier rendu), toasts, dialogues, preview, toutes les mutations |
 | `src/components/brand/` | Logo NDF5 vectorisé, `VaultLockup`, `AppWatermark`, `PageWatermark` |
@@ -92,7 +107,7 @@ Le plan de data room (section 1 bis) ajoute l'expérience invité et la signatur
 - **Le store est la seule couture vers la persistance.** Les composants n'appellent que `useVault()`. En phase 2, brancher IndexedDB puis Supabase derrière les mutations du store (ou extraire une interface `VaultRepository`), sans toucher aux composants.
 - **État en mémoire pour l'instant** : tout se réinitialise au rechargement. C'est voulu à ce stade et doit rester indiqué dans l'interface.
 - **Actions déjà fonctionnelles en mémoire** : favoris, épingler, renommer, modifier les détails, déplacer, copier, archiver, restaurer, supprimer (avec Undo dans le toast), statut en lot, nouveau dossier, nouveau projet, tri, pagination, recherche, filtres.
-- **Actions volontairement non branchées** : Download, Print, recherche dans le document, upload réel, New Document, New Spreadsheet. Elles appellent `notReady("…")` qui affiche un toast honnête. Ne pas les simuler.
+- **Retirés plutôt que simulés** : imprimer et chercher dans le document (boutons enlevés de la visionneuse), créer un document ou un tableur dans l'app (cartes remplacées par Téléverser et Visite guidée), téléchargement groupé.
 - **Menu trois-points** : « Open » ouvre le modal en plein écran, « Preview » en fenêtre.
 - **Utilisateurs d'exemple** : des services (NDF5 Admin, Production Office, Legal Affairs, Finance Office, Story Department), avatars à initiales. Pas de fausses personnes ni de photos.
 
@@ -148,12 +163,15 @@ npm run build
 ## 9. Prompt de démarrage pour Claude Code
 
 ```
-Lis HANDOFF.md en entier, puis docs/brief.txt et les trois images de docs/reference/.
-Lis aussi AGENTS.md et les guides Next concernés dans node_modules/next/dist/docs/.
+Lis HANDOFF.md en entier, puis docs/brief.txt. Lis aussi AGENTS.md et les guides
+Next concernés dans node_modules/next/dist/docs/.
 
-L'interface est terminée. Si l'utilisateur l'a validée, commence la phase 2 dans l'ordre
-de la section 3 (upload réel et glisser-déposer, puis IndexedDB), en branchant tout
-derrière les mutations de src/lib/store.tsx sans toucher aux composants.
+L'interface est en français et les premières fonctions réelles marchent (téléversement,
+stockage dans le navigateur, téléchargement, aperçu PDF/images/texte, visite guidée).
+Demande à l'utilisateur ses ajustements après son essai sur PC, puis la suite :
+aperçus Office, historique des versions, puis l'accès des invités et le serveur
+(fournisseur à confirmer, voir section 1 bis).
 
+Après chaque changement : npx tsc --noEmit, npm run build:page, test dans un navigateur.
 Écris-moi l'avancement dans le chat pendant que tu travailles, en français.
 ```
