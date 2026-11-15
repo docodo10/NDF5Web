@@ -10,7 +10,9 @@ import { useVault } from "@/lib/store";
  * screen being shared), and uncovered when the person comes back to it.
  */
 export function PrivacyVeil() {
-  const { privacy } = useVault();
+  const { privacy: chosen, previewProtection } = useVault();
+  // A protected document brings the privacy screen with it, whatever the setting says.
+  const privacy = chosen || previewProtection !== "standard";
   const [covered, setCovered] = useState(false);
 
   useEffect(() => {

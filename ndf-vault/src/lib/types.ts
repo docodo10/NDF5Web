@@ -35,6 +35,8 @@ export interface VaultFile {
   versionAt?: string;
   /** Earlier versions of this file, newest first. Each has its own stored original. */
   versions?: FileVersion[];
+  /** Beyond the standard level: "view" blocks download and copy, "high" adds the protected reading view. */
+  protection?: "view" | "high";
 }
 
 export interface FileVersion {
@@ -86,6 +88,8 @@ export interface ActivityItem {
   projectId: string | null;
   /** "security" for lock, passphrase and integrity events; file activity otherwise. */
   kind?: "file" | "security";
+  /** For a consultation: the code printed in the watermark of that opening. */
+  code?: string;
 }
 
 /** Who is using this vault on this device. Shown in the personal watermark. */

@@ -236,6 +236,11 @@ export function ActivityList({ items, emptyTitle = "Aucune activité pour l’in
                       <span className="break-words font-medium text-ink">{it.target}</span>
                     )}
                   </p>
+                  {it.code && (
+                    <span data-code title="Code de consultation, imprimé dans le filigrane de cette ouverture" className="inline-flex">
+                      <Chip className="font-mono tracking-wide">{it.code}</Chip>
+                    </span>
+                  )}
                   {it.kind === "security" && <Chip className="hidden sm:inline-flex">Sécurité</Chip>}
                   {it.projectId && projectCode.has(it.projectId) && <Chip className="hidden sm:inline-flex">{projectCode.get(it.projectId)}</Chip>}
                   <time dateTime={it.at} className="shrink-0 whitespace-nowrap text-[12.5px] tabular-nums text-neutral-400">

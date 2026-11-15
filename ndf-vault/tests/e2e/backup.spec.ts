@@ -15,7 +15,7 @@ async function seeded(page: Page) {
 /** Create a backup through the dialog and return the downloaded file. */
 async function backup(page: Page, passphrase = BACKUP_PASS): Promise<Buffer> {
   await go(page, "preferences");
-  await main(page).getByRole("button", { name: "Sauvegarder" }).click();
+  await main(page).getByRole("button", { name: "Sauvegarder" }).last().click();
   await page.fill("#backup-new", passphrase);
   await page.fill("#backup-confirm", passphrase);
   const [download] = await Promise.all([page.waitForEvent("download"), dialog(page).locator("button[type=submit]").click()]);
@@ -48,7 +48,7 @@ test.describe("encrypted backup", () => {
   test("asks for a real passphrase, typed twice", async ({ page }) => {
     await seeded(page);
     await go(page, "preferences");
-    await main(page).getByRole("button", { name: "Sauvegarder" }).click();
+    await main(page).getByRole("button", { name: "Sauvegarder" }).last().click();
     const submit = dialog(page).locator("button[type=submit]");
     await page.fill("#backup-new", "court");
     await page.fill("#backup-confirm", "court");

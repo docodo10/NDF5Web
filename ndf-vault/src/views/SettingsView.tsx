@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, HardDriveDownload, HardDriveUpload, KeyRound, LockKeyhole, RotateCcw, ScanSearch } from "lucide-react";
+import { CircleAlert, CircleCheck, Download, HardDriveDownload, HardDriveUpload, KeyRound, LockKeyhole, RotateCcw, ScanSearch } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import { requestPersistence, storageUsage } from "@/lib/db";
@@ -9,7 +9,8 @@ import { formatMoment, formatSize } from "@/lib/format";
 import { watermarkText } from "@/lib/stamp";
 import { Ndf5Logo } from "@/components/brand/Brand";
 import { INPUT, SwitchRow } from "@/components/dialog-kit";
-import { Avatar, Button, Chip, PageHeader } from "@/components/ui";
+import { PROTECTION_HINT, PROTECTION_LABEL, PROTECTION_LEVELS, type Protection } from "@/lib/protection";
+import { Avatar, Button, Chip, Kbd, PageHeader } from "@/components/ui";
 
 function Panel({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
@@ -48,6 +49,7 @@ const STEPS: { label: string; hint: string; state: StepState }[] = [
   { label: "Récupération et sauvegarde", hint: "Code de récupération si la phrase est oubliée, sauvegarde chiffrée de tout le Vault et restauration", state: "done" },
   { label: "Aperçu réel", hint: "PDF, images, texte, CSV, et le contenu des fichiers Word, Excel et PowerPoint", state: "done" },
   { label: "Recherche dans le contenu", hint: "Le texte des PDF, des fichiers Office et des fichiers texte, indexé sur cet appareil et chiffré comme le reste", state: "done" },
+  { label: "Protection des documents", hint: "Consultation seule, lecture protégée par bande, filigrane incrusté et code de consultation, capture d’écran détectée", state: "done" },
   { label: "Accès des invités", hint: "Connexion par courriel, niveaux d’accès, conditions et NDA à signer", state: "pending" },
   { label: "Serveur", hint: "Stockage privé partagé entre appareils et utilisateurs", state: "pending" },
 ];
@@ -86,11 +88,80 @@ export function SettingsView() {
   const [email, setEmail] = useState(v.profile.email);
   const dirty = name !== v.profile.name || company !== v.profile.company || email !== v.profile.email;
 
+  // What a careful owner would have in place. Each line says where things stand and offers the missing step.
+  const fresh = (iso: string | null) => iso !== null && Date.now() - Date.parse(iso) < 30 * 86_400_000;
+  const checks: { ok: boolean; label: string; hint: string; action?: [string, () => void] }[] = [
+    {
+      ok: security.protected,
+      label: "Protection par phrase secrète",
+      hint: security.protected ? "Tout ce qui est stocké est chiffré." : "Sans elle, quiconque ouvre ce navigateur lit le Vault.",
+      action: !security.protected && security.available ? ["Activer", () => v.openDialog({ type: "protect" })] : undefined,
+    },
+    {
+      ok: security.recoveryAt !== null,
+      label: "Code de récupération",
+      hint: security.recoveryAt !== null ? "Une phrase secrète oubliée n’est pas fatale." : "Sans code, une phrase secrète oubliée rend le contenu irrécupérable.",
+      action: security.protected && security.recoveryAt === null ? ["Créer", () => v.openDialog({ type: "recovery" })] : undefined,
+    },
+    {
+      ok: security.protected && security.autoLockMinutes > 0 && security.autoLockMinutes <= 15,
+      label: "Verrouillage automatique en 15 minutes ou moins",
+      hint: !security.protected ? "Disponible une fois la protection activée." : security.autoLockMinutes === 0 ? "Réglé sur « Jamais » : un poste laissé ouvert reste ouvert." : `Réglé sur ${security.autoLockMinutes} minute${security.autoLockMinutes > 1 ? "s" : ""}.`,
+    },
+    {
+      ok: fresh(v.lastBackupAt),
+      label: "Sauvegarde chiffrée de moins de 30 jours",
+      hint: v.lastBackupAt ? `Dernière sauvegarde le ${formatMoment(v.lastBackupAt)}.` : "Aucune sauvegarde faite depuis cet appareil.",
+      action: fresh(v.lastBackupAt) ? undefined : ["Sauvegarder", () => v.openDialog({ type: "backup" })],
+    },
+    {
+      ok: fresh(v.lastAuditAt),
+      label: "Intégrité vérifiée depuis moins de 30 jours",
+      hint: v.lastAuditAt ? `Dernière vérification le ${formatMoment(v.lastAuditAt)}.` : "Les originaux n’ont pas encore été vérifiés d’un bloc.",
+      action: fresh(v.lastAuditAt) || !persistent ? undefined : ["Vérifier", () => v.openDialog({ type: "audit" })],
+    },
+    {
+      ok: durable === true,
+      label: "Stockage durable",
+      hint: durable ? "Le navigateur ne supprimera pas ces données pour faire de la place." : "Le navigateur peut effacer ces données si le disque se remplit.",
+    },
+  ];
+  const passed = checks.filter((c) => c.ok).length;
+
   return (
     <div className="max-w-[980px]">
       <PageHeader title="Réglages" description="Sécurité, profil, stockage et état de cette version." />
 
       <div className="mt-8">
+        <Panel title="Bilan de sécurité" description="Ce qui est en place sur cet appareil, et ce qu’il reste à faire.">
+          <div data-checkup className={box}>
+            <div className="flex items-center gap-4 py-3">
+              <p className="shrink-0 text-[13px] font-medium text-ink">
+                <span className="text-[20px] font-semibold tabular-nums tracking-[-0.02em]">{passed}</span> sur {checks.length}
+              </p>
+              <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-neutral-200">
+                <div className={`h-full rounded-full transition-[width] duration-300 ${passed === checks.length ? "bg-emerald-600" : "bg-ink"}`} style={{ width: `${(passed / checks.length) * 100}%` }} />
+              </div>
+            </div>
+            <ul aria-label="Points de contrôle">
+              {checks.map((c) => (
+                <li key={c.label} data-check={c.ok} className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-hair py-2">
+                  {c.ok ? <CircleCheck aria-label="En place" className="size-[18px] shrink-0 text-emerald-600" strokeWidth={1.75} /> : <CircleAlert aria-label="À faire" className="size-[18px] shrink-0 text-amber-500" strokeWidth={1.75} />}
+                  <div className="min-w-0 flex-1 basis-[220px]">
+                    <p className="text-[13px] font-medium text-ink">{c.label}</p>
+                    <p className="text-[12px] leading-[17px] text-neutral-500">{c.hint}</p>
+                  </div>
+                  {c.action && (
+                    <Button size="sm" onClick={c.action[1]}>
+                      {c.action[0]}
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Panel>
+
         <Panel title="Sécurité" description="Protégez ce qui est stocké sur cet appareil avec une phrase secrète.">
           <div className={box}>
             <Line
@@ -162,6 +233,49 @@ export function SettingsView() {
             <div className="border-t border-hair">
               <SwitchRow on={v.privacy} onChange={v.setPrivacy} label="Écran de confidentialité" hint="Masque le contenu dès que la fenêtre n’est plus active : autre onglet, autre application, partage d’écran." />
             </div>
+            {security.protected && (
+              <>
+                <div className="border-t border-hair">
+                  <SwitchRow
+                    on={security.wipeAfter > 0}
+                    onChange={v.setWipeAfter}
+                    label="Effacement après 10 tentatives"
+                    hint="Après 10 phrases secrètes ou codes refusés d’affilée, le Vault s’efface de cet appareil. À n’activer qu’avec une sauvegarde chiffrée à jour."
+                  />
+                </div>
+                <Line label="Verrouillage d’urgence" hint="Trois appuis rapprochés sur Échap verrouillent le Vault aussitôt, où que vous soyez dans l’application.">
+                  <span className="flex items-center gap-1.5 text-[12.5px] text-neutral-500">
+                    <Kbd>Échap</Kbd> × 3
+                  </span>
+                </Line>
+              </>
+            )}
+          </div>
+        </Panel>
+
+        <Panel title="Protection des documents" description="Jusqu’où un document peut être lu sans pouvoir être emporté.">
+          <div className={box}>
+            <Line label="Niveau des nouveaux fichiers" hint="Appliqué à chaque téléversement. Le niveau d’un fichier se change ensuite dans son menu, sous « Protection ».">
+              <label className="sr-only" htmlFor="default-protection">
+                Niveau des nouveaux fichiers
+              </label>
+              <select id="default-protection" value={v.defaultProtection} onChange={(e) => v.setDefaultProtection(e.target.value as Protection)} className={`${INPUT} !h-8 !w-auto pr-8`}>
+                {PROTECTION_LEVELS.map((l) => (
+                  <option key={l} value={l}>
+                    {PROTECTION_LABEL[l]}
+                  </option>
+                ))}
+              </select>
+            </Line>
+            {PROTECTION_LEVELS.map((l) => (
+              <div key={l} className="border-t border-hair py-2.5">
+                <p className="text-[13px] font-medium text-ink">{PROTECTION_LABEL[l]}</p>
+                <p className="mt-0.5 text-[12px] leading-[17px] text-neutral-500">{PROTECTION_HINT[l]}</p>
+              </div>
+            ))}
+            <p className="border-t border-hair py-2.5 text-[12px] leading-[17px] text-neutral-500">
+              Aucune application ne peut empêcher de photographier un écran. Ces protections font qu’une photo ne montre qu’une bande du document, et que son filigrane porte un code qui désigne la consultation dans le journal.
+            </p>
           </div>
         </Panel>
 

@@ -11,6 +11,7 @@ import { cryptoAvailable, sha256Hex } from "./crypto";
 import { toCsv } from "./csv";
 import { extractText } from "./extract";
 import { indexText, searchText, type DocText, type Hit, type IndexedText } from "./search";
+import { consultationCode, lowers, PROTECTION_LABEL, protectionOf, type Protection } from "./protection";
 import { hashToRoute, routeToHash } from "./routes";
 import { folderRules } from "./selectors";
 import { stampImage, stampPdf, watermarkText } from "./stamp";
@@ -52,6 +53,7 @@ export type DialogState =
   | { type: "restore" }
   | { type: "audit" }
   | { type: "exportVault" }
+  | { type: "protection"; fileIds: string[] }
   | null;
 
 export interface Toast {
@@ -66,6 +68,8 @@ interface PreviewState {
   fullscreen?: boolean;
   /** Page, slide or sheet to show first, counted from 1: where a search found its match. */
   page?: number;
+  /** The code of this consultation, printed in the watermark and written to the journal. */
+  code?: string;
 }
 
 /** A document whose content matches a search. */
@@ -86,6 +90,8 @@ export interface SecurityState {
   autoLockMinutes: number;
   /** When the current recovery code was created; null when there is none. */
   recoveryAt: string | null;
+  /** Wrong attempts after which the vault erases itself; 0 when the option is off. */
+  wipeAfter: number;
 }
 
 export type AuditState = "altered" | "missing" | "unverified";
@@ -144,6 +150,20 @@ interface VaultContext {
   disableProtection: (passphrase: string) => Promise<boolean>;
   changePassphrase: (current: string, next: string) => Promise<boolean>;
   setAutoLock: (minutes: number) => void;
+  /** Turn the erase-after-failed-attempts option on or off. */
+  setWipeAfter: (on: boolean) => void;
+  /** The level given to newly uploaded files. */
+  defaultProtection: Protection;
+  setDefaultProtection: (level: Protection) => void;
+  /** Change the protection level of files. Lowering it in a protected vault takes the passphrase. */
+  setProtection: (ids: string[], level: Protection, passphrase?: string) => Promise<"ok" | "wrong-passphrase">;
+  /** The protection level of the document open in the viewer; "standard" when none is. */
+  previewProtection: Protection;
+  /** Record that a screen-capture key was pressed while a protected document was open. */
+  reportCapture: () => void;
+  /** When the last encrypted backup and the last full integrity check were made on this device. */
+  lastBackupAt: string | null;
+  lastAuditAt: string | null;
   /** True when the vault is not protected, or when this is its passphrase. */
   verifyPassphrase: (passphrase: string) => Promise<boolean>;
   /** Recompute the fingerprint of every stored original and compare it with the one taken at upload. */
@@ -229,7 +249,7 @@ export interface LockScreenProps {
   /** Set a new passphrase with the recovery code. The vault stays locked: unlock with the new passphrase next. */
   recover: (code: string, passphrase: string) => Promise<RecoverResult>;
   /** Erase the whole vault, protection included: the only way out when the passphrase is lost. */
-  wipe: () => Promise<void>;
+  wipe: (notice?: string) => Promise<void>;
 }
 
 type Boot =
@@ -279,10 +299,13 @@ export function VaultProvider({ children, fallback, lockScreen }: { children: Re
   const recover = useCallback((code: string, passphrase: string) => db.recoverWithCode(code, passphrase), []);
   // Read the stored vault again and start a fresh session on it: after a restore, what is on disk is not what is on screen.
   const reload = useCallback((notice: string) => void start(undefined, notice), [start]);
-  const wipe = useCallback(async () => {
-    await db.wipeEverything();
-    await start();
-  }, [start]);
+  const wipe = useCallback(
+    async (notice?: string) => {
+      await db.wipeEverything();
+      await start(undefined, notice);
+    },
+    [start],
+  );
   const relock = useCallback(() => {
     db.lock();
     void start();
@@ -309,6 +332,9 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   const [watermark, setWatermark] = useState(init?.watermark ?? true);
   const [personalMark, setPersonalMark] = useState(init?.personalMark ?? true);
   const [privacy, setPrivacy] = useState(init?.privacy === true);
+  const [defaultProtection, setDefaultProtection] = useState<Protection>(init?.defaultProtection ?? "standard");
+  const [lastBackupAt, setLastBackupAt] = useState<string | null>(init?.lastBackupAt ?? null);
+  const [lastAuditAt, setLastAuditAt] = useState<string | null>(init?.lastAuditAt ?? null);
   const [profile, setProfileState] = useState<Profile>(init?.profile ?? db.DEFAULT_PROFILE);
   const [meta, setMeta] = useState<Meta>(boot.meta);
   // The session only mounts in the browser (see VaultApp), so the first render can read the URL.
@@ -322,8 +348,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const persisted = useMemo<db.Persisted>(
-    () => ({ schema: db.SCHEMA, files, folders, projects, activity: activity.slice(0, 500), watermark, personalMark, profile, ...(privacy && { privacy: true }) }),
-    [files, folders, projects, activity, watermark, personalMark, profile, privacy],
+    () => ({ schema: db.SCHEMA, files, folders, projects, activity: activity.slice(0, 500), watermark, personalMark, profile, ...(privacy && { privacy: true }), ...(defaultProtection !== "standard" && { defaultProtection }), ...(lastBackupAt && { lastBackupAt }), ...(lastAuditAt && { lastAuditAt }) }),
+    [files, folders, projects, activity, watermark, personalMark, profile, privacy, defaultProtection, lastBackupAt, lastAuditAt],
   );
   const latest = useRef(persisted);
   latest.current = persisted;
@@ -375,12 +401,12 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   }, []);
 
   /** Add a journal entry. `once` skips it when the same entry was just written. */
-  const log = useCallback((verb: string, target: string, projectId: string | null = null, kind: "file" | "security" = "file", once = false) => {
+  const log = useCallback((verb: string, target: string, projectId: string | null = null, kind: "file" | "security" = "file", once = false, code?: string) => {
     const at = nowIso();
     setActivity((a) => {
       const top = a[0];
       if (once && top && top.verb === verb && top.target === target && top.userId === CURRENT_USER_ID && top.at.slice(0, 15) === at.slice(0, 15)) return a;
-      return [{ id: uid("a"), at, userId: CURRENT_USER_ID, verb, target, projectId, kind }, ...a];
+      return [{ id: uid("a"), at, userId: CURRENT_USER_ID, verb, target, projectId, kind, ...(code && { code }) }, ...a];
     });
   }, []);
 
@@ -536,6 +562,27 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
     };
   }, [meta.protected, meta.autoLockMinutes]);
 
+  // Emergency lock: Escape three times in a row. No menu to find, no pointer to aim.
+  useEffect(() => {
+    if (!meta.protected) return;
+    let presses: number[] = [];
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") {
+        presses = [];
+        return;
+      }
+      const now = Date.now();
+      presses = [...presses.filter((t) => now - t < 1200), now];
+      if (presses.length >= 3) {
+        presses = [];
+        void lockRef.current();
+      }
+    };
+    // Capture phase: a dialog that handles Escape itself must not hide the key from this.
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [meta.protected]);
+
   const readOriginal = useCallback(
     async (file: Pick<VaultFile, "id" | "name" | "ext" | "sha256">, blobId?: string): Promise<OriginalResult> => {
       const r = await db.readBlob(blobId ?? file.id);
@@ -561,12 +608,17 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
     const unreadable = (status: OriginalResult["status"]) =>
       status === "missing" ? "Original introuvable dans ce navigateur." : status === "locked" ? "Le Vault est verrouillé." : "Ce fichier a été altéré : il ne peut pas être ouvert ni téléchargé.";
     const pathOf = (f: VaultFile) => zipPath([...folderPath(folders, f.folderId).filter((d) => d.parentId !== null).map((d) => (d.index ? `${d.index} ${d.name}` : d.name)), fullName(f)]);
-    const security: SecurityState = { available: persistent && cryptoAvailable(), protected: meta.protected, autoLockMinutes: meta.autoLockMinutes, recoveryAt: meta.recovery ? (meta.recoveryAt ?? "") : null };
+    const security: SecurityState = { available: persistent && cryptoAvailable(), protected: meta.protected, autoLockMinutes: meta.autoLockMinutes, recoveryAt: meta.recovery ? (meta.recoveryAt ?? "") : null, wipeAfter: meta.wipeAfter ?? 0 };
 
     const exportEntries = async (targets: VaultFile[]) => {
       const entries: ZipEntry[] = [];
       let skipped = 0;
       for (const f of targets) {
+        // A document that may not be downloaded may not leave in an archive either.
+        if (protectionOf(f) !== "standard") {
+          skipped++;
+          continue;
+        }
         const r = await readOriginal(f);
         if (r.status === "ok") entries.push({ path: pathOf(f), data: r.blob });
         else skipped++;
@@ -579,7 +631,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       if (result === "failed") return notify("L’export n’est pas disponible dans cette vue.");
       if (result === "declined") return;
       log("a exporté en ZIP", count(fileCount, "fichier"));
-      notify(`${count(fileCount, "fichier")} exporté${fileCount > 1 ? "s" : ""}${skipped ? ` · ${count(skipped, "fichier")} illisible${skipped > 1 ? "s" : ""} ignoré${skipped > 1 ? "s" : ""}` : ""}`);
+      notify(`${count(fileCount, "fichier")} exporté${fileCount > 1 ? "s" : ""}${skipped ? ` · ${count(skipped, "fichier")} protégé${skipped > 1 ? "s" : ""} ou illisible${skipped > 1 ? "s" : ""} laissé${skipped > 1 ? "s" : ""} de côté` : ""}`);
     };
 
     return {
@@ -608,9 +660,46 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       openDialog,
       preview,
       openPreview: (fileId, listIds, fullscreen, page) => {
-        setPreview({ fileId, listIds: listIds && listIds.length ? listIds : [fileId], fullscreen, page });
         const f = byId(fileId);
-        if (f) log("a ouvert", fullName(f), f.projectId, "file", true);
+        // Every opening of a real document gets its own code: it is what ties a photo of the screen to this consultation.
+        const code = f && !f.sample ? consultationCode() : undefined;
+        setPreview({ fileId, listIds: listIds && listIds.length ? listIds : [fileId], fullscreen, page, code });
+        if (f) log("a ouvert", fullName(f), f.projectId, "file", !code, code);
+      },
+      previewProtection: protectionOf(preview ? byId(preview.fileId) : undefined),
+      reportCapture: () => {
+        const f = preview ? byId(preview.fileId) : undefined;
+        if (f) log("a pressé une touche de capture d’écran pendant la consultation de", fullName(f), f.projectId, "security", false, preview?.code);
+      },
+      defaultProtection,
+      setDefaultProtection: (level) => {
+        setDefaultProtection(level);
+        notify(`Nouveaux fichiers : ${PROTECTION_LABEL[level].toLowerCase()}`);
+      },
+      setProtection: async (ids, level, passphrase) => {
+        const targets = files.filter((f) => ids.includes(f.id) && !f.sample);
+        if (targets.length === 0) return "ok";
+        // Taking protection away is the sensitive direction: in a protected vault it takes the passphrase.
+        if (targets.some((f) => lowers(protectionOf(f), level)) && !(await db.verifyPassphrase(passphrase ?? ""))) return "wrong-passphrase";
+        const set = new Set(targets.map((f) => f.id));
+        setFiles((fs) =>
+          fs.map((f) => {
+            if (!set.has(f.id)) return f;
+            const { protection: _old, ...rest } = f;
+            return level === "standard" ? rest : { ...rest, protection: level };
+          }),
+        );
+        log(`a réglé la protection sur « ${PROTECTION_LABEL[level]} » pour`, label(targets.map((f) => f.id)), null, "security");
+        notify(`Protection : ${PROTECTION_LABEL[level].toLowerCase()}`);
+        return "ok";
+      },
+      lastBackupAt,
+      lastAuditAt,
+      setWipeAfter: (on) => {
+        const attempts = on ? db.WIPE_AFTER : 0;
+        setMeta((m) => ({ ...m, wipeAfter: attempts || undefined }));
+        void db.setWipeAfter(attempts);
+        log(on ? `a activé l’effacement après ${db.WIPE_AFTER} tentatives échouées` : "a désactivé l’effacement après tentatives échouées", "", null, "security");
       },
       closePreview: () => setPreview(null),
       searchContent,
@@ -673,6 +762,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
           for (const ver of f.versions ?? []) await check(ver.id, ver.sha256, `${fullName(f)} — version du ${formatDate(ver.at)}`);
         }
         const bad = problems.filter((p) => p.state !== "unverified").length;
+        setLastAuditAt(new Date().toISOString());
         log("a vérifié l’intégrité du Vault :", total === 0 ? "aucun original à vérifier" : bad ? `${count(bad, "problème")} sur ${count(total, "original", "originaux")}` : count(total, "original intact", "originaux intacts"), null, "security");
         return { total, intact: total - problems.length, problems };
       },
@@ -711,6 +801,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const result = await saveToDisk(`ndf-vault-${nowIso().slice(0, 10)}.${BACKUP_EXTENSION}`, backup);
         if (result === "failed") notify("La sauvegarde n’est pas disponible dans cette vue.");
         if (result !== "saved") return false;
+        setLastBackupAt(new Date().toISOString());
         log("a créé une sauvegarde chiffrée", count(blobs.length, "original", "originaux"), null, "security");
         notify(`Sauvegarde créée : ${count(blobs.length, "original", "originaux")}${skipped ? ` · ${count(skipped, "original illisible ignoré", "originaux illisibles ignorés")}` : ""}`);
         return true;
@@ -871,6 +962,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
             deleted: false,
             pages: 1,
             sample: false,
+            ...(defaultProtection !== "standard" && { protection: defaultProtection }),
             mime: it.file.type || undefined,
             sha256: it.sha256,
           });
@@ -887,6 +979,10 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const f = byId(id);
         if (!f) return;
         if (f.sample) return notify("Fichier d’exemple : il n’a pas d’original à télécharger.");
+        if (protectionOf(f) !== "standard") {
+          log("a tenté de télécharger un document en consultation seule :", fullName(f), f.projectId, "security", true);
+          return notify("Document en consultation seule : le téléchargement est bloqué. Changez son niveau de protection pour l’autoriser.");
+        }
         const r = await readOriginal(f);
         if (r.status !== "ok") return notify(unreadable(r.status));
         let blob = r.blob;
@@ -967,6 +1063,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const f = byId(fileId);
         const version = f?.versions?.find((v) => v.id === versionId);
         if (!f || !version) return;
+        if (protectionOf(f) !== "standard") return notify("Document en consultation seule : le téléchargement de ses versions est bloqué.");
         const r = await readOriginal(f, versionId);
         if (r.status !== "ok") return notify(unreadable(r.status));
         if (version.sha256 && cryptoAvailable() && (await sha256Hex(r.blob)) !== version.sha256) return notify(unreadable("altered"));
@@ -1050,7 +1147,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const targets = files.filter((f) => ids.includes(f.id) && !f.sample);
         if (!targets.length) return notify("Rien à exporter : les fichiers d’exemple n’ont pas d’original.");
         const { entries, skipped } = await exportEntries(targets);
-        if (!entries.length) return notify("Aucun original lisible à exporter.");
+        if (!entries.length) return notify(skipped ? "Rien à exporter : ces documents sont en consultation seule ou illisibles." : "Aucun original lisible à exporter.");
         await saveZip(entries, archiveName, skipped, entries.length);
       },
       exportVault: async () => {
@@ -1078,8 +1175,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         if (!items.length) return notify("Le journal est vide.");
         const who = (id: string) => USERS.find((u) => u.id === id)?.name ?? "";
         const rows = [
-          ["Date", "Heure", "Qui", "Action", "Élément", "Projet", "Type"],
-          ...items.map((a) => [formatDate(a.at), formatTime(a.at), who(a.userId), a.verb, a.target, projects.find((p) => p.id === a.projectId)?.code ?? "", a.kind === "security" ? "Sécurité" : "Fichier"]),
+          ["Date", "Heure", "Qui", "Action", "Élément", "Projet", "Type", "Code de consultation"],
+          ...items.map((a) => [formatDate(a.at), formatTime(a.at), who(a.userId), a.verb, a.target, projects.find((p) => p.id === a.projectId)?.code ?? "", a.kind === "security" ? "Sécurité" : "Fichier", a.code ?? ""]),
         ];
         const result = await saveToDisk(`journal-ndf-vault-${nowIso().slice(0, 10)}.csv`, new Blob([toCsv(rows)], { type: "text/csv" }));
         if (result === "failed") notify("L’export n’est pas disponible dans cette vue.");
@@ -1094,13 +1191,16 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         setWatermark(true);
         setPersonalMark(true);
         setPrivacy(false);
+        setDefaultProtection("standard");
+        setLastBackupAt(null);
+        setLastAuditAt(null);
         setProfileState(db.DEFAULT_PROFILE);
         setPreview(null);
         navigate({ view: "home" });
         notify("Vault réinitialisé : les données d’exemple sont de retour.");
       },
     };
-  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, privacy, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload, searchContent, indexable, indexedCount]);
+  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, privacy, defaultProtection, lastBackupAt, lastAuditAt, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload, searchContent, indexable, indexedCount]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -18,11 +18,13 @@ import {
   FolderInput,
   History,
   Inbox,
+  Lock,
   Pencil,
   Pin,
   PinOff,
   RotateCcw,
   Share2,
+  ShieldCheck,
   SquarePen,
   Stamp,
   Star,
@@ -32,6 +34,7 @@ import {
 import { ArticleIcon, FilePdfIcon, FileTextIcon, GridFourIcon, ImageIcon, PresentationChartIcon, TableIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useVault } from "@/lib/store";
+import { PROTECTION_LABEL } from "@/lib/protection";
 import type { FileKind, VaultFile } from "@/lib/types";
 import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
@@ -101,7 +104,8 @@ export function RowMenu({ file, listIds, vertical }: { file: VaultFile; listIds:
               {item(Copy, "Copier", () => v.copyFile(file.id))}
               {item(Share2, "Partager", () => v.openDialog({ type: "share", fileId: file.id }))}
               {item(Download, "Télécharger", () => void v.downloadFile(file.id))}
-              {!file.sample && (file.kind === "pdf" || file.kind === "image") && item(Stamp, "Télécharger avec filigrane", () => void v.downloadFile(file.id, { stamped: true }))}
+              {!file.sample && !file.protection && (file.kind === "pdf" || file.kind === "image") && item(Stamp, "Télécharger avec filigrane", () => void v.downloadFile(file.id, { stamped: true }))}
+              {!file.sample && item(ShieldCheck, "Protection", () => v.openDialog({ type: "protection", fileIds: [file.id] }))}
               {item(History, "Historique des versions", () => v.openDialog({ type: "versions", fileId: file.id }))}
               <Dropdown.Separator className={MENU_SEPARATOR} />
               {file.archived ? item(RotateCcw, "Restaurer", () => v.restoreFiles([file.id])) : item(Archive, "Archiver", () => v.archiveFiles([file.id]))}
@@ -431,6 +435,11 @@ export function FileTable({
                           >
                             {f.name}
                           </button>
+                          {f.protection && (
+                            <span data-protected={f.protection} title={PROTECTION_LABEL[f.protection]} className="inline-flex shrink-0 text-neutral-500">
+                              <Lock aria-label={PROTECTION_LABEL[f.protection]} className="size-3.5" strokeWidth={2} />
+                            </span>
+                          )}
                           <button
                             type="button"
                             aria-label={f.favorite ? `Retirer ${f.name} des favoris` : `Ajouter ${f.name} aux favoris`}

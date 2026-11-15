@@ -16,6 +16,7 @@ import {
   Folder as FolderIcon,
   Image as ImageIcon,
   LoaderCircle,
+  Lock,
   Maximize2,
   Minimize2,
   Minus,
@@ -23,6 +24,7 @@ import {
   PanelLeft,
   Plus,
   Scan,
+  ScanLine,
   ShieldAlert,
   Stamp,
   X,
@@ -32,6 +34,7 @@ import { useVault, type OriginalResult } from "@/lib/store";
 import type { VaultFile } from "@/lib/types";
 import { parseCsv } from "@/lib/csv";
 import { OfficeError, readDocx, readPptx, readXlsx, type DocxContent, type PptxContent, type XlsxContent } from "@/lib/office";
+import { bakeWatermark, PROTECTION_LABEL, protectionOf } from "@/lib/protection";
 import { watermarkText } from "@/lib/stamp";
 import { formatDate, fullName, KIND_LABEL } from "@/lib/format";
 import { Ndf5Mark, PageWatermark, PersonalWatermark } from "../brand/Brand";
@@ -58,7 +61,8 @@ type Doc =
   | { kind: "sample" }
   | { kind: "loading" }
   | { kind: "pdf"; pdf: PDFDocumentProxy; base: Size }
-  | { kind: "image"; url: string; base: Size }
+  // A protected image is never given a URL of its own: it is only ever drawn, with its watermark, on a canvas.
+  | { kind: "image"; url: string | null; bitmap: ImageBitmap | null; base: Size }
   | { kind: "text"; text: string; rows: string[][] | null; truncated: boolean }
   | { kind: "docx"; content: DocxContent }
   | { kind: "xlsx"; content: XlsxContent }
@@ -160,7 +164,7 @@ function ScaledSample({ file, n, scale, folderName, watermark, personal }: { fil
 /* ---------------------------------------------------------------- PDF pages */
 
 /** One PDF page drawn to a canvas, rendered only once it is near the viewport. */
-function PdfPage({ pdf, n, width, base, watermark, personal }: { pdf: PDFDocumentProxy; n: number; width: number; base: Size; watermark: boolean; personal: string | null }) {
+function PdfPage({ pdf, n, width, base, watermark, personal, bake }: { pdf: PDFDocumentProxy; n: number; width: number; base: Size; watermark: boolean; personal: string | null; bake: boolean }) {
   const holder = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [near, setNear] = useState(false);
@@ -191,8 +195,15 @@ function PdfPage({ pdf, n, width, base, watermark, personal }: { pdf: PDFDocumen
         const el = canvas.current;
         el.width = Math.floor(viewport.width);
         el.height = Math.floor(viewport.height);
+        delete el.dataset.baked;
         task = page.render({ canvas: el, viewport });
         await task.promise;
+        // For a protected document the watermark goes into the pixels themselves.
+        const ctx = bake && personal ? el.getContext("2d") : null;
+        if (ctx && personal && !cancelled) {
+          bakeWatermark(ctx, el.width, el.height, personal);
+          el.dataset.baked = "true";
+        }
       } catch {
         /* cancelled, or a page that cannot be drawn: the white slot stays */
       }
@@ -202,20 +213,94 @@ function PdfPage({ pdf, n, width, base, watermark, personal }: { pdf: PDFDocumen
       clearTimeout(timer);
       task?.cancel();
     };
-  }, [near, pdf, n, width]);
+  }, [near, pdf, n, width, bake, personal]);
 
   return (
     <div ref={holder} className="relative overflow-hidden bg-white" style={{ width, height: Math.round(width * ratio) }}>
       <canvas ref={canvas} className="block h-full w-full" />
       {watermark && width > 300 && <PageWatermark />}
-      {personal && width > 300 && <PersonalWatermark text={personal} />}
+      {personal && !bake && width > 300 && <PersonalWatermark text={personal} />}
+    </div>
+  );
+}
+
+/** A protected image: drawn on a canvas with its watermark in the pixels. There is no file behind it to open or save. */
+function BakedImage({ bitmap, width, height, text, label }: { bitmap: ImageBitmap; width: number; height: number; text: string | null; label: string }) {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const el = canvas.current;
+    const ctx = el?.getContext("2d");
+    if (!el || !ctx) return;
+    // Enough pixels for a sharp picture at any zoom, without drawing more than the screen can show.
+    const scale = Math.min(1, 4096 / Math.max(bitmap.width, bitmap.height));
+    el.width = Math.round(bitmap.width * scale);
+    el.height = Math.round(bitmap.height * scale);
+    ctx.drawImage(bitmap, 0, 0, el.width, el.height);
+    if (text) bakeWatermark(ctx, el.width, el.height, text);
+    el.dataset.baked = "true";
+  }, [bitmap, text]);
+  return <canvas ref={canvas} role="img" aria-label={label} className="block" style={{ width, height }} />;
+}
+
+/**
+ * The protected reading view. The document is blurred except for a band that
+ * follows the pointer or the finger, and entirely when neither is on it: a
+ * photo of the screen catches a few lines, never the page.
+ */
+function Fence({ host }: { host: HTMLElement | null }) {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = root.current;
+    if (!host || !el) return;
+    // Moved by writing a CSS variable, not through React: the pages underneath must not re-render at every pixel.
+    const show = (clientY: number) => {
+      el.style.setProperty("--fence-y", `${Math.round(clientY - host.getBoundingClientRect().top)}px`);
+      el.dataset.reading = "true";
+    };
+    const hide = () => {
+      el.dataset.reading = "false";
+    };
+    const onPointer = (e: PointerEvent) => show(e.clientY);
+    const onTouch = (e: TouchEvent) => {
+      if (e.touches[0]) show(e.touches[0].clientY);
+    };
+    host.addEventListener("pointermove", onPointer);
+    host.addEventListener("pointerdown", onPointer);
+    host.addEventListener("pointerleave", hide);
+    host.addEventListener("touchstart", onTouch, { passive: true });
+    host.addEventListener("touchmove", onTouch, { passive: true });
+    host.addEventListener("touchend", hide);
+    host.addEventListener("touchcancel", hide);
+    window.addEventListener("blur", hide);
+    return () => {
+      host.removeEventListener("pointermove", onPointer);
+      host.removeEventListener("pointerdown", onPointer);
+      host.removeEventListener("pointerleave", hide);
+      host.removeEventListener("touchstart", onTouch);
+      host.removeEventListener("touchmove", onTouch);
+      host.removeEventListener("touchend", hide);
+      host.removeEventListener("touchcancel", hide);
+      window.removeEventListener("blur", hide);
+    };
+  }, [host]);
+  return (
+    <div ref={root} data-fence data-reading="false" aria-hidden className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+      <div className="fence-cover absolute inset-x-0 top-0" style={{ height: "max(0px, calc(var(--fence-y, 0px) - var(--fence-band) / 2))" }} />
+      <div className="fence-cover absolute inset-x-0 bottom-0" style={{ top: "calc(var(--fence-y, 0px) + var(--fence-band) / 2)" }} />
+      <div className="fence-all absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+        <span className="flex size-11 items-center justify-center rounded-2xl bg-ink text-white">
+          <ScanLine className="size-5" strokeWidth={1.75} />
+        </span>
+        <p className="mt-3 text-[15px] font-semibold text-ink">Lecture protégée</p>
+        <p className="mt-1 max-w-[320px] text-[13px] leading-[19px] text-neutral-600">Placez le pointeur ou le doigt sur le document : seule la bande où vous lisez est nette.</p>
+      </div>
     </div>
   );
 }
 
 /* ----------------------------------------------------------- Loading a file */
 
-function useDocument(file: VaultFile | undefined, read: (file: VaultFile) => Promise<OriginalResult>): Doc {
+function useDocument(file: VaultFile | undefined, read: (file: VaultFile) => Promise<OriginalResult>, guarded: boolean): Doc {
   const [doc, setDoc] = useState<Doc>({ kind: "loading" });
   const id = file?.id;
   const sample = file?.sample;
@@ -244,11 +329,16 @@ function useDocument(file: VaultFile | undefined, read: (file: VaultFile) => Pro
           if (!alive) return cleanup();
           const first = (await pdf.getPage(1)).getViewport({ scale: 96 / 72 });
           if (alive) setDoc({ kind: "pdf", pdf, base: { w: first.width, h: first.height } });
+        } else if (kind === "image" && guarded) {
+          const bitmap = await createImageBitmap(blob);
+          cleanup = () => bitmap.close();
+          if (!alive) return cleanup();
+          setDoc({ kind: "image", url: null, bitmap, base: { w: bitmap.width || LETTER.w, h: bitmap.height || LETTER.h } });
         } else if (kind === "image") {
           const url = URL.createObjectURL(blob);
           cleanup = () => URL.revokeObjectURL(url);
           const img = new Image();
-          img.onload = () => alive && setDoc({ kind: "image", url, base: { w: img.naturalWidth || LETTER.w, h: img.naturalHeight || LETTER.h } });
+          img.onload = () => alive && setDoc({ kind: "image", url, bitmap: null, base: { w: img.naturalWidth || LETTER.w, h: img.naturalHeight || LETTER.h } });
           img.onerror = () => alive && setDoc({ kind: "unsupported" });
           img.src = url;
         } else if (kind === "txt" || kind === "csv") {
@@ -277,7 +367,7 @@ function useDocument(file: VaultFile | undefined, read: (file: VaultFile) => Pro
     };
     // Reload when the file or its content changes (a new or restored version), not on every edit of its details.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, sample, kind, file?.sha256, read]);
+  }, [id, sample, kind, file?.sha256, read, guarded]);
 
   return doc;
 }
@@ -307,7 +397,14 @@ export function PreviewModal() {
   const v = useVault();
   const { preview } = v;
   const file = preview ? v.files.find((f) => f.id === preview.fileId) : undefined;
-  const doc = useDocument(file, v.readOriginal);
+  const level = protectionOf(file);
+  // Beyond the standard level: nothing leaves, nothing is copied, and the watermark is not optional.
+  const guarded = level !== "standard";
+  const doc = useDocument(file, v.readOriginal, guarded);
+  const [fenceChosen, setFenceChosen] = useState(false);
+  const fence = level === "high" || fenceChosen;
+  const [bodyEl, setBodyEl] = useState<HTMLDivElement | null>(null);
+  const [captured, setCaptured] = useState(false);
 
   const [fullscreen, setFullscreen] = useState(false);
   const [panel, setPanel] = useState(true);
@@ -369,11 +466,36 @@ export function PreviewModal() {
   }, [canvasEl, fit, panel, fullscreen, fileId, baseW, baseH, docKind]);
 
   // Who is looking and when, fixed at the moment the file is opened.
+  const code = preview?.code;
   const personal = useMemo(
-    () => (v.personalMark && fileId ? watermarkText(v.profile) : null),
+    () => ((v.personalMark || guarded) && fileId ? [watermarkText(v.profile), code].filter(Boolean).join(" · ") : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fileId, v.personalMark, v.profile],
+    [fileId, v.personalMark, v.profile, guarded, code],
   );
+
+  // A screen-capture key cannot be stopped, but it can be seen: the document is covered and the press goes to the journal.
+  const { reportCapture } = v;
+  useEffect(() => {
+    if (!guarded || !fileId) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "PrintScreen") return;
+      setCaptured(true);
+      reportCapture();
+      // On some systems this replaces the picture that was just put on the clipboard.
+      void navigator.clipboard?.writeText("").catch(() => {});
+      clearTimeout(timer);
+      timer = setTimeout(() => setCaptured(false), 4000);
+    };
+    window.addEventListener("keyup", onKey);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("keyup", onKey);
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guarded, fileId]);
 
   const goToPage = useCallback((n: number) => {
     pageRefs.current[n - 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -411,13 +533,15 @@ export function PreviewModal() {
     setZoom((z) => Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round((z + dir * 0.1) * 10) / 10)));
   };
   const pages = Array.from({ length: pageCount }, (_, i) => i + 1);
-  const showPanel = panel && paged;
+  // Thumbnails show whole pages at once, which is what the protected reading view exists to avoid.
+  const showPanel = panel && paged && !fence;
+  const block = guarded ? (e: { preventDefault: () => void }) => e.preventDefault() : undefined;
   const download = () => void v.downloadFile(file.id);
 
-  const stampable = !file.sample && (file.kind === "pdf" || file.kind === "image") && (doc.kind === "pdf" || doc.kind === "image");
+  const stampable = !guarded && !file.sample && (file.kind === "pdf" || file.kind === "image") && (doc.kind === "pdf" || doc.kind === "image");
   const renderPage = (n: number, width: number) =>
     doc.kind === "pdf" ? (
-      <PdfPage pdf={doc.pdf} n={n} width={width} base={doc.base} watermark={v.watermark} personal={personal} />
+      <PdfPage pdf={doc.pdf} n={n} width={width} base={doc.base} watermark={v.watermark} personal={personal} bake={guarded} />
     ) : (
       <ScaledSample file={file} n={n} scale={width / LETTER.w} folderName={folderName} watermark={v.watermark} personal={width > 300 ? personal : null} />
     );
@@ -429,7 +553,21 @@ export function PreviewModal() {
         <Dialog.Content
           aria-describedby={undefined}
           onOpenAutoFocus={(e) => e.preventDefault()}
+          data-protection={level}
+          onContextMenu={block}
+          onCopy={block}
+          onCut={block}
+          onDragStart={block}
+          onKeyDownCapture={
+            guarded
+              ? (e) => {
+                  // Save, print, copy, select all: none of them applies to a document that may only be read.
+                  if ((e.ctrlKey || e.metaKey) && ["s", "p", "c", "a", "x"].includes(e.key.toLowerCase())) e.preventDefault();
+                }
+              : undefined
+          }
           className={clsx(
+            guarded && "select-none",
             "fixed z-[61] flex animate-rise flex-col overflow-hidden bg-white focus:outline-none",
             fullscreen
               ? "inset-0"
@@ -488,8 +626,16 @@ export function PreviewModal() {
               </>
             )}
             <div className="ml-auto flex items-center gap-1">
+              {!file.sample && <IconButton icon={ScanLine} label={level === "high" ? "Lecture protégée (imposée par le niveau de protection)" : fence ? "Quitter la lecture protégée" : "Lecture protégée"} variant="ghost" size="sm" active={fence} disabled={level === "high"} onClick={() => setFenceChosen((f) => !f)} />}
               {stampable && <IconButton icon={Stamp} label="Télécharger avec filigrane" variant="ghost" size="sm" onClick={() => void v.downloadFile(file.id, { stamped: true })} />}
-              <IconButton icon={Download} label="Télécharger" variant="ghost" size="sm" disabled={doc.kind === "altered"} onClick={download} />
+              {guarded ? (
+                <span data-protection-chip className="ml-1 inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-white px-2 text-[12px] font-medium text-neutral-700">
+                  <Lock className="size-3.5" strokeWidth={2} />
+                  <span className="max-sm:hidden">{PROTECTION_LABEL[level]}</span>
+                </span>
+              ) : (
+                <IconButton icon={Download} label="Télécharger" variant="ghost" size="sm" disabled={doc.kind === "altered"} onClick={download} />
+              )}
             </div>
           </div>
 
@@ -523,6 +669,7 @@ export function PreviewModal() {
                 </ol>
               </aside>
             )}
+            <div ref={setBodyEl} className="relative flex min-w-0 flex-1">
             <div ref={setCanvasEl} data-viewer-canvas onScroll={onScroll} className="scroll-quiet min-w-0 flex-1 overflow-auto scroll-smooth bg-white">
               {doc.kind === "loading" && (
                 <div className="flex h-full items-center justify-center text-neutral-400">
@@ -534,10 +681,10 @@ export function PreviewModal() {
                   file={file}
                   title={file.kind === "docx" || file.kind === "xlsx" || file.kind === "pptx" ? "Aperçu impossible pour ce fichier" : `Pas d’aperçu pour ce format (.${file.ext})`}
                   text="L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application."
-                  onDownload={download}
+                  onDownload={guarded ? undefined : download}
                 />
               )}
-              {doc.kind === "tooLarge" && <Notice file={file} title="Fichier trop volumineux pour l’aperçu" text="L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application." onDownload={download} />}
+              {doc.kind === "tooLarge" && <Notice file={file} title="Fichier trop volumineux pour l’aperçu" text="L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application." onDownload={guarded ? undefined : download} />}
               {doc.kind === "altered" && (
                 <div className="flex h-full flex-col items-center justify-center px-6 text-center">
                   <ShieldAlert className="size-10 text-red-500" strokeWidth={1.5} />
@@ -572,10 +719,14 @@ export function PreviewModal() {
               {doc.kind === "image" && (
                 <div className="mx-auto flex w-max min-w-full flex-col items-center px-3 py-6 sm:px-8">
                   <div className="relative overflow-hidden border border-line shadow-page">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={doc.url} alt={fullName(file)} draggable={false} className="block" style={{ width: Math.round(base.w * zoom), height: Math.round(base.h * zoom), maxWidth: "none" }} />
+                    {doc.bitmap ? (
+                      <BakedImage bitmap={doc.bitmap} width={Math.round(base.w * zoom)} height={Math.round(base.h * zoom)} text={personal} label={fullName(file)} />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={doc.url ?? undefined} alt={fullName(file)} draggable={false} className="block" style={{ width: Math.round(base.w * zoom), height: Math.round(base.h * zoom), maxWidth: "none" }} />
+                    )}
                     {v.watermark && <PageWatermark />}
-                    {personal && <PersonalWatermark text={personal} />}
+                    {personal && !doc.bitmap && <PersonalWatermark text={personal} />}
                   </div>
                 </div>
               )}
@@ -641,6 +792,15 @@ export function PreviewModal() {
                   </div>
                 </div>
               )}
+            </div>
+            {fence && !file.sample && <Fence host={bodyEl} />}
+            {captured && (
+              <div role="alert" data-capture-veil className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white px-6 text-center">
+                <ShieldAlert className="size-10 text-red-500" strokeWidth={1.5} />
+                <p className="mt-4 text-[16px] font-semibold text-ink">Capture d’écran détectée</p>
+                <p className="mt-1.5 max-w-[380px] text-[13.5px] leading-[21px] text-neutral-600">Ce document est protégé. La tentative est consignée dans le journal de sécurité, avec le code de cette consultation.</p>
+              </div>
+            )}
             </div>
           </div>
         </Dialog.Content>

@@ -12,7 +12,7 @@ async function seeded(page: import("@playwright/test").Page) {
 test.describe("protection by passphrase", () => {
   test("only accepts a passphrase that is strong enough, confirmed and acknowledged", async ({ page }) => {
     await openVault(page, "preferences");
-    await main(page).getByRole("button", { name: "Activer", exact: true }).click();
+    await main(page).getByRole("button", { name: "Activer", exact: true }).last().click();
     const submit = dialog(page).locator("button[type=submit]");
     await page.fill("#protect-new", "court");
     await page.fill("#protect-confirm", "court");

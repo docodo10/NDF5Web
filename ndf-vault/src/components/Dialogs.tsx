@@ -5,6 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Check, CloudUpload, Copy, Download, Lock, ShieldCheck, Trash2, TriangleAlert, Users, X } from "lucide-react";
 import { FolderIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { highest, lowers, PROTECTION_HINT, PROTECTION_LABEL, PROTECTION_LEVELS, protectionOf, type Protection } from "@/lib/protection";
 import { useVault } from "@/lib/store";
 import type { FileStatus, Folder, Project, VaultFile } from "@/lib/types";
 import { STATUSES } from "@/lib/types";
@@ -668,6 +669,67 @@ function PurgeDialog({ fileIds }: { fileIds: string[] }) {
   );
 }
 
+/** Choose how far a document is protected. Lowering the level in a protected vault takes the passphrase. */
+function ProtectionDialog({ fileIds }: { fileIds: string[] }) {
+  const { files, setProtection, security, openDialog } = useVault();
+  const targets = files.filter((f) => fileIds.includes(f.id) && !f.sample);
+  const current = highest(targets.map((f) => protectionOf(f)));
+  const [level, setLevel] = useState<Protection>(current);
+  const [passphrase, setPassphrase] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [wrong, setWrong] = useState(false);
+  const needsPassphrase = security.protected && targets.some((f) => lowers(protectionOf(f), level));
+  const ready = !busy && level !== current && (!needsPassphrase || passphrase.length > 0);
+  return (
+    <Modal
+      title="Protection du document"
+      description={targets.length === 1 ? fullName(targets[0]) : `${targets.length} documents`}
+      width={500}
+      onSubmit={async () => {
+        if (!ready) return;
+        setBusy(true);
+        setWrong(false);
+        if ((await setProtection(fileIds, level, passphrase)) === "ok") return openDialog(null);
+        setWrong(true);
+        setBusy(false);
+      }}
+      footer={
+        <>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button variant="primary" type="submit" disabled={!ready}>
+            Appliquer
+          </Button>
+        </>
+      }
+    >
+      <div role="radiogroup" aria-label="Niveau de protection" className="space-y-2">
+        {PROTECTION_LEVELS.map((l) => (
+          <label key={l} className={clsx("flex cursor-pointer items-start gap-3 rounded-[10px] border px-3 py-2.5 transition-colors duration-150", level === l ? "border-ink bg-subtle" : "border-line hover:border-neutral-300")}>
+            <input type="radio" name="protection-level" value={l} checked={level === l} onChange={() => setLevel(l)} className="mt-1 size-4 shrink-0 accent-black" />
+            <span className="min-w-0">
+              <span className="block text-[13.5px] font-medium text-ink">{PROTECTION_LABEL[l]}</span>
+              <span className="mt-0.5 block text-[12.5px] leading-[18px] text-neutral-600">{PROTECTION_HINT[l]}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      {needsPassphrase && (
+        <div className="mt-4">
+          <Field label="Phrase secrète" hint="Demandée pour retirer une protection.">
+            <PassphraseInput id="protection-passphrase" value={passphrase} onChange={setPassphrase} autoComplete="current-password" />
+            <p role="alert" className="mt-1.5 min-h-[18px] text-[12px] text-red-600">
+              {wrong ? "Phrase secrète incorrecte." : ""}
+            </p>
+          </Field>
+        </div>
+      )}
+      <div className="mt-4">
+        <Note>Ces protections freinent la copie et permettent de remonter à son origine. Elles ne peuvent pas empêcher quelqu’un de photographier un écran : c’est le filigrane et son code de consultation qui désignent alors la personne.</Note>
+      </div>
+    </Modal>
+  );
+}
+
 function ResetDialog() {
   const { resetVault, verifyPassphrase, security, openDialog } = useVault();
   const [current, setCurrent] = useState("");
@@ -889,6 +951,8 @@ export function Dialogs() {
       return <RestoreDialog />;
     case "audit":
       return <AuditDialog />;
+    case "protection":
+      return <ProtectionDialog fileIds={dialog.fileIds} />;
     case "exportVault":
       return <ExportVaultDialog />;
     case "purge":

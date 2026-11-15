@@ -35,6 +35,11 @@ export interface Persisted {
   profile: Profile;
   /** Hide the content whenever the window is not the active one. */
   privacy?: boolean;
+  /** The protection level given to newly uploaded files. */
+  defaultProtection?: "view" | "high";
+  /** When the last encrypted backup was made on this device, and the last full integrity check. */
+  lastBackupAt?: string;
+  lastAuditAt?: string;
 }
 
 export const DEFAULT_PROFILE: Profile = { name: "Admin NDF5", company: "NDF5 Productions", email: "" };
@@ -55,6 +60,8 @@ export interface Meta {
   recoveryAt?: string;
   /** Set when the passphrase was just replaced with the recovery code; reported and cleared at the next unlock. */
   recovered?: boolean;
+  /** Erase the vault after this many wrong passphrases or codes in a row; absent or 0: never. */
+  wipeAfter?: number;
 }
 
 const DEFAULT_META: Meta = { protected: false, failed: 0, autoLockMinutes: 15 };
@@ -163,7 +170,27 @@ export function isAvailableKey(): boolean {
 
 /* --------------------------------------------------------- Lock and unlock */
 
-export type UnlockResult = { ok: true; failedBefore: number; lastFailedAt?: string; recovered: boolean } | { ok: false; failed: number };
+export type UnlockResult = { ok: true; failedBefore: number; lastFailedAt?: string; recovered: boolean } | { ok: false; failed: number; wiped?: boolean };
+
+/** The standard number of attempts for the erase-after-failures option. */
+export const WIPE_AFTER = 10;
+
+/** One more wrong attempt: count it, and erase the vault if that was one too many. */
+async function refuse(meta: Meta): Promise<{ ok: false; failed: number; wiped?: boolean }> {
+  const failed = meta.failed + 1;
+  if (meta.wipeAfter && failed >= meta.wipeAfter) {
+    await wipeEverything();
+    return { ok: false, failed, wiped: true };
+  }
+  await writeMeta({ ...meta, failed, lastFailedAt: new Date().toISOString() });
+  return { ok: false, failed };
+}
+
+/** Turn the erase-after-failures option on (a number of attempts) or off (0). */
+export async function setWipeAfter(attempts: number): Promise<void> {
+  const meta = await readMeta();
+  await writeMeta({ ...meta, wipeAfter: attempts > 0 ? Math.max(3, Math.floor(attempts)) : undefined });
+}
 
 export async function unlock(passphrase: string): Promise<UnlockResult> {
   const meta = await readMeta();
@@ -172,9 +199,7 @@ export async function unlock(passphrase: string): Promise<UnlockResult> {
     dataKey = await openEnvelope(passphrase, meta.envelope);
   } catch (e) {
     if (!(e instanceof WrongPassphraseError)) throw e;
-    const failed = meta.failed + 1;
-    await writeMeta({ ...meta, failed, lastFailedAt: new Date().toISOString() });
-    return { ok: false, failed };
+    return refuse(meta);
   }
   const result: UnlockResult = { ok: true, failedBefore: meta.failed, lastFailedAt: meta.lastFailedAt, recovered: meta.recovered === true };
   let next: Meta = { ...meta, failed: 0, lastFailedAt: undefined, recovered: undefined };
@@ -272,7 +297,7 @@ export async function createRecoveryCode(passphrase: string, iterations?: number
   }
 }
 
-export type RecoverResult = { ok: true; code: string } | { ok: false; failed: number };
+export type RecoverResult = { ok: true; code: string } | { ok: false; failed: number; wiped?: boolean };
 
 /**
  * The passphrase is lost: the recovery code sets a new one. The vault stays
@@ -289,9 +314,7 @@ export async function recoverWithCode(code: string, nextPassphrase: string, iter
     return { ok: true, code: next.code };
   } catch (e) {
     if (!(e instanceof WrongPassphraseError)) throw e;
-    const failed = meta.failed + 1;
-    await writeMeta({ ...meta, failed, lastFailedAt: new Date().toISOString() });
-    return { ok: false, failed };
+    return refuse(meta);
   }
 }
 
@@ -347,6 +370,9 @@ export function migrate(saved: Partial<Persisted> & { schema?: number }): Persis
     personalMark: saved.personalMark ?? true,
     profile: { ...DEFAULT_PROFILE, ...(saved.profile ?? {}) },
     ...(saved.privacy === true && { privacy: true }),
+    ...((saved.defaultProtection === "view" || saved.defaultProtection === "high") && { defaultProtection: saved.defaultProtection }),
+    ...(typeof saved.lastBackupAt === "string" && { lastBackupAt: saved.lastBackupAt }),
+    ...(typeof saved.lastAuditAt === "string" && { lastAuditAt: saved.lastAuditAt }),
   };
 }
 

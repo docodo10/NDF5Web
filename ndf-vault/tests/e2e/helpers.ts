@@ -123,7 +123,7 @@ export async function noteRecoveryCode(page: Page): Promise<string> {
 /** Turn protection on. Resolves the recovery code handed out at the end. */
 export async function protect(page: Page, passphrase = PASS): Promise<string> {
   await go(page, "preferences");
-  await main(page).getByRole("button", { name: "Activer", exact: true }).click();
+  await main(page).getByRole("button", { name: "Activer", exact: true }).last().click();
   await page.fill("#protect-new", passphrase);
   await page.fill("#protect-confirm", passphrase);
   await page.check("#protect-understood");

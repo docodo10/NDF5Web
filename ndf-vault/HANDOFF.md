@@ -40,7 +40,7 @@ L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », con
 
 ## 3. État actuel
 
-**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (172 tests unitaires) et `npm run test:e2e` (85 tests dans un vrai navigateur) passent.
+**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (187 tests unitaires) et `npm run test:e2e` (102 tests dans un vrai navigateur) passent.
 
 ### Sécurité (2026-11-14)
 
@@ -70,6 +70,26 @@ Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc *
 
 **Limites à dire à l'utilisateur, sans les enjoliver :** la protection vaut contre quelqu'un qui accède à l'appareil ou au profil du navigateur pendant que le Vault est verrouillé. Elle ne protège pas d'un logiciel malveillant sur une session déverrouillée, ni ne remplace l'authentification des invités, les permissions par dossier et le journal côté serveur, qui restent à construire. Sans la phrase secrète **et** sans le code de récupération, le contenu est irrécupérable. Le code de récupération vaut la phrase secrète : il ne doit pas rester sur l'appareil.
 
+### Protection des documents (2026-11-15)
+
+Demande de l'utilisateur : rendre un document « impossible à hacker », même par des professionnels qui lisent le code, et flouter les photos prises au téléphone. **Ce n'est pas réalisable et il ne faut jamais le lui promettre** : ce qu'un écran affiche, un appareil photo le capture, et tout ce qui s'exécute dans le navigateur peut y être observé. Ce qui a été construit freine la copie, n'en montre qu'un fragment à la fois et désigne son auteur. La vraie garantie viendra du serveur : un invité ne recevra jamais le fichier d'origine, seulement des pages rendues côté serveur avec le filigrane incrusté.
+
+| Fonction | Où | Notes |
+|---|---|---|
+| Niveaux de protection | `src/lib/protection.ts`, `VaultFile.protection`, store `setProtection`, `ProtectionDialog`, menu du fichier → « Protection » | `standard`, `view` (consultation seule) et `high` (haute protection). Monter un niveau est libre ; **le baisser dans un Vault protégé demande la phrase secrète**. Niveau par défaut des nouveaux fichiers dans Réglages (`Persisted.defaultProtection`). Cadenas à côté du nom dans les tables |
+| Consultation seule | store `downloadFile`, `downloadVersion`, `exportEntries` | Téléchargement, téléchargement filigrané, versions et export ZIP refusés (le fichier est laissé de côté et le message le dit) ; la tentative va au journal de sécurité. La sauvegarde chiffrée, elle, contient tout |
+| Visionneuse durcie | `PreviewModal` (`guarded`) | Pas de sélection, de copie, de clic droit, de glisser-déposer ; Ctrl/Cmd + S, P, C, A, X avalés ; filigrane personnel imposé même si le réglage est éteint ; voile de confidentialité imposé quand la fenêtre n'est plus active |
+| Filigrane dans les pixels | `protection.bakeWatermark`, `PdfPage` (`bake`), `BakedImage` | Pour un document protégé, le filigrane est dessiné **dans le canevas** (PDF et images), plus dans un élément posé par-dessus : le retirer de l'arbre de la page ne suffit plus. Une image protégée n'a jamais d'URL `blob:` : elle n'existe que dessinée. Les aperçus texte et Office gardent un filigrane en surimpression (limite connue) |
+| Lecture protégée | `Fence` dans `PreviewModal`, styles `.fence-*` dans `globals.css` | Le document est flouté sauf une bande (19 % de la hauteur, 104 à 190 px) qui suit le pointeur ou le doigt, et entièrement quand ni l'un ni l'autre n'est dessus. Une photo ne capture que quelques lignes. Imposée au niveau `high`, proposée par un bouton pour tout document. Les vignettes sont masquées dans ce mode. La bande se déplace par variable CSS, sans re-rendu React |
+| Code de consultation | `protection.consultationCode`, `PreviewState.code`, `ActivityItem.code` | Chaque ouverture d'un vrai document reçoit un code (`K7Q-2M9`) imprimé dans le filigrane et écrit au journal. Activité → recherche : taper le code lu sur une photo retrouve l'ouverture (qui, quand, quel document). Colonne dans l'export CSV |
+| Capture d'écran | effet `PrintScreen` dans `PreviewModal`, store `reportCapture` | La touche ne peut pas être bloquée : sur un document protégé elle couvre le document 4 s, tente de vider le presse-papiers et écrit l'événement au journal avec le code de consultation |
+| Impression | `@media print` dans `globals.css` | Tout est masqué à l'impression |
+| Effacement après tentatives | `Meta.wipeAfter`, `db.setWipeAfter`, `db.refuse` | Option (éteinte par défaut) : après 10 phrases ou codes refusés d'affilée, `wipeEverything`. L'écran de verrouillage annonce le nombre de tentatives restantes. Minimum de 3 imposé par `setWipeAfter` |
+| Verrouillage d'urgence | effet dans `store.tsx` | Trois appuis sur Échap en 1,2 s verrouillent, où que l'on soit (écouté en phase de capture) |
+| Bilan de sécurité | `SettingsView` (`checks`), `Persisted.lastBackupAt`, `lastAuditAt` | Six points (protection, code de récupération, verrouillage ≤ 15 min, sauvegarde et intégrité de moins de 30 jours, stockage durable), chacun avec son état et le bouton qui le règle |
+
+**À surveiller pour la suite :** la recherche dans le contenu montre des extraits de tous les documents, protégés compris. C'est correct pour le propriétaire, pas pour un futur invité : à restreindre par niveau d'accès quand le serveur existera.
+
 ### Fonctions réelles
 
 | Fonction | Où | Notes |
@@ -93,8 +113,8 @@ Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc *
 
 | Suite | Commande | Contenu |
 |---|---|---|
-| Unitaires (172) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `recovery` (code, récupération, remplacement, tentatives), `backup` (aller-retour, rien en clair, fichier altéré, enregistrements échangés, validation de l'état restauré), `uploads` (octets magiques, exécutables déguisés, faux fichiers Office, macros), `unzip` (bombe de décompression, somme de contrôle, archives tronquées), `xml` (DOCTYPE refusé, entrées hostiles en temps linéaire), `office` (Word, Excel, PowerPoint, limites), `search` (casse et accents, extraits, limites), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
-| Navigateur (85) | `npm run test:e2e` | `tests/e2e/` : visite guidée, fichiers, téléversement, aperçus Office, recherche dans le contenu, vérification d'intégrité, actions sensibles, journal des verrouillages, écran de confidentialité, versions, dossiers et projets, exports, sécurité (rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré…), code de récupération, sauvegarde et restauration (dont la restauration dans un second profil de navigateur, comme sur un autre appareil), téléphone |
+| Unitaires (187) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `recovery` (code, récupération, remplacement, tentatives), `backup` (aller-retour, rien en clair, fichier altéré, enregistrements échangés, validation de l'état restauré), `uploads` (octets magiques, exécutables déguisés, faux fichiers Office, macros), `unzip` (bombe de décompression, somme de contrôle, archives tronquées), `xml` (DOCTYPE refusé, entrées hostiles en temps linéaire), `office` (Word, Excel, PowerPoint, limites), `search` (casse et accents, extraits, limites), `protection` (niveaux, codes, filigrane dessiné, effacement après tentatives), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
+| Navigateur (102) | `npm run test:e2e` | `tests/e2e/` : protection des documents (consultation seule, filigrane dans les pixels, lecture protégée, code de consultation, touche de capture, effacement, verrouillage d'urgence, bilan), visite guidée, fichiers, téléversement, aperçus Office, recherche dans le contenu, vérification d'intégrité, actions sensibles, journal des verrouillages, écran de confidentialité, versions, dossiers et projets, exports, sécurité (rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré…), code de récupération, sauvegarde et restauration (dont la restauration dans un second profil de navigateur, comme sur un autre appareil), téléphone |
 
 `npm run test:e2e` reconstruit d'abord `dist/` puis sert ce dossier (`scripts/serve-dist.mjs`, port 4173) : les tests s'exécutent sur **la page réellement publiée**, pas sur le serveur de développement. `tests/e2e/helpers.ts` contient les aides (`openVault`, `upload`, `protect` qui rend le code de récupération, `noteRecoveryCode`, `unlock`, `diskDump`, `tamperFirstOriginal`, `readZip`…). `tests/fixtures/office.ts` fabrique de vrais fichiers Word, Excel et PowerPoint compressés, pour les deux suites.
 
@@ -108,7 +128,7 @@ Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc *
 |---|---|
 | `src/lib/types.ts` | `VaultFile` (avec `sha256`, `versions`), `FileVersion`, `Folder`, `Project`, `Profile`, `ActivityItem`, `Route`, statuts |
 | `src/lib/sample-data.ts` | 42 fichiers d'exemple en français, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 services, activité |
-| `src/lib/crypto.ts`, `db.ts`, `backup.ts`, `uploads.ts`, `unzip.ts`, `xml.ts`, `office.ts`, `search.ts`, `extract.ts`, `pdf.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
+| `src/lib/crypto.ts`, `db.ts`, `backup.ts`, `uploads.ts`, `unzip.ts`, `xml.ts`, `office.ts`, `search.ts`, `extract.ts`, `protection.ts`, `pdf.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
 | `src/lib/format.ts` | Dates et tailles à la française, `KIND_LABEL`, `STATUS_LABEL`, `count()`, `sanitizeName` |
 | `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory`, `folderRules` |
 | `src/lib/routes.ts` | `routeToHash`, `hashToRoute` |
@@ -192,6 +212,8 @@ Note de fidélité : on reprend le langage visuel (layout, densité, composants)
 - **Playwright est épinglé à 1.63.0**, la version du Chromium préinstallé. Ne pas lancer `playwright install`.
 - **Tests : locale UTF-8 obligatoire pour le navigateur.** Sans elle, un téléchargement au nom accentué s'appelle « download ». `playwright.config.ts` force `C.UTF-8` quand l'environnement n'en a pas.
 - **Pas d'expression régulière sur du contenu venu d'un fichier sans borne de longueur.** Un motif comme `[^=]+\s*=` ou `\[[^\]]*\]` prend un temps quadratique sur une entrée piégée et gèle la page. `xml.ts` lit les attributs en une passe ; `classifyFormat` tronque son entrée. Les tests `hostile input` le vérifient au chronomètre.
+- **Tests : plusieurs boutons portent le même nom dans Réglages** depuis le bilan de sécurité (« Activer », « Vérifier », « Sauvegarder ») : cibler le panneau voulu (`[data-checkup]`) ou prendre `.last()`.
+- **Tests : `row(page, "Entente")` attrape aussi un fichier d'exemple** (« Modèle d'entente… ») : choisir des noms de test qui n'existent pas dans les données d'exemple.
 - **Un dialogue Radix ouvert coupe les clics sur le reste de la page** (`pointer-events: none` sur `body`). Tout ce qui doit rester cliquable par-dessus un dialogue sans en faire partie (le voile de confidentialité) doit poser `pointer-events-auto`.
 - **Tests : ne pas mesurer un élément pendant son animation d'ouverture** (`animate-rise` change sa taille pendant 200 ms) ; utiliser `expect.poll`.
 - **Tests : attendre la fin d'une action qui navigue** (la réinitialisation revient à l'accueil) avant de changer de vue, sinon la navigation de l'app passe après celle du test.
@@ -221,7 +243,8 @@ Next concernés dans node_modules/next/dist/docs/.
 L'interface est en français. Fonctionnent déjà : téléversement, stockage chiffré dans
 le navigateur (phrase secrète, verrouillage, code de récupération), sauvegarde chiffrée
 et restauration, aperçus (PDF, images, texte, Word, Excel, PowerPoint), recherche dans
-le contenu, vérification d'intégrité, versions,
+le contenu, vérification d'intégrité, protection des documents (consultation seule,
+lecture protégée, filigrane incrusté, code de consultation), versions,
 dossiers, projets, exports, filigrane personnel, journal de sécurité, visite guidée,
 et deux suites de tests.
 Demande à l'utilisateur ses ajustements après son essai sur PC, puis la suite :

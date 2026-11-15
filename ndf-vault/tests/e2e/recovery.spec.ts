@@ -37,7 +37,7 @@ test.describe("recovery code", () => {
   test("cannot be skipped past without confirming it was written down", async ({ page }) => {
     await seeded(page);
     await go(page, "preferences");
-    await main(page).getByRole("button", { name: "Activer", exact: true }).click();
+    await main(page).getByRole("button", { name: "Activer", exact: true }).last().click();
     await page.fill("#protect-new", PASS);
     await page.fill("#protect-confirm", PASS);
     await page.check("#protect-understood");

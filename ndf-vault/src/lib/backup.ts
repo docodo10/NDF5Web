@@ -201,6 +201,7 @@ function file(v: unknown, folders: Set<string>, projects: Set<string>): VaultFil
     ...(hex(v.sha256) && { sha256: hex(v.sha256) }),
     ...(str(v.versionAt, 40) && { versionAt: v.versionAt }),
     ...(Array.isArray(v.versions) && { versions: v.versions.map(version).filter((x): x is FileVersion => x !== null) }),
+    ...((v.protection === "view" || v.protection === "high") && { protection: v.protection }),
   };
 }
 
@@ -280,7 +281,7 @@ export function validateState(raw: unknown): Persisted | null {
   const activity: ActivityItem[] = [];
   for (const a of list(migrated.activity).slice(0, 500)) {
     if (!obj(a) || !id(a.id) || !str(a.at, 40) || !str(a.userId, 64) || !str(a.verb, 200) || !str(a.target, 600)) continue;
-    activity.push({ id: a.id, at: a.at, userId: a.userId, verb: a.verb, target: a.target, projectId: id(a.projectId) && projectIds.has(a.projectId) ? a.projectId : null, kind: a.kind === "security" ? "security" : "file" });
+    activity.push({ id: a.id, at: a.at, userId: a.userId, verb: a.verb, target: a.target, projectId: id(a.projectId) && projectIds.has(a.projectId) ? a.projectId : null, kind: a.kind === "security" ? "security" : "file", ...(typeof a.code === "string" && /^[0-9A-Z]{3}-[0-9A-Z]{3}$/.test(a.code) && { code: a.code }) });
   }
 
   const profile: Record<string, unknown> = obj(migrated.profile) ? migrated.profile : {};
@@ -293,6 +294,7 @@ export function validateState(raw: unknown): Persisted | null {
     watermark: migrated.watermark !== false,
     personalMark: migrated.personalMark !== false,
     ...(migrated.privacy === true && { privacy: true }),
+    ...(migrated.defaultProtection && { defaultProtection: migrated.defaultProtection }),
     profile: {
       name: (str(profile.name, 200) && sanitizeName(profile.name)) || DEFAULT_PROFILE.name,
       company: str(profile.company, 200) ? sanitizeName(profile.company) : "",

@@ -129,3 +129,32 @@ button:disabled {
     transition-duration: 1ms !important;
   }
 }
+
+/* Protected reading view: everything outside the band being read is blurred. */
+[data-fence] {
+  --fence-band: clamp(104px, 19%, 190px);
+}
+.fence-cover,
+.fence-all {
+  -webkit-backdrop-filter: blur(11px);
+  backdrop-filter: blur(11px);
+  background: rgb(255 255 255 / 0.58);
+}
+[data-fence][data-reading="false"] .fence-cover,
+[data-fence][data-reading="true"] .fence-all {
+  display: none;
+}
+
+/* Nothing in the vault is meant for paper: a printout would carry no watermark and no trace. */
+@media print {
+  body > * {
+    display: none !important;
+  }
+  body::before {
+    content: "NDF Vault — l’impression est désactivée. Les documents se consultent à l’écran.";
+    display: block;
+    padding: 48px;
+    font: 16px/1.5 system-ui, sans-serif;
+    color: #0a0a0a;
+  }
+}

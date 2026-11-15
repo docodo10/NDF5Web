@@ -26,7 +26,7 @@ test.describe("integrity check of the whole vault", () => {
     await page.keyboard.press("Escape");
 
     await go(page, "preferences");
-    await main(page).getByRole("button", { name: "Vérifier", exact: true }).click();
+    await main(page).getByRole("button", { name: "Vérifier", exact: true }).last().click();
     const report = dialog(page).locator("[data-audit-report]");
     await expect(report).toContainText("Les 3 originaux sont intacts");
     await expect(report.getByRole("list")).toHaveCount(0);
@@ -38,7 +38,7 @@ test.describe("integrity check of the whole vault", () => {
     await seeded(page);
     await tamperFirstOriginal(page);
     await go(page, "preferences");
-    await main(page).getByRole("button", { name: "Vérifier", exact: true }).click();
+    await main(page).getByRole("button", { name: "Vérifier", exact: true }).last().click();
     const report = dialog(page).locator("[data-audit-report]");
     await expect(report).toContainText("1 original sur 2 pose problème");
     const problems = report.getByRole("list", { name: "Fichiers à problème" }).getByRole("listitem");
@@ -70,7 +70,7 @@ test.describe("integrity check of the whole vault", () => {
       });
       conn.close();
     });
-    await main(page).getByRole("button", { name: "Vérifier", exact: true }).click();
+    await main(page).getByRole("button", { name: "Vérifier", exact: true }).last().click();
     const report = dialog(page).locator("[data-audit-report]");
     await expect(report).toContainText("2 originaux sur 2 posent problème");
     await expect(report.getByRole("list").getByRole("listitem").filter({ hasText: "Altéré" })).toHaveCount(1);
@@ -79,7 +79,7 @@ test.describe("integrity check of the whole vault", () => {
 
   test("says so when there is nothing to check", async ({ page }) => {
     await openVault(page, "preferences");
-    await main(page).getByRole("button", { name: "Vérifier", exact: true }).click();
+    await main(page).getByRole("button", { name: "Vérifier", exact: true }).last().click();
     await expect(dialog(page).locator("[data-audit-report]")).toContainText("Aucun original à vérifier");
   });
 });

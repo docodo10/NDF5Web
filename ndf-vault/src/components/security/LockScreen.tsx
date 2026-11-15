@@ -53,7 +53,9 @@ export function LockScreen({ meta, unlock, recover, wipe }: LockScreenProps) {
     return () => clearInterval(t);
   }, [wait]);
 
-  const refused = (attempts: number) => {
+  const refused = (attempts: number, wiped?: boolean) => {
+    // One attempt too many, with the erase option on: the vault is gone, and the screen says so once it reopens empty.
+    if (wiped) return void wipe("Trop de tentatives échouées : le Vault a été effacé de cet appareil.");
     setFailed(attempts);
     setLastFailedAt(Date.now());
     setNow(Date.now());
@@ -76,7 +78,7 @@ export function LockScreen({ meta, unlock, recover, wipe }: LockScreenProps) {
     // On success the provider replaces this screen; only a failure comes back here.
     if (!result.ok) {
       setPassphrase("");
-      refused(result.failed);
+      refused(result.failed, result.wiped);
     }
   };
 
@@ -88,7 +90,7 @@ export function LockScreen({ meta, unlock, recover, wipe }: LockScreenProps) {
     setBusy(true);
     setWrong(false);
     const result = await recover(code, next);
-    if (!result.ok) return refused(result.failed);
+    if (!result.ok) return refused(result.failed, result.wiped);
     setNewCode(result.code);
     setBusy(false);
     setMode("newCode");
@@ -100,6 +102,12 @@ export function LockScreen({ meta, unlock, recover, wipe }: LockScreenProps) {
     if (!result.ok) refused(result.failed);
   };
 
+  const left = meta.wipeAfter ? meta.wipeAfter - failed : null;
+  const warning = left !== null && failed > 0 && (
+    <span data-wipe-warning className={left <= 3 ? "block font-medium text-red-600" : "block text-neutral-600"}>
+      {left > 1 ? `Encore ${left} tentatives` : "Encore une tentative"} avant l’effacement du Vault.
+    </span>
+  );
   const attempts =
     wait > 0 ? (
       <span className="text-neutral-600">Trop de tentatives. Réessayez dans {wait} s.</span>
@@ -141,6 +149,7 @@ export function LockScreen({ meta, unlock, recover, wipe }: LockScreenProps) {
                 <PassphraseInput id="unlock-passphrase" value={passphrase} onChange={setPassphrase} autoComplete="current-password" autoFocus />
                 <div role="alert" className="min-h-[22px] pt-1.5 text-[12.5px]">
                   {attempts}
+                  {warning}
                 </div>
                 <Button variant="primary" type="submit" disabled={!passphrase || busy || wait > 0} className="mt-2 !h-10 w-full !text-[14px]">
                   {busy ? (
