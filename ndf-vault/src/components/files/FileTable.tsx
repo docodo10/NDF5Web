@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import * as ContextMenu from "@radix-ui/react-context-menu";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import {
   Archive,
@@ -32,9 +33,10 @@ import {
   X,
 } from "lucide-react";
 import { ArticleIcon, FilePdfIcon, FileTextIcon, GridFourIcon, ImageIcon, PresentationChartIcon, TableIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import { PROTECTION_LABEL } from "@/lib/protection";
+import { startFileDrag } from "@/lib/dnd";
 import type { FileKind, VaultFile } from "@/lib/types";
 import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
@@ -66,14 +68,54 @@ export function FileIcon({ kind, size = 36 }: { kind: FileKind; size?: number })
 
 /* ----------------------------------------------------------------- Row menu */
 
-export function RowMenu({ file, listIds, vertical }: { file: VaultFile; listIds: string[]; vertical?: boolean }) {
+/** The parts of a menu that both the "⋯" button and the right click share. */
+type MenuKit = {
+  Item: ComponentType<{ className?: string; onSelect?: (e: Event) => void; children?: ReactNode }>;
+  Separator: ComponentType<{ className?: string }>;
+};
+
+/** What can be done with a file, the same whether it is reached from the "⋯" button or by a right click. */
+function FileMenuItems({ file, listIds, kit: Menu }: { file: VaultFile; listIds: string[]; kit: MenuKit }) {
   const v = useVault();
   const item = (Icon: IconType, label: string, onSelect: () => void, danger?: boolean) => (
-    <Dropdown.Item className={clsx(MENU_ITEM, danger && "!text-red-600 data-[highlighted]:!bg-red-50")} onSelect={onSelect}>
+    <Menu.Item className={clsx(MENU_ITEM, danger && "!text-red-600 data-[highlighted]:!bg-red-50")} onSelect={onSelect}>
       <Icon className={clsx("size-4", danger ? "text-red-500" : "text-neutral-500")} strokeWidth={1.75} />
       {label}
-    </Dropdown.Item>
+    </Menu.Item>
   );
+  if (file.deleted) {
+    return (
+      <>
+        {item(Eye, "Aperçu", () => v.openPreview(file.id, listIds))}
+        <Menu.Separator className={MENU_SEPARATOR} />
+        {item(RotateCcw, "Restaurer", () => v.restoreFiles([file.id]))}
+        {item(Trash2, "Supprimer définitivement", () => v.openDialog({ type: "purge", fileIds: [file.id] }), true)}
+      </>
+    );
+  }
+  return (
+    <>
+      {item(ExternalLink, "Ouvrir", () => v.openPreview(file.id, listIds, true))}
+      {item(Eye, "Aperçu", () => v.openPreview(file.id, listIds))}
+      {!file.archived && (file.pinned ? item(PinOff, "Désépingler", () => v.togglePinned(file.id)) : item(Pin, "Épingler à l’accueil", () => v.togglePinned(file.id)))}
+      <Menu.Separator className={MENU_SEPARATOR} />
+      {item(Pencil, "Renommer", () => v.openDialog({ type: "rename", fileId: file.id }))}
+      {item(SquarePen, "Modifier les détails", () => v.openDialog({ type: "details", fileId: file.id }))}
+      {item(FolderInput, "Déplacer", () => v.openDialog({ type: "move", fileIds: [file.id] }))}
+      {item(Copy, "Copier", () => v.copyFile(file.id))}
+      {item(Share2, "Partager", () => v.openDialog({ type: "share", fileId: file.id }))}
+      {item(Download, "Télécharger", () => void v.downloadFile(file.id))}
+      {!file.sample && !file.protection && (file.kind === "pdf" || file.kind === "image") && item(Stamp, "Télécharger avec filigrane", () => void v.downloadFile(file.id, { stamped: true }))}
+      {!file.sample && item(ShieldCheck, "Protection", () => v.openDialog({ type: "protection", fileIds: [file.id] }))}
+      {item(History, "Historique des versions", () => v.openDialog({ type: "versions", fileId: file.id }))}
+      <Menu.Separator className={MENU_SEPARATOR} />
+      {file.archived ? item(RotateCcw, "Restaurer", () => v.restoreFiles([file.id])) : item(Archive, "Archiver", () => v.archiveFiles([file.id]))}
+      {item(Trash2, "Supprimer", () => v.openDialog({ type: "delete", fileIds: [file.id] }), true)}
+    </>
+  );
+}
+
+export function RowMenu({ file, listIds, vertical }: { file: VaultFile; listIds: string[]; vertical?: boolean }) {
   return (
     <Dropdown.Root>
       <Dropdown.Trigger asChild>
@@ -85,36 +127,24 @@ export function RowMenu({ file, listIds, vertical }: { file: VaultFile; listIds:
       </Dropdown.Trigger>
       <Dropdown.Portal>
         <Dropdown.Content align="end" sideOffset={6} collisionPadding={12} className={MENU_CONTENT} onClick={(e) => e.stopPropagation()}>
-          {file.deleted ? (
-            <>
-              {item(Eye, "Aperçu", () => v.openPreview(file.id, listIds))}
-              <Dropdown.Separator className={MENU_SEPARATOR} />
-              {item(RotateCcw, "Restaurer", () => v.restoreFiles([file.id]))}
-              {item(Trash2, "Supprimer définitivement", () => v.openDialog({ type: "purge", fileIds: [file.id] }), true)}
-            </>
-          ) : (
-            <>
-              {item(ExternalLink, "Ouvrir", () => v.openPreview(file.id, listIds, true))}
-              {item(Eye, "Aperçu", () => v.openPreview(file.id, listIds))}
-              {!file.archived && (file.pinned ? item(PinOff, "Désépingler", () => v.togglePinned(file.id)) : item(Pin, "Épingler à l’accueil", () => v.togglePinned(file.id)))}
-              <Dropdown.Separator className={MENU_SEPARATOR} />
-              {item(Pencil, "Renommer", () => v.openDialog({ type: "rename", fileId: file.id }))}
-              {item(SquarePen, "Modifier les détails", () => v.openDialog({ type: "details", fileId: file.id }))}
-              {item(FolderInput, "Déplacer", () => v.openDialog({ type: "move", fileIds: [file.id] }))}
-              {item(Copy, "Copier", () => v.copyFile(file.id))}
-              {item(Share2, "Partager", () => v.openDialog({ type: "share", fileId: file.id }))}
-              {item(Download, "Télécharger", () => void v.downloadFile(file.id))}
-              {!file.sample && !file.protection && (file.kind === "pdf" || file.kind === "image") && item(Stamp, "Télécharger avec filigrane", () => void v.downloadFile(file.id, { stamped: true }))}
-              {!file.sample && item(ShieldCheck, "Protection", () => v.openDialog({ type: "protection", fileIds: [file.id] }))}
-              {item(History, "Historique des versions", () => v.openDialog({ type: "versions", fileId: file.id }))}
-              <Dropdown.Separator className={MENU_SEPARATOR} />
-              {file.archived ? item(RotateCcw, "Restaurer", () => v.restoreFiles([file.id])) : item(Archive, "Archiver", () => v.archiveFiles([file.id]))}
-              {item(Trash2, "Supprimer", () => v.openDialog({ type: "delete", fileIds: [file.id] }), true)}
-            </>
-          )}
+          <FileMenuItems file={file} listIds={listIds} kit={Dropdown} />
         </Dropdown.Content>
       </Dropdown.Portal>
     </Dropdown.Root>
+  );
+}
+
+/** The same menu on a right click (or a long press), where anyone used to a file manager looks for it. */
+export function FileContextMenu({ file, listIds, children }: { file: VaultFile; listIds: string[]; children: ReactNode }) {
+  return (
+    <ContextMenu.Root>
+      <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
+      <ContextMenu.Portal>
+        <ContextMenu.Content collisionPadding={12} className={MENU_CONTENT} aria-label={`Actions pour ${fullName(file)}`} onClick={(e) => e.stopPropagation()}>
+          <FileMenuItems file={file} listIds={listIds} kit={ContextMenu} />
+        </ContextMenu.Content>
+      </ContextMenu.Portal>
+    </ContextMenu.Root>
   );
 }
 
@@ -411,9 +441,12 @@ export function FileTable({
               const owner = users.get(f.ownerId)!;
               const isSel = selected.has(f.id);
               return (
+                <FileContextMenu key={f.id} file={f} listIds={listIds}>
                 <tr
-                  key={f.id}
                   onClick={() => v.openPreview(f.id, listIds)}
+                  // Dragged onto a folder, a row moves there; the whole selection goes with it when it is part of one.
+                  draggable={!trash}
+                  onDragStart={(e) => startFileDrag(e, isSel ? [...selected] : [f.id])}
                   className={clsx("group h-[60px] cursor-pointer border-t border-hair transition-colors duration-150", isSel ? "bg-subtle" : "hover:bg-subtle/70")}
                 >
                   <td className="w-11 pl-4 pr-1">
@@ -512,6 +545,7 @@ export function FileTable({
                     </div>
                   </td>
                 </tr>
+                </FileContextMenu>
               );
             })}
           </tbody>

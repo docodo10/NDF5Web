@@ -15,7 +15,7 @@ import { consultationCode, lowers, PROTECTION_LABEL, protectionOf, type Protecti
 import { hashToRoute, routeToHash } from "./routes";
 import { folderRules } from "./selectors";
 import { stampImage, stampPdf, watermarkText } from "./stamp";
-import { saveToDisk, type UploadCheck } from "./uploads";
+import { saveToDisk, type Picked, type UploadCheck } from "./uploads";
 import { buildZip, uniquePaths, zipPath, type ZipEntry } from "./zip";
 
 /**
@@ -44,7 +44,7 @@ export type DialogState =
   | { type: "deleteFolder"; folderId: string }
   | { type: "newProject" }
   | { type: "editProject"; projectId: string }
-  | { type: "upload"; folderId: string | null; files?: File[] }
+  | { type: "upload"; folderId: string | null; files?: File[]; picked?: Picked[] }
   | { type: "protect" }
   | { type: "passphrase" }
   | { type: "unprotect" }
@@ -54,6 +54,7 @@ export type DialogState =
   | { type: "audit" }
   | { type: "exportVault" }
   | { type: "protection"; fileIds: string[] }
+  | { type: "unlockDoc"; fileId: string; listIds?: string[]; fullscreen?: boolean; page?: number }
   | null;
 
 export interface Toast {
@@ -145,7 +146,7 @@ interface VaultContext {
   endTour: () => void;
   // security
   security: SecurityState;
-  lockNow: (idle?: boolean) => Promise<void>;
+  lockNow: (reason?: "idle" | "strikes") => Promise<void>;
   enableProtection: (passphrase: string) => Promise<boolean>;
   disableProtection: (passphrase: string) => Promise<boolean>;
   changePassphrase: (current: string, next: string) => Promise<boolean>;
@@ -231,7 +232,14 @@ function nowIso(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
 }
 
+/** How long a deleted file stays in the bin before it is erased for good. */
+export const BIN_DAYS = 30;
+
 const TOUR_KEY = "ndf-vault-tour-done";
+/** Wrong passphrases in a row, in an open session, before the vault locks itself. */
+const MAX_STRIKES = 5;
+/** How long a passphrase just given stays good for opening documents in high protection. */
+const REAUTH_MS = 5 * 60_000;
 
 function tourSeen(): boolean {
   try {
@@ -524,13 +532,13 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   /* ------------------------------------------------------------- Security */
 
   const lockNow = useCallback(
-    async (idle = false) => {
+    async (reason?: "idle" | "strikes") => {
       if (!meta.protected) return;
       // Write the last changes while the key is still there, with the lock itself in the journal, then forget the key.
       if (persistent) {
         await saveNow();
         frozen.current = true;
-        const entry: ActivityItem = { id: uid("a"), at: nowIso(), userId: CURRENT_USER_ID, verb: "a verrouillé le Vault", target: idle ? "automatiquement, après une période sans activité" : "", projectId: null, kind: "security" };
+        const entry: ActivityItem = { id: uid("a"), at: nowIso(), userId: CURRENT_USER_ID, verb: "a verrouillé le Vault", target: reason === "idle" ? "automatiquement, après une période sans activité" : reason === "strikes" ? `automatiquement, après ${MAX_STRIKES} phrases secrètes refusées` : "", projectId: null, kind: "security" };
         await db.saveState({ ...latest.current, activity: [entry, ...latest.current.activity].slice(0, 500) });
       }
       relock();
@@ -539,6 +547,22 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   );
   const lockRef = useRef(lockNow);
   lockRef.current = lockNow;
+
+  // An open session is not a licence to guess: a few wrong passphrases in a row lock the vault,
+  // and the lock screen's own delays take over from there.
+  const strikes = useRef(0);
+  // When the passphrase was last given. A document in high protection asks for it again after a while.
+  const lastAuth = useRef(boot.unlocked ? Date.now() : 0);
+  const judge = useCallback(
+    (ok: boolean) => {
+      if (ok) {
+        strikes.current = 0;
+        lastAuth.current = Date.now();
+      } else if (meta.protected && ++strikes.current >= MAX_STRIKES) void lockRef.current("strikes");
+      return ok;
+    },
+    [meta.protected],
+  );
 
   // Lock after a period without any interaction.
   useEffect(() => {
@@ -549,7 +573,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       last = Date.now();
     };
     const check = () => {
-      if (Date.now() - last >= limit) void lockRef.current(true);
+      if (Date.now() - last >= limit) void lockRef.current("idle");
     };
     const events = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"] as const;
     for (const e of events) window.addEventListener(e, touch, { passive: true, capture: true });
@@ -561,6 +585,27 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       document.removeEventListener("visibilitychange", check);
     };
   }, [meta.protected, meta.autoLockMinutes]);
+
+  // The bin empties itself: a file deleted more than 30 days ago is erased for good, original and versions included.
+  const binChecked = useRef(false);
+  useEffect(() => {
+    if (binChecked.current) return;
+    binChecked.current = true;
+    const limit = Date.now() - BIN_DAYS * 86_400_000;
+    const expired = files.filter((f) => f.deleted && f.deletedAt && Date.parse(f.deletedAt) < limit);
+    // Files deleted before the bin kept dates start their 30 days now.
+    const undated = files.some((f) => f.deleted && !f.deletedAt);
+    if (expired.length === 0 && !undated) return;
+    const gone = new Set(expired.map((f) => f.id));
+    const now = new Date().toISOString();
+    setFiles((fs) => fs.filter((f) => !gone.has(f.id)).map((f) => (f.deleted && !f.deletedAt ? { ...f, deletedAt: now } : f)));
+    if (expired.length) {
+      void db.deleteBlobs(expired.flatMap((f) => [f.id, `t-${f.id}`, ...(f.versions ?? []).map((ver) => ver.id)]));
+      log("a laissé la corbeille se vider :", `${count(expired.length, "fichier")} supprimé${expired.length > 1 ? "s" : ""} depuis plus de ${BIN_DAYS} jours`);
+    }
+    // Once, when the vault opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Emergency lock: Escape three times in a row. No menu to find, no pointer to aim.
   useEffect(() => {
@@ -661,6 +706,11 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       preview,
       openPreview: (fileId, listIds, fullscreen, page) => {
         const f = byId(fileId);
+        // A document in high protection is not opened on the strength of a session someone else may have left open.
+        if (f && meta.protected && protectionOf(f) === "high" && Date.now() - lastAuth.current > REAUTH_MS) {
+          setPreview(null);
+          return openDialog({ type: "unlockDoc", fileId, listIds, fullscreen, page });
+        }
         // Every opening of a real document gets its own code: it is what ties a photo of the screen to this consultation.
         const code = f && !f.sample ? consultationCode() : undefined;
         setPreview({ fileId, listIds: listIds && listIds.length ? listIds : [fileId], fullscreen, page, code });
@@ -680,7 +730,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const targets = files.filter((f) => ids.includes(f.id) && !f.sample);
         if (targets.length === 0) return "ok";
         // Taking protection away is the sensitive direction: in a protected vault it takes the passphrase.
-        if (targets.some((f) => lowers(protectionOf(f), level)) && !(await db.verifyPassphrase(passphrase ?? ""))) return "wrong-passphrase";
+        if (targets.some((f) => lowers(protectionOf(f), level)) && !judge(await db.verifyPassphrase(passphrase ?? ""))) return "wrong-passphrase";
         const set = new Set(targets.map((f) => f.id));
         setFiles((fs) =>
           fs.map((f) => {
@@ -719,6 +769,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         // The saved state must exist before it can be converted.
         await saveNow();
         if (!(await db.enableProtection(passphrase))) return false;
+        judge(true);
         setMeta(await db.readMeta());
         log("a activé la protection par phrase secrète", "", null, "security");
         notify("Vault protégé : tout ce qui est stocké est maintenant chiffré.");
@@ -727,14 +778,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       disableProtection: async (passphrase) => {
         if (!meta.protected) return false;
         await saveNow();
-        if (!(await db.disableProtection(passphrase))) return false;
+        if (!judge(await db.disableProtection(passphrase))) return false;
         setMeta(await db.readMeta());
         log("a désactivé la protection par phrase secrète", "", null, "security");
         notify("Protection désactivée : le Vault n’est plus chiffré.");
         return true;
       },
       changePassphrase: async (current, next) => {
-        if (!(await db.changePassphrase(current, next))) return false;
+        if (!judge(await db.changePassphrase(current, next))) return false;
         setMeta(await db.readMeta());
         log("a changé la phrase secrète", "", null, "security");
         notify("Phrase secrète changée");
@@ -744,7 +795,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         setMeta((m) => ({ ...m, autoLockMinutes: minutes }));
         void db.setAutoLock(minutes);
       },
-      verifyPassphrase: (passphrase) => db.verifyPassphrase(passphrase),
+      verifyPassphrase: async (passphrase) => judge(await db.verifyPassphrase(passphrase)),
       auditVault: async (onProgress) => {
         const targets = files.filter((f) => !f.sample);
         const total = targets.reduce((n, f) => n + 1 + (f.versions?.length ?? 0), 0);
@@ -770,7 +821,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         // Asked of what is stored, not of this render: the dialog calls it right after turning protection on.
         const replaced = Boolean((await db.readMeta()).recovery);
         const code = await db.createRecoveryCode(passphrase);
-        if (!code) return null;
+        if (!judge(code !== null)) return null;
         setMeta(await db.readMeta());
         log(replaced ? "a remplacé le code de récupération" : "a créé un code de récupération", "", null, "security");
         return code;
@@ -905,14 +956,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         notify(`${label(ids)} archivé${s(ids)}`, () => patchMany(ids, (f) => ({ archived: false, status: before.get(f.id) ?? "Draft" })));
       },
       restoreFiles: (ids) => {
-        patchMany(ids, (f) => ({ archived: false, deleted: false, status: f.status === "Archived" ? ("Draft" as FileStatus) : f.status }));
+        patchMany(ids, (f) => ({ archived: false, deleted: false, deletedAt: undefined, status: f.status === "Archived" ? ("Draft" as FileStatus) : f.status }));
         log("a restauré", label(ids));
         notify(`${label(ids)} restauré${s(ids)}`);
       },
       deleteFiles: (ids) => {
-        patchMany(ids, () => ({ deleted: true, pinned: false }));
+        patchMany(ids, () => ({ deleted: true, deletedAt: new Date().toISOString(), pinned: false }));
         log("a supprimé", label(ids));
-        notify(`${label(ids)} supprimé${s(ids)}`, () => patchMany(ids, () => ({ deleted: false })));
+        notify(`${label(ids)} supprimé${s(ids)} · conservé${s(ids)} ${BIN_DAYS} jours dans la corbeille`, () => patchMany(ids, () => ({ deleted: false, deletedAt: undefined })));
       },
       purgeFiles: (ids) => {
         const what = label(ids);
@@ -930,6 +981,29 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       uploadFiles: async (items, folderId, projectId) => {
         const added: VaultFile[] = [];
         let refused = 0;
+        // Files that came inside folders keep them: each folder is found under the destination, or created there.
+        const made: Folder[] = [];
+        const folderFor = (path: string[] | undefined) => {
+          let parent = folderId;
+          for (const name of path ?? []) {
+            const same = (d: Folder) => d.parentId === parent && d.name.toLowerCase() === name.toLowerCase();
+            let found = folders.find(same) ?? made.find(same);
+            if (!found) {
+              found = { id: uid("d"), name, parentId: parent };
+              made.push(found);
+            }
+            parent = found.id;
+          }
+          return parent;
+        };
+        // Two files of the same name in one folder would be told apart only by luck: the newcomer is numbered.
+        const taken = new Set(files.filter((f) => !f.deleted).map((f) => `${f.folderId}/${fullName(f).toLowerCase()}`));
+        const freeName = (name: string, ext: string, folder: string) => {
+          let candidate = name;
+          for (let n = 2; taken.has(`${folder}/${candidate.toLowerCase()}.${ext}`); n++) candidate = `${name} (${n})`;
+          taken.add(`${folder}/${candidate.toLowerCase()}.${ext}`);
+          return candidate;
+        };
         for (const it of items) {
           if (it.error || !it.kind) continue;
           const id = uid("f");
@@ -939,13 +1013,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
             continue;
           }
           const at = nowIso();
+          const target = folderFor(it.path);
           added.push({
             id,
-            name: sanitizeName(it.name) || "Sans titre",
+            name: freeName(sanitizeName(it.name) || "Sans titre", it.ext, target),
             ext: it.ext,
             kind: it.kind,
             size: it.file.size,
-            folderId,
+            folderId: target,
             projectId,
             ownerId: CURRENT_USER_ID,
             createdAt: at,
@@ -967,6 +1042,10 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
             sha256: it.sha256,
           });
         }
+        // Only folders that ended up holding something are kept.
+        const used = new Set<string>();
+        for (const f of added) for (let at: string | null = f.folderId; at && made.some((d) => d.id === at); at = made.find((d) => d.id === at)?.parentId ?? null) used.add(at);
+        if (used.size) setFolders((ds) => [...ds, ...made.filter((d) => used.has(d.id))]);
         if (added.length) {
           setFiles((fs) => [...added, ...fs]);
           log("a téléversé", added.length === 1 ? fullName(added[0]) : count(added.length, "fichier"), projectId);
@@ -1200,7 +1279,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         notify("Vault réinitialisé : les données d’exemple sont de retour.");
       },
     };
-  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, privacy, defaultProtection, lastBackupAt, lastAuditAt, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload, searchContent, indexable, indexedCount]);
+  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, privacy, defaultProtection, lastBackupAt, lastAuditAt, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload, searchContent, indexable, indexedCount, judge]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

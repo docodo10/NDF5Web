@@ -22,6 +22,77 @@ export interface UploadCheck {
   sha256?: string;
   /** Name of a file already in the vault with exactly the same content. */
   duplicateOf?: string;
+  /** For a file that came inside a folder: the folders above it, outermost first. They are created on upload. */
+  path?: string[];
+}
+
+/** A file chosen for upload, with the folders it sat in when a whole folder was chosen or dropped. */
+export interface Picked {
+  file: File;
+  path: string[];
+}
+
+/** The most files taken from one dropped or chosen folder. */
+export const MAX_FOLDER_FILES = 1000;
+const MAX_FOLDER_DEPTH = 12;
+
+/** Files a system leaves in folders for its own use: never what someone meant to upload. */
+const isClutter = (name: string) => name.startsWith(".") || name.startsWith("~$") || /^(thumbs\.db|desktop\.ini)$/i.test(name);
+
+/** "Contrats/2026/Entente.pdf" → ["Contrats", "2026"]: clean folder names, nothing that climbs or hides. */
+export function folderSegments(relativePath: string): string[] {
+  return relativePath
+    .split(/[\\/]/)
+    .slice(0, -1)
+    .map((s) => sanitizeName(s))
+    .filter((s) => s && s !== "." && s !== "..")
+    .slice(0, MAX_FOLDER_DEPTH);
+}
+
+/** Files from a file input. One opened on a folder gives each file its path inside that folder. */
+export function pickedFromInput(list: FileList | File[] | null): Picked[] {
+  return Array.from(list ?? [])
+    .filter((f) => !isClutter(f.name))
+    .slice(0, MAX_FOLDER_FILES)
+    .map((file) => ({ file, path: folderSegments(file.webkitRelativePath ?? "") }));
+}
+
+type Entry = { isFile: boolean; isDirectory: boolean; name: string; file?: (ok: (f: File) => void, no: () => void) => void; createReader?: () => { readEntries: (ok: (e: Entry[]) => void, no: () => void) => void } };
+
+/**
+ * What was dropped: plain files, or whole folders walked through to their
+ * files. The entries must be taken from the event at once, before anything is
+ * awaited: the browser empties the drop as soon as its handler returns.
+ */
+export function pickedFromDrop(data: DataTransfer | null): Promise<Picked[]> {
+  if (!data) return Promise.resolve([]);
+  const entries = Array.from(data.items ?? [])
+    .map((item) => (item.kind === "file" ? ((item as unknown as { webkitGetAsEntry?: () => Entry | null }).webkitGetAsEntry?.() ?? null) : null))
+    .filter((e): e is Entry => e !== null);
+  // A browser without folder entries still gives the files themselves.
+  if (entries.length === 0) return Promise.resolve(pickedFromInput(data.files));
+
+  const out: Picked[] = [];
+  const walk = async (entry: Entry, path: string[]): Promise<void> => {
+    if (out.length >= MAX_FOLDER_FILES || isClutter(entry.name)) return;
+    if (entry.isFile && entry.file) {
+      const file = await new Promise<File | null>((resolve) => entry.file!(resolve, () => resolve(null)));
+      if (file) out.push({ file, path });
+    } else if (entry.isDirectory && entry.createReader && path.length < MAX_FOLDER_DEPTH) {
+      const name = sanitizeName(entry.name);
+      const reader = entry.createReader();
+      // A folder is read in batches: keep asking until a batch comes back empty.
+      for (;;) {
+        const batch = await new Promise<Entry[]>((resolve) => reader.readEntries(resolve, () => resolve([])));
+        if (batch.length === 0) break;
+        for (const child of batch) await walk(child, name ? [...path, name] : path);
+      }
+    }
+  };
+  return (async () => {
+    for (const entry of entries) await walk(entry, []);
+    return out;
+  })();
 }
 
 /** The cheap checks: extension, size. */

@@ -464,3 +464,44 @@ export function AuditDialog() {
     </Modal>
   );
 }
+
+/** A document in high protection, opened from a session that has not given the passphrase recently. */
+export function UnlockDocDialog({ fileId, listIds, fullscreen, page }: { fileId: string; listIds?: string[]; fullscreen?: boolean; page?: number }) {
+  const { files, verifyPassphrase, openPreview, openDialog } = useVault();
+  const file = files.find((f) => f.id === fileId);
+  const [current, setCurrent] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [wrong, setWrong] = useState(false);
+  return (
+    <Modal
+      title="Document en haute protection"
+      description={file ? `${file.name}.${file.ext}` : undefined}
+      onSubmit={async () => {
+        if (!current || busy) return;
+        setBusy(true);
+        setWrong(false);
+        if (!(await verifyPassphrase(current))) {
+          setWrong(true);
+          return setBusy(false);
+        }
+        openDialog(null);
+        openPreview(fileId, listIds, fullscreen, page);
+      }}
+      footer={
+        <>
+          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button variant="primary" type="submit" disabled={!current || busy}>
+            {busy ? "Vérification…" : "Ouvrir"}
+          </Button>
+        </>
+      }
+    >
+      <Field label="Phrase secrète" hint="Redemandée pour ce niveau de protection, puis valable cinq minutes.">
+        <PassphraseInput id="doc-passphrase" value={current} onChange={setCurrent} autoComplete="current-password" autoFocus />
+        <p role="alert" className="mt-1.5 min-h-[18px] text-[12px] text-red-600">
+          {wrong ? "Phrase secrète incorrecte." : ""}
+        </p>
+      </Field>
+    </Modal>
+  );
+}

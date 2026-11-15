@@ -1,4 +1,4 @@
-import { createEnvelope, decryptBytes, decryptJson, encryptBytes, encryptJson, openEnvelope, WrongPassphraseError, type KeyEnvelope } from "./crypto";
+import { createEnvelope, decryptBytes, decryptJson, encryptBytes, encryptJson, envelopeKdf, openEnvelope, WrongPassphraseError, type Kdf, type KeyEnvelope } from "./crypto";
 import { DEFAULT_PROFILE, SCHEMA, migrate, type Persisted } from "./db";
 import { sanitizeName } from "./format";
 import type { ActivityItem, FileKind, FileStatus, FileVersion, Folder, Project, VaultFile } from "./types";
@@ -23,8 +23,6 @@ const MAGIC = new TextEncoder().encode("NDFVAULT-BACKUP\n");
 const OVERHEAD = 12 + 16;
 const MAX_HEADER_BYTES = 4096;
 const MAX_MANIFEST_BYTES = 64 * 1024 * 1024;
-/** A header may not ask for more key-stretching than this: it would freeze the page. */
-const MAX_ITERATIONS = 5_000_000;
 
 export type BackupProblem = "not-a-backup" | "unsupported" | "wrong-passphrase" | "damaged";
 
@@ -58,7 +56,7 @@ const u32 = (n: number) => {
   return b;
 };
 
-export async function createBackup(passphrase: string, state: Persisted, blobs: BackupBlob[], options: { iterations?: number; now?: Date } = {}): Promise<Blob> {
+export async function createBackup(passphrase: string, state: Persisted, blobs: BackupBlob[], options: { iterations?: number | Kdf; now?: Date } = {}): Promise<Blob> {
   const createdAt = (options.now ?? new Date()).toISOString();
   const { envelope, key } = await createEnvelope(passphrase, options.iterations);
   const header = new TextEncoder().encode(JSON.stringify({ v: 1, createdAt, kdf: envelope } satisfies Header));
@@ -82,9 +80,14 @@ async function readHeader(file: Blob): Promise<{ header: Header; end: number }> 
     throw new BackupError("damaged");
   }
   const k = header?.kdf;
-  if (header?.v !== 1 || k?.v !== 1) throw new BackupError("unsupported");
-  if (typeof k.salt !== "string" || typeof k.wrapped !== "string" || !Number.isInteger(k.iterations) || k.iterations < 1 || k.salt.length > 256 || k.wrapped.length > 512) throw new BackupError("damaged");
-  if (k.iterations > MAX_ITERATIONS) throw new BackupError("unsupported");
+  if (header?.v !== 1 || (k?.v !== 1 && k?.v !== 2)) throw new BackupError("unsupported");
+  if (typeof k.salt !== "string" || typeof k.wrapped !== "string" || k.salt.length > 256 || k.wrapped.length > 512) throw new BackupError("damaged");
+  try {
+    // Refuses a header that asks for more work or memory than this page will give: it would freeze it.
+    envelopeKdf(k);
+  } catch {
+    throw new BackupError("unsupported");
+  }
   return { header, end };
 }
 
@@ -195,6 +198,7 @@ function file(v: unknown, folders: Set<string>, projects: Set<string>): VaultFil
     sharedWithMe: v.sharedWithMe === true,
     archived: v.archived === true,
     deleted: v.deleted === true,
+    ...(v.deleted === true && str(v.deletedAt, 40) && { deletedAt: v.deletedAt }),
     pages: size(v.pages) ? Math.min(Math.floor(v.pages), 100_000) : 1,
     sample: v.sample === true,
     ...(str(v.mime, 120) && { mime: v.mime }),

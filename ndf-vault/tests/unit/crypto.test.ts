@@ -1,15 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
   createEnvelope,
+  DEFAULT_KDF,
   decryptBytes,
   decryptJson,
   encryptBytes,
   encryptJson,
+  envelopeKdf,
+  generatePassphrase,
+  isLegacyEnvelope,
   openEnvelope,
   passphraseStrength,
   PBKDF2_ITERATIONS,
   rewrapEnvelope,
   sha256Hex,
+  suggestedBits,
+  UnsupportedEnvelopeError,
   WrongPassphraseError,
 } from "@/lib/crypto";
 
@@ -59,10 +65,44 @@ describe("key envelope", () => {
     await expect(crypto.subtle.exportKey("raw", key)).rejects.toThrow();
   });
 
-  it("defaults to the recommended number of PBKDF2 rounds", async () => {
+  it("derives the key with memory-hard scrypt by default, at a recommended cost", async () => {
+    const { envelope, key } = await createEnvelope("correct horse battery staple");
+    expect(envelope.v).toBe(2);
+    // 128 × N × r bytes: 64 MiB per guess, twice over.
+    expect(envelope.scrypt).toEqual({ n: 65536, r: 8, p: 2 });
+    expect(DEFAULT_KDF).toEqual({ kind: "scrypt", n: 65536, r: 8, p: 2 });
+    const sealed = await encryptBytes(key, bytes("secret"), "x");
+    expect(text(await decryptBytes(await openEnvelope("correct horse battery staple", envelope), sealed, "x"))).toBe("secret");
+    await expect(openEnvelope("correct horse battery stapler", envelope)).rejects.toBeInstanceOf(WrongPassphraseError);
+  });
+
+  it("still opens the envelopes earlier versions wrote, and knows them for what they are", async () => {
     expect(PBKDF2_ITERATIONS).toBeGreaterThanOrEqual(600_000);
-    const { envelope } = await createEnvelope("correct horse battery staple");
-    expect(envelope.iterations).toBe(PBKDF2_ITERATIONS);
+    const old = await createEnvelope("correct horse battery staple", { kind: "pbkdf2", iterations: PBKDF2_ITERATIONS });
+    expect(old.envelope).toMatchObject({ v: 1, iterations: PBKDF2_ITERATIONS });
+    expect(isLegacyEnvelope(old.envelope)).toBe(true);
+    await expect(openEnvelope("correct horse battery staple", old.envelope)).resolves.toBeTruthy();
+    expect(isLegacyEnvelope((await createEnvelope("x".repeat(12))).envelope)).toBe(false);
+    expect(isLegacyEnvelope((await createEnvelope("x".repeat(12), FAST)).envelope)).toBe(false);
+  });
+
+  it("refuses an envelope that asks for more work or memory than it would ever have written", async () => {
+    const { envelope } = await createEnvelope("correct horse battery staple", { kind: "scrypt", n: 1024, r: 8, p: 1 });
+    const bad = [
+      { ...envelope, scrypt: { n: 2 ** 24, r: 8, p: 1 } }, // 16 GiB
+      { ...envelope, scrypt: { n: 1000, r: 8, p: 1 } }, // not a power of two
+      { ...envelope, scrypt: { n: 1024, r: 8, p: 500 } },
+      { ...envelope, scrypt: { n: 1024, r: 0, p: 1 } },
+      { ...envelope, scrypt: undefined },
+      { ...envelope, v: 1 as const, iterations: 2_000_000_000 },
+      { ...envelope, v: 1 as const, iterations: 0 },
+      { ...envelope, v: 3 as unknown as 2 },
+    ];
+    for (const e of bad) {
+      expect(() => envelopeKdf(e), JSON.stringify(e.scrypt ?? e.iterations)).toThrow(UnsupportedEnvelopeError);
+      await expect(openEnvelope("correct horse battery staple", e)).rejects.toBeInstanceOf(UnsupportedEnvelopeError);
+    }
+    expect(envelopeKdf(envelope)).toEqual({ kind: "scrypt", n: 1024, r: 8, p: 1 });
   });
 });
 
@@ -143,5 +183,28 @@ describe("passphrase strength", () => {
   it("rates a long varied phrase as strong", () => {
     expect(passphraseStrength("Girafe-Violette_42 boit du thé").score).toBe(4);
     expect(passphraseStrength("tortue lampe orage fenêtre").score).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("suggested passphrase", () => {
+  it("is five groups of three syllables, different every time", () => {
+    const phrases = Array.from({ length: 300 }, () => generatePassphrase());
+    for (const p of phrases) expect(p).toMatch(/^([bdfgjklmnprstvz][aeiou]){3}(-([bdfgjklmnprstvz][aeiou]){3}){4}$/);
+    expect(new Set(phrases).size).toBe(300);
+  });
+
+  it("uses every letter about as often as any other", () => {
+    const text = Array.from({ length: 2000 }, () => generatePassphrase()).join("").replace(/-/g, "");
+    const counts = new Map<string, number>();
+    for (const c of text) counts.set(c, (counts.get(c) ?? 0) + 1);
+    // 30,000 consonants over 15 letters and 30,000 vowels over 5: each within a fifth of its share.
+    for (const c of "bdfgjklmnprstvz") expect(Math.abs((counts.get(c) ?? 0) - 2000), c).toBeLessThan(400);
+    for (const c of "aeiou") expect(Math.abs((counts.get(c) ?? 0) - 6000), c).toBeLessThan(1200);
+  });
+
+  it("is worth about 93 bits and rates as strong", () => {
+    expect(suggestedBits()).toBe(93);
+    expect(suggestedBits(3)).toBe(56);
+    expect(passphraseStrength(generatePassphrase()).score).toBe(4);
   });
 });

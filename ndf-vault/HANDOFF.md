@@ -1,6 +1,6 @@
 # NDF VAULT — Handoff pour Claude Code
 
-Date : 2026-11-14 · Projet : `ndf-vault/` · Stack : Next.js 16.4.6, React 19, TypeScript, Tailwind v4, Radix, Lucide, Phosphor, PDF.js, pdf-lib · Tests : Vitest, Playwright
+Date : 2026-11-14 · Projet : `ndf-vault/` · Stack : Next.js 16.4.6, React 19, TypeScript, Tailwind v4, Radix, Lucide, Phosphor, PDF.js, pdf-lib, @noble/hashes · Tests : Vitest, Playwright
 
 ## 1. Objectif
 
@@ -40,7 +40,7 @@ L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », con
 
 ## 3. État actuel
 
-**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (187 tests unitaires) et `npm run test:e2e` (102 tests dans un vrai navigateur) passent.
+**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (200 tests unitaires) et `npm run test:e2e` (119 tests dans un vrai navigateur) passent.
 
 ### Sécurité (2026-11-14)
 
@@ -48,12 +48,14 @@ Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc *
 
 | Fonction | Où | Notes |
 |---|---|---|
-| Chiffrement au repos | `src/lib/crypto.ts`, `src/lib/db.ts` | Web Crypto. Phrase secrète → PBKDF2-SHA-256 (600 000 itérations, sel aléatoire) → clé qui enveloppe une clé de données AES-GCM 256 bits aléatoire et **non extractible** (`KeyEnvelope`). Chaque enregistrement (état et chaque original) est chiffré avec un nonce aléatoire de 96 bits et son emplacement comme données associées (`"state"`, `` `blob:<id>` ``) : un enregistrement déplacé ou échangé ne se déchiffre pas |
+| Chiffrement au repos | `src/lib/crypto.ts`, `src/lib/db.ts` | Phrase secrète → **scrypt** (N = 2^16, r = 8, p = 2 : 64 Mio de mémoire par essai, réglage recommandé par l'OWASP ; implémentation auditée `@noble/hashes`) → clé qui enveloppe une clé de données AES-GCM 256 bits aléatoire et **non extractible** (`KeyEnvelope` v2). Les Vaults protégés par une version antérieure (enveloppe v1, PBKDF2 600 000 itérations) s'ouvrent toujours et **passent à scrypt d'eux-mêmes au premier déverrouillage** (`isLegacyEnvelope`, `db.unlock`). Une enveloppe qui demande plus de travail ou de mémoire que ce code n'en écrirait est refusée (`envelopeKdf`, `UnsupportedEnvelopeError`). Le code de récupération, déjà aléatoire sur 120 bits, garde PBKDF2 : l'étirer n'apporterait rien. Chaque enregistrement (état et chaque original) est chiffré avec un nonce aléatoire de 96 bits et son emplacement comme données associées (`"state"`, `` `blob:<id>` ``) : un enregistrement déplacé ou échangé ne se déchiffre pas |
 | Écran de verrouillage | `components/security/LockScreen.tsx` | Tant que le Vault est verrouillé, **rien de déchiffré n'est monté** : `VaultProvider` rend seulement l'écran (`Boot` : `loading` → `locked` → `ready`). Aucun nom de fichier ou de dossier n'y apparaît |
 | Délai après erreurs | `LockScreen.delayFor`, `Meta.failed` | Rien avant 3 erreurs, puis 5, 10, 20, 30 s. Le compteur est sur disque (`lastFailedAt`) : recharger la page ne l'efface pas |
 | Verrouillage | store `lockNow`, effet d'auto-verrouillage dans `store.tsx` | Bouton dans la barre du haut et dans Réglages ; automatique après inactivité (réglable, 15 min par défaut), y compris quand l'onglet revient au premier plan après le délai. Chaque verrouillage est écrit au journal juste avant que la clé soit oubliée, en disant s'il était manuel ou automatique |
 | Phrase redemandée | `db.verifyPassphrase`, `ExportVaultDialog`, `ResetDialog`, `RestoreDialog` | Dans un Vault protégé, la phrase secrète est redemandée avant ce qui sort le contenu de la protection ou l'efface : export ZIP complet (non chiffré), réinitialisation, restauration d'une sauvegarde. Un Vault non protégé n'est pas interrogé |
 | Écran de confidentialité | `security/PrivacyVeil.tsx`, `Persisted.privacy` | Option (désactivée par défaut) : le contenu est masqué dès que la fenêtre n'est plus active. Le voile se met au-dessus de tout, visionneuse comprise |
+| Phrase proposée | `crypto.generatePassphrase`, `security/parts.tsx` (`NewPassphrase`) | « Proposer une phrase forte » : cinq groupes de trois syllabes tirés au hasard (`vafomo-jegonu-…`), environ 93 bits. Elle remplit le premier champ ; le second reste à retaper, pour prouver qu'elle a été notée. Copie possible, effacée du presse-papiers une minute plus tard (aussi pour le code de récupération) |
+| Session ouverte | store `judge`, `MAX_STRIKES`, `REAUTH_MS`, `UnlockDocDialog` | Cinq phrases secrètes refusées d'affilée dans une session (dialogues d'export, de réinitialisation, de protection…) **verrouillent le Vault**. Un document en haute protection redemande la phrase secrète si elle n'a pas été donnée depuis cinq minutes |
 | Activer, changer, désactiver | `components/security/SecurityDialogs.tsx` | Phrase de 10 caractères minimum, indicateur de force (`passphraseStrength`, il faut au moins « Moyenne »), case « j'ai compris qu'elle ne peut pas être récupérée ». Changer la phrase ré-enveloppe la clé sans re-chiffrer les fichiers |
 | Conversion reprenable | `db.convertAll`, `Meta.pending` | Chiffrer ou déchiffrer tout le Vault est idempotent : un enregistrement se lit selon sa forme (`{enc}` ou `Blob`), donc une conversion interrompue reste lisible et reprend au déverrouillage suivant |
 | Code de récupération | `crypto.createRecovery`, `recoverEnvelope`, `db.createRecoveryCode`, `db.recoverWithCode`, `security/parts.tsx` (`RecoveryCodeCard`) | 24 caractères en base 32 sans lettres ambiguës (120 bits), remis **une seule fois** à l'activation de la protection. C'est une deuxième enveloppe de la même clé de données (`Meta.recovery`) : le code n'est jamais stocké. Sur l'écran de verrouillage, « Phrase secrète oubliée ? » demande le code et une nouvelle phrase ; le code utilisé est **remplacé** par un nouveau. Un mauvais code compte comme une tentative échouée (même délai). Remplaçable dans Réglages avec la phrase secrète |
@@ -90,6 +92,22 @@ Demande de l'utilisateur : rendre un document « impossible à hacker », même 
 
 **À surveiller pour la suite :** la recherche dans le contenu montre des extraits de tous les documents, protégés compris. C'est correct pour le propriétaire, pas pour un futur invité : à restreindre par niveau d'accès quand le serveur existera.
 
+### Comme un gestionnaire de fichiers familier (2026-11-15)
+
+Demande de l'utilisateur : que l'application ressemble à Dropbox dans ses gestes, pour qu'on s'y retrouve.
+
+| Geste | Où | Notes |
+|---|---|---|
+| Glisser un fichier vers un dossier | `src/lib/dnd.ts`, `components/files/drop.ts` (`useFolderDrop`), lignes de `FileTable`, tuiles de `FileGrid` | Cibles : dossiers de la barre latérale et tuiles de sous-dossiers (`data-drop-folder`). Glisser un fichier d'une sélection emporte toute la sélection. Même annulation que « Déplacer ». Un dépôt sur le dossier d'origine ne fait rien |
+| Clic droit | `FileContextMenu`, `FileMenuItems` dans `FileTable.tsx` | Le même menu que le bouton « ⋯ », écrit une seule fois pour les deux (`MenuKit`) |
+| Vue grille ou liste | `components/files/view-mode.tsx`, `FileGrid.tsx`, `ExplorerToolbar` | Choix gardé dans `localStorage` (`ndf-vault-view`). Vignettes pour les images **non protégées** seulement : une image protégée n'apparaît que dans la visionneuse. La corbeille reste en liste |
+| Téléverser un dossier entier | `uploads.pickedFromInput`, `pickedFromDrop`, `UploadCheck.path`, store `uploadFiles` | Bouton « Choisir un dossier » ou dépôt d'un dossier (sur le dialogue ou n'importe où). Les sous-dossiers sont retrouvés ou créés sous la destination ; fichiers système (`.DS_Store`, `Thumbs.db`, `~$…`) écartés ; 1000 fichiers et 12 niveaux au plus |
+| Noms en double | store `uploadFiles` (`freeName`) | Un deuxième « Notes.txt » dans le même dossier devient « Notes (2).txt » |
+| Corbeille de 30 jours | `VaultFile.deletedAt`, `BIN_DAYS`, effet dans `store.tsx`, `FilesView` | Un fichier supprimé reste 30 jours, puis est effacé à l'ouverture du Vault, original, versions et index compris (entrée au journal). Bandeau explicatif et bouton « Vider la corbeille » |
+| Espace utilisé | `StorageMeter` dans `Shell.tsx` | Jauge au pied de la barre latérale, d'après l'estimation du navigateur |
+
+Pas fait, parce que cela demande le serveur : liens de partage, demandes de fichiers, commentaires entre personnes.
+
 ### Fonctions réelles
 
 | Fonction | Où | Notes |
@@ -113,8 +131,8 @@ Demande de l'utilisateur : rendre un document « impossible à hacker », même 
 
 | Suite | Commande | Contenu |
 |---|---|---|
-| Unitaires (187) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `recovery` (code, récupération, remplacement, tentatives), `backup` (aller-retour, rien en clair, fichier altéré, enregistrements échangés, validation de l'état restauré), `uploads` (octets magiques, exécutables déguisés, faux fichiers Office, macros), `unzip` (bombe de décompression, somme de contrôle, archives tronquées), `xml` (DOCTYPE refusé, entrées hostiles en temps linéaire), `office` (Word, Excel, PowerPoint, limites), `search` (casse et accents, extraits, limites), `protection` (niveaux, codes, filigrane dessiné, effacement après tentatives), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
-| Navigateur (102) | `npm run test:e2e` | `tests/e2e/` : protection des documents (consultation seule, filigrane dans les pixels, lecture protégée, code de consultation, touche de capture, effacement, verrouillage d'urgence, bilan), visite guidée, fichiers, téléversement, aperçus Office, recherche dans le contenu, vérification d'intégrité, actions sensibles, journal des verrouillages, écran de confidentialité, versions, dossiers et projets, exports, sécurité (rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré…), code de récupération, sauvegarde et restauration (dont la restauration dans un second profil de navigateur, comme sur un autre appareil), téléphone |
+| Unitaires (200) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `recovery` (code, récupération, remplacement, tentatives), `backup` (aller-retour, rien en clair, fichier altéré, enregistrements échangés, validation de l'état restauré), `uploads` (octets magiques, exécutables déguisés, faux fichiers Office, macros), `unzip` (bombe de décompression, somme de contrôle, archives tronquées), `xml` (DOCTYPE refusé, entrées hostiles en temps linéaire), `office` (Word, Excel, PowerPoint, limites), `search` (casse et accents, extraits, limites), `protection` (niveaux, codes, filigrane dessiné, effacement après tentatives), `familiar` (glisser-déposer, dossiers téléversés, corbeille), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
+| Navigateur (119) | `npm run test:e2e` | `tests/e2e/` : dérivation de clé, phrase proposée, redemande de la phrase et verrouillage après refus (`passphrase`), gestes familiers (`familiar` : glisser-déposer, clic droit, grille, dossier entier, doublons, corbeille, jauge), protection des documents (consultation seule, filigrane dans les pixels, lecture protégée, code de consultation, touche de capture, effacement, verrouillage d'urgence, bilan), visite guidée, fichiers, téléversement, aperçus Office, recherche dans le contenu, vérification d'intégrité, actions sensibles, journal des verrouillages, écran de confidentialité, versions, dossiers et projets, exports, sécurité (rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré…), code de récupération, sauvegarde et restauration (dont la restauration dans un second profil de navigateur, comme sur un autre appareil), téléphone |
 
 `npm run test:e2e` reconstruit d'abord `dist/` puis sert ce dossier (`scripts/serve-dist.mjs`, port 4173) : les tests s'exécutent sur **la page réellement publiée**, pas sur le serveur de développement. `tests/e2e/helpers.ts` contient les aides (`openVault`, `upload`, `protect` qui rend le code de récupération, `noteRecoveryCode`, `unlock`, `diskDump`, `tamperFirstOriginal`, `readZip`…). `tests/fixtures/office.ts` fabrique de vrais fichiers Word, Excel et PowerPoint compressés, pour les deux suites.
 
@@ -128,7 +146,7 @@ Demande de l'utilisateur : rendre un document « impossible à hacker », même 
 |---|---|
 | `src/lib/types.ts` | `VaultFile` (avec `sha256`, `versions`), `FileVersion`, `Folder`, `Project`, `Profile`, `ActivityItem`, `Route`, statuts |
 | `src/lib/sample-data.ts` | 42 fichiers d'exemple en français, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 services, activité |
-| `src/lib/crypto.ts`, `db.ts`, `backup.ts`, `uploads.ts`, `unzip.ts`, `xml.ts`, `office.ts`, `search.ts`, `extract.ts`, `protection.ts`, `pdf.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
+| `src/lib/crypto.ts`, `db.ts`, `backup.ts`, `uploads.ts`, `unzip.ts`, `xml.ts`, `office.ts`, `search.ts`, `extract.ts`, `protection.ts`, `dnd.ts`, `pdf.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
 | `src/lib/format.ts` | Dates et tailles à la française, `KIND_LABEL`, `STATUS_LABEL`, `count()`, `sanitizeName` |
 | `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory`, `folderRules` |
 | `src/lib/routes.ts` | `routeToHash`, `hashToRoute` |
@@ -137,7 +155,7 @@ Demande de l'utilisateur : rendre un document « impossible à hacker », même 
 | `src/components/ui.tsx`, `dialog-kit.tsx` | Boutons, onglets, badges… ; `Modal`, `Field`, `Note`, `Toggle`, `PassphraseInput` |
 | `src/components/security/` | `LockScreen` (déverrouiller, récupérer, effacer), `SecurityDialogs` (`ProtectDialog`, `PassphraseDialog`, `UnprotectDialog`, `RecoveryDialog`, `BackupDialog`, `RestoreDialog`, `AuditDialog`, `ExportVaultDialog`), `parts.tsx` (pièces sans état du Vault, utilisables quand il est verrouillé), `PrivacyVeil` |
 | `src/components/Shell.tsx` | Sidebar, topbar (verrou, aide), tiroir mobile, dépôt de fichiers sur toute la fenêtre |
-| `src/components/files/` | `FileTable` (complète, compacte, corbeille, actions groupées), `Explorer` (filtres, recherche) |
+| `src/components/files/` | `FileTable` (complète, compacte, corbeille, actions groupées, menu partagé avec le clic droit), `FileGrid`, `view-mode`, `drop`, `Explorer` (filtres, recherche) |
 | `src/components/Dialogs.tsx` | Tous les dialogues de fichiers, dossiers et projets, `ToastHost` |
 | `src/components/viewer/` | `PreviewModal`, `OfficePreview` (le chargeur PDF est dans `src/lib/pdf.ts`) |
 | `src/components/CommandPalette.tsx`, `Tour.tsx` | Recherche globale ⌘K / Ctrl+K / « / » ; visite guidée |
@@ -212,6 +230,9 @@ Note de fidélité : on reprend le langage visuel (layout, densité, composants)
 - **Playwright est épinglé à 1.63.0**, la version du Chromium préinstallé. Ne pas lancer `playwright install`.
 - **Tests : locale UTF-8 obligatoire pour le navigateur.** Sans elle, un téléchargement au nom accentué s'appelle « download ». `playwright.config.ts` force `C.UTF-8` quand l'environnement n'en a pas.
 - **Pas d'expression régulière sur du contenu venu d'un fichier sans borne de longueur.** Un motif comme `[^=]+\s*=` ou `\[[^\]]*\]` prend un temps quadratique sur une entrée piégée et gèle la page. `xml.ts` lit les attributs en une passe ; `classifyFormat` tronque son entrée. Les tests `hostile input` le vérifient au chronomètre.
+- **Le premier déverrouillage d'un ancien Vault est plus long** : il ré-enveloppe la clé avec scrypt. Dans les tests, une enveloppe PBKDF2 à faible coût (`createEnvelope(phrase, 1000)`) n'est pas mise à niveau, pour qu'ils restent rapides.
+- **Lire une entrée de dossier déposé tout de suite** : `webkitGetAsEntry()` doit être appelé dans le gestionnaire de dépôt, avant tout `await` ; le navigateur vide le dépôt dès que le gestionnaire rend la main (`pickedFromDrop`).
+- **Tests : l'arbre des dossiers et la jauge d'espace sont dans `<aside>`, pas dans la navigation principale.**
 - **Tests : plusieurs boutons portent le même nom dans Réglages** depuis le bilan de sécurité (« Activer », « Vérifier », « Sauvegarder ») : cibler le panneau voulu (`[data-checkup]`) ou prendre `.last()`.
 - **Tests : `row(page, "Entente")` attrape aussi un fichier d'exemple** (« Modèle d'entente… ») : choisir des noms de test qui n'existent pas dans les données d'exemple.
 - **Un dialogue Radix ouvert coupe les clics sur le reste de la page** (`pointer-events: none` sur `body`). Tout ce qui doit rester cliquable par-dessus un dialogue sans en faire partie (le voile de confidentialité) doit poser `pointer-events-auto`.
@@ -244,7 +265,9 @@ L'interface est en français. Fonctionnent déjà : téléversement, stockage ch
 le navigateur (phrase secrète, verrouillage, code de récupération), sauvegarde chiffrée
 et restauration, aperçus (PDF, images, texte, Word, Excel, PowerPoint), recherche dans
 le contenu, vérification d'intégrité, protection des documents (consultation seule,
-lecture protégée, filigrane incrusté, code de consultation), versions,
+lecture protégée, filigrane incrusté, code de consultation), gestes d'un gestionnaire
+de fichiers (glisser-déposer, clic droit, grille, dossier entier, corbeille de 30 jours),
+versions,
 dossiers, projets, exports, filigrane personnel, journal de sécurité, visite guidée,
 et deux suites de tests.
 Demande à l'utilisateur ses ajustements après son essai sur PC, puis la suite :

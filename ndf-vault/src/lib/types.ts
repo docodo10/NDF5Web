@@ -24,6 +24,8 @@ export interface VaultFile {
   sharedWithMe: boolean;
   archived: boolean;
   deleted: boolean;
+  /** When the file was put in the bin. It is erased for good 30 days later. */
+  deletedAt?: string;
   pages: number;
   /** True for built-in sample entries that have no stored file behind them. */
   sample: boolean;

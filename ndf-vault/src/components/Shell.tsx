@@ -22,9 +22,12 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import type { Folder, Route } from "@/lib/types";
 import { CURRENT_USER_ID, USERS } from "@/lib/sample-data";
-import { folderPath } from "@/lib/format";
+import { storageUsage } from "@/lib/db";
+import { folderPath, formatSize } from "@/lib/format";
+import { pickedFromDrop, type Picked } from "@/lib/uploads";
 import { AppWatermark, Ndf5Logo, VaultLockup } from "./brand/Brand";
 import { Avatar, IconButton, Kbd } from "./ui";
+import { useFolderDrop } from "./files/drop";
 import { MENU_CONTENT, MENU_ITEM } from "./files/menu-styles";
 
 // Navigation uses filled icons, as in the dashboard reference; actions elsewhere stay outlined.
@@ -49,12 +52,15 @@ function TreeNode({ folder, depth, childrenOf, expanded, toggle }: { folder: Fol
   const open = expanded.has(folder.id);
   const active = route.view === "folder" && route.id === folder.id;
   const isRoot = folder.parentId === null;
+  const drop = useFolderDrop(folder.id);
   return (
     <li>
       <div
+        {...drop.props}
+        data-drop-folder={folder.id}
         className={clsx(
           "group flex h-[34px] items-center rounded-lg pr-1.5 text-[13.5px] font-medium transition-colors duration-150",
-          active ? "bg-neutral-200/60 text-ink" : "text-neutral-600 hover:bg-neutral-200/40 hover:text-ink",
+          drop.over ? "bg-ink text-white" : active ? "bg-neutral-200/60 text-ink" : "text-neutral-600 hover:bg-neutral-200/40 hover:text-ink",
         )}
         style={{ paddingLeft: 4 + depth * 14 }}
       >
@@ -87,6 +93,35 @@ function TreeNode({ folder, depth, childrenOf, expanded, toggle }: { folder: Fol
         </ul>
       )}
     </li>
+  );
+}
+
+/** How much of the space this browser grants is in use, as file services show it at the foot of their sidebar. */
+function StorageMeter() {
+  const { files, persistent } = useVault();
+  const [usage, setUsage] = useState<{ usage: number; quota: number } | null>(null);
+  const uploaded = files.filter((f) => !f.sample).length;
+  useEffect(() => {
+    if (!persistent) return;
+    let alive = true;
+    // A moment after a change: the browser's estimate lags behind the write.
+    const timer = setTimeout(() => void storageUsage().then((u) => alive && setUsage(u)), 400);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [persistent, uploaded]);
+  if (!usage || usage.quota <= 0) return null;
+  const share = Math.min(1, usage.usage / usage.quota);
+  return (
+    <div data-storage-meter className="mb-3">
+      <div className="h-1 overflow-hidden rounded-full bg-neutral-200" role="progressbar" aria-label="Espace utilisé" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(share * 100)}>
+        <div className={clsx("h-full rounded-full", share > 0.9 ? "bg-red-500" : "bg-ink")} style={{ width: `${Math.max(share * 100, 1.5)}%` }} />
+      </div>
+      <p className="mt-1.5 truncate text-[11.5px] text-neutral-500">
+        {formatSize(usage.usage)} utilisés sur {formatSize(usage.quota)}
+      </p>
+    </div>
   );
 }
 
@@ -181,6 +216,7 @@ function Sidebar() {
       </div>
 
       <div className="shrink-0 border-t border-line px-4 py-3">
+        <StorageMeter />
         <div className="flex items-center gap-2.5">
           <Avatar user={me} size={30} />
           <div className="min-w-0 flex-1 leading-tight">
@@ -263,7 +299,7 @@ function Topbar() {
 /* ---------------------------------------------------------------- Drop zone */
 
 /** Dropping files anywhere on the window opens the upload dialog with them. */
-function useWindowDrop(onFiles: (files: File[]) => void, enabled: boolean) {
+function useWindowDrop(onFiles: (picked: Picked[]) => void, enabled: boolean) {
   const [over, setOver] = useState(false);
   const depth = useRef(0);
   const handler = useRef(onFiles);
@@ -289,8 +325,8 @@ function useWindowDrop(onFiles: (files: File[]) => void, enabled: boolean) {
       e.preventDefault();
       depth.current = 0;
       setOver(false);
-      const files = Array.from(e.dataTransfer?.files ?? []);
-      if (files.length) handler.current(files);
+      // Whole folders are walked through to their files, keeping where each one sat.
+      void pickedFromDrop(e.dataTransfer).then((picked) => picked.length && handler.current(picked));
     };
     window.addEventListener("dragenter", enter);
     window.addEventListener("dragleave", leave);
@@ -313,7 +349,7 @@ function useWindowDrop(onFiles: (files: File[]) => void, enabled: boolean) {
 export function Shell({ children }: { children: ReactNode }) {
   const { sidebarOpen, setSidebarOpen, watermark, dialog, openDialog, route } = useVault();
   // While the upload dialog is open it handles drops itself.
-  const dropping = useWindowDrop((files) => openDialog({ type: "upload", folderId: route.view === "folder" ? route.id : null, files }), dialog?.type !== "upload");
+  const dropping = useWindowDrop((picked) => openDialog({ type: "upload", folderId: route.view === "folder" ? route.id : null, picked }), dialog?.type !== "upload");
   return (
     <div className="flex h-full overflow-hidden bg-white">
       {/* Desktop: in-flow sidebar. Tablet/phone: slide-over drawer. */}

@@ -109,12 +109,17 @@ describe("encrypted backup", () => {
     const length = new Uint8Array(4);
     new DataView(length.buffer).setUint32(0, header.length, true);
     expect(await problem(openBackup(new Blob(["NDFVAULT-BACKUP\n", length, header]), PASS))).toBe("unsupported");
+    // The same goes for a memory-hard header that asks for gigabytes.
+    const greedy = JSON.stringify({ v: 1, createdAt: NOW.toISOString(), kdf: { v: 2, salt: "AAAA", iterations: 0, scrypt: { n: 2 ** 26, r: 8, p: 1 }, wrapped: "AAAA" } });
+    new DataView(length.buffer).setUint32(0, greedy.length, true);
+    expect(await problem(openBackup(new Blob(["NDFVAULT-BACKUP\n", length, greedy]), PASS))).toBe("unsupported");
   });
 
   it("uses the recommended key stretching by default", async () => {
     const backup = await createBackup(PASS, state([]), []);
     const text = new TextDecoder("latin1").decode(await backup.slice(0, 300).arrayBuffer());
-    expect(text).toContain('"iterations":600000');
+    expect(text).toContain('"scrypt":{"n":65536,"r":8,"p":2}');
+    expect((await openBackup(backup, PASS)).state.files).toEqual([]);
   });
 });
 

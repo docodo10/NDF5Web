@@ -2,14 +2,27 @@
 
 import { FolderPlus, FolderSearch } from "lucide-react";
 import { FolderIcon } from "@phosphor-icons/react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles } from "@/lib/selectors";
 import { count, descendantIds, folderLabel, folderPath } from "@/lib/format";
 import { ExplorerToolbar, useFileFilters } from "@/components/files/Explorer";
+import { FileGrid } from "@/components/files/FileGrid";
 import { FileTable } from "@/components/files/FileTable";
+import { useFolderDrop } from "@/components/files/drop";
+import { useViewMode } from "@/components/files/view-mode";
 import { Button, EmptyState, PageHeader, TextTabs, type TabItem } from "@/components/ui";
 import { Breadcrumbs, FolderMenu, SectionTitle, UploadButton } from "./shared";
+
+/** A subfolder tile that takes the files dropped on it. */
+function FolderCard({ folderId, children }: { folderId: string; children: ReactNode }) {
+  const drop = useFolderDrop(folderId);
+  return (
+    <li {...drop.props} data-drop-folder={folderId} className={drop.over ? "rounded-[10px] ring-2 ring-ink ring-offset-2" : undefined}>
+      {children}
+    </li>
+  );
+}
 
 type Depth = "direct" | "nested";
 
@@ -28,6 +41,7 @@ export function FolderView({ id }: { id: string }) {
   // A folder that only holds subfolders opens on everything beneath it.
   const [depth, setDepth] = useState<Depth>(() => (direct.length === 0 && nested.length > 0 ? "nested" : "direct"));
   const filters = useFileFilters(depth === "direct" ? direct : nested);
+  const [view, setView] = useViewMode();
 
   if (!folder) {
     return (
@@ -75,7 +89,7 @@ export function FolderView({ id }: { id: string }) {
             {subfolders.map((f) => {
               const n = countIn(f.id);
               return (
-                <li key={f.id}>
+                <FolderCard key={f.id} folderId={f.id}>
                   <button
                     type="button"
                     onClick={() => v.navigate({ view: "folder", id: f.id })}
@@ -94,7 +108,7 @@ export function FolderView({ id }: { id: string }) {
                       </span>
                     </span>
                   </button>
-                </li>
+                </FolderCard>
               );
             })}
           </ul>
@@ -103,12 +117,20 @@ export function FolderView({ id }: { id: string }) {
 
       <section className="space-y-4">
         <SectionTitle>Fichiers</SectionTitle>
-        <ExplorerToolbar left={subfolders.length > 0 ? <TextTabs<Depth> label="Profondeur" items={depthItems} value={depth} onChange={setDepth} /> : undefined} filters={filters} />
-        <FileTable
-          files={filters.filtered}
-          emptyTitle={depth === "direct" && direct.length === 0 ? "Ce dossier est vide" : "Aucun fichier ne correspond"}
-          emptyHint={depth === "direct" && direct.length === 0 ? "Téléversez des fichiers ici, ou déplacez-en depuis un menu d’actions." : "Effacez la recherche ou réinitialisez les filtres."}
-        />
+        <ExplorerToolbar left={subfolders.length > 0 ? <TextTabs<Depth> label="Profondeur" items={depthItems} value={depth} onChange={setDepth} /> : undefined} filters={filters} view={view} onView={setView} />
+        {view === "grid" ? (
+          <FileGrid
+            files={filters.filtered}
+            emptyTitle={depth === "direct" && direct.length === 0 ? "Ce dossier est vide" : "Aucun fichier ne correspond"}
+            emptyHint={depth === "direct" && direct.length === 0 ? "Glissez des fichiers ou un dossier ici, ou utilisez Téléverser." : "Effacez la recherche ou réinitialisez les filtres."}
+          />
+        ) : (
+          <FileTable
+            files={filters.filtered}
+            emptyTitle={depth === "direct" && direct.length === 0 ? "Ce dossier est vide" : "Aucun fichier ne correspond"}
+            emptyHint={depth === "direct" && direct.length === 0 ? "Glissez des fichiers ou un dossier ici, ou utilisez Téléverser." : "Effacez la recherche ou réinitialisez les filtres."}
+          />
+        )}
       </section>
     </div>
   );

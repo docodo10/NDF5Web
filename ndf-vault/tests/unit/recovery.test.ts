@@ -145,6 +145,22 @@ describe("a vault with a recovery code", () => {
     expect((await db.recoverWithCode(second, "phrase après récupération", FAST)).ok).toBe(true);
   });
 
+  it("moves a vault protected by an earlier version to the current key derivation at its next unlock", async () => {
+    await db.disableProtection(PASS);
+    await db.enableProtection(PASS, { kind: "pbkdf2", iterations: 600_000 });
+    expect((await db.readMeta()).envelope).toMatchObject({ v: 1, iterations: 600_000 });
+    reopen();
+    expect((await db.unlock("mauvaise phrase")).ok).toBe(false);
+    expect((await db.readMeta()).envelope!.v).toBe(1);
+    expect((await db.unlock(PASS)).ok).toBe(true);
+    // Same passphrase, same content, stronger wrapping.
+    expect((await db.readMeta()).envelope).toMatchObject({ v: 2, scrypt: { n: 65536, r: 8, p: 2 } });
+    expect(await (await db.getBlob("f-1"))!.text()).toBe("%PDF original");
+    reopen();
+    expect((await db.unlock(PASS)).ok).toBe(true);
+    expect((await db.unlock("mauvaise phrase")).ok).toBe(false);
+  }, 20_000);
+
   it("cannot recover a vault that never had a code", async () => {
     await db.disableProtection(PASS);
     await db.enableProtection(PASS, FAST);

@@ -21,7 +21,7 @@ export const PROTECTION_LABEL: Record<Protection, string> = { standard: "Standar
 export const PROTECTION_HINT: Record<Protection, string> = {
   standard: "Le document s’ouvre, se télécharge et s’exporte normalement.",
   view: "Téléchargement et export bloqués. Pas de copie ni de clic droit, filigrane personnel incrusté dans l’image, code de consultation au journal.",
-  high: "Consultation seule, plus la lecture protégée : seule une bande du document est nette à la fois, et tout se masque dès que la fenêtre n’est plus active.",
+  high: "Consultation seule, plus la lecture protégée : seule une bande du document est nette à la fois, tout se masque dès que la fenêtre n’est plus active, et la phrase secrète est redemandée pour l’ouvrir.",
 };
 
 const RANK: Record<Protection, number> = { standard: 0, view: 1, high: 2 };

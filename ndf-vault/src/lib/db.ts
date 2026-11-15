@@ -1,5 +1,5 @@
 import type { ActivityItem, Folder, Profile, Project, VaultFile } from "./types";
-import { createEnvelope, createRecovery, decryptBytes, decryptJson, encryptBytes, encryptJson, openEnvelope, recoverEnvelope, rewrapEnvelope, WrongPassphraseError, type KeyEnvelope } from "./crypto";
+import { createEnvelope, createRecovery, decryptBytes, decryptJson, encryptBytes, encryptJson, isLegacyEnvelope, openEnvelope, recoverEnvelope, rewrapEnvelope, WrongPassphraseError, type Kdf, type KeyEnvelope } from "./crypto";
 
 /**
  * Local storage for the vault: IndexedDB in this browser only. Nothing here is
@@ -203,6 +203,15 @@ export async function unlock(passphrase: string): Promise<UnlockResult> {
   }
   const result: UnlockResult = { ok: true, failedBefore: meta.failed, lastFailedAt: meta.lastFailedAt, recovered: meta.recovered === true };
   let next: Meta = { ...meta, failed: 0, lastFailedAt: undefined, recovered: undefined };
+  // A vault protected by an earlier version moves to the current, memory-hard key derivation
+  // the first time its passphrase is typed: this is the only moment the passphrase is at hand.
+  if (isLegacyEnvelope(meta.envelope)) {
+    try {
+      next = { ...next, envelope: await rewrapEnvelope(passphrase, passphrase, meta.envelope) };
+    } catch {
+      /* the vault opens all the same, on the envelope it had */
+    }
+  }
   if (meta.pending === "encrypt") {
     sealing = true;
     await convertAll("encrypt");
@@ -225,7 +234,7 @@ export function lock(): void {
 }
 
 /** Turn protection on: from now on everything is written encrypted, and what is already stored is converted. */
-export async function enableProtection(passphrase: string, iterations?: number): Promise<boolean> {
+export async function enableProtection(passphrase: string, iterations?: number | Kdf): Promise<boolean> {
   const meta = await readMeta();
   if (meta.protected) return false;
   const { envelope, key } = await createEnvelope(passphrase, iterations);
@@ -269,7 +278,7 @@ export async function verifyPassphrase(passphrase: string): Promise<boolean> {
 }
 
 /** Change the passphrase. The stored data is untouched: only the key's wrapping changes. */
-export async function changePassphrase(current: string, next: string, iterations?: number): Promise<boolean> {
+export async function changePassphrase(current: string, next: string, iterations?: number | Kdf): Promise<boolean> {
   const meta = await readMeta();
   if (!meta.protected || !meta.envelope) return false;
   try {

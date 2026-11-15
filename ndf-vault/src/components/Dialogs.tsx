@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Check, CloudUpload, Copy, Download, Lock, ShieldCheck, Trash2, TriangleAlert, Users, X } from "lucide-react";
+import { Check, CloudUpload, FolderUp, Copy, Download, Lock, ShieldCheck, Trash2, TriangleAlert, Users, X } from "lucide-react";
 import { FolderIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { highest, lowers, PROTECTION_HINT, PROTECTION_LABEL, PROTECTION_LEVELS, protectionOf, type Protection } from "@/lib/protection";
@@ -12,11 +12,11 @@ import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
 import { count, descendantIds, folderLabel, formatDate, formatSize, formatTime, fullName, STATUS_LABEL } from "@/lib/format";
 import { folderRules } from "@/lib/selectors";
-import { ACCEPT_ATTR, inspectUpload, type UploadCheck } from "@/lib/uploads";
+import { ACCEPT_ATTR, inspectUpload, pickedFromDrop, pickedFromInput, type Picked, type UploadCheck } from "@/lib/uploads";
 import { Avatar, Button, Chip, IconButton } from "./ui";
 import { Field, INPUT, Modal, Note, PassphraseInput, Toggle } from "./dialog-kit";
 
-import { AuditDialog, BackupDialog, ExportVaultDialog, PassphraseDialog, ProtectDialog, RecoveryDialog, RestoreDialog, UnprotectDialog } from "./security/SecurityDialogs";
+import { AuditDialog, BackupDialog, ExportVaultDialog, UnlockDocDialog, PassphraseDialog, ProtectDialog, RecoveryDialog, RestoreDialog, UnprotectDialog } from "./security/SecurityDialogs";
 
 export { SwitchRow } from "./dialog-kit";
 
@@ -492,7 +492,7 @@ function NewProjectDialog() {
   );
 }
 
-function UploadDialog({ folderId, initial }: { folderId: string | null; initial?: File[] }) {
+function UploadDialog({ folderId, initial, picked }: { folderId: string | null; initial?: File[]; picked?: Picked[] }) {
   const { files, folders, projects, uploadFiles, openDialog, navigate, persistent } = useVault();
   const flat = useFlatFolders(folders);
   const [items, setItems] = useState<UploadCheck[]>([]);
@@ -502,16 +502,17 @@ function UploadDialog({ folderId, initial }: { folderId: string | null; initial?
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const folderInput = useRef<HTMLInputElement>(null);
 
   // Each file is read before it is accepted: its content must match its extension.
   const known = useMemo(() => files.filter((f) => f.sha256 && !f.deleted).map((f) => ({ sha256: f.sha256, label: fullName(f) })), [files]);
-  const add = (list: FileList | File[] | null) => {
-    const chosen = Array.from(list ?? []);
+  const add = (chosen: Picked[]) => {
     if (!chosen.length) return;
     setPending((n) => n + chosen.length);
-    for (const file of chosen) {
+    for (const { file, path } of chosen) {
       void inspectUpload(file, known).then((check) => {
-        setItems((prev) => [...prev, check]);
+        // A file that came inside a folder remembers where: the folders are created with it.
+        setItems((prev) => [...prev, path.length ? { ...check, path } : check]);
         setPending((n) => n - 1);
       });
     }
@@ -520,7 +521,7 @@ function UploadDialog({ folderId, initial }: { folderId: string | null; initial?
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    if (initial?.length) add(initial);
+    add(picked ?? pickedFromInput(initial ?? []));
     // Files handed over when the dialog opens are read once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -560,7 +561,7 @@ function UploadDialog({ folderId, initial }: { folderId: string | null; initial?
         onDrop={(e) => {
           e.preventDefault();
           setOver(false);
-          add(e.dataTransfer.files);
+          void pickedFromDrop(e.dataTransfer).then(add);
         }}
         className={clsx(
           "flex flex-col items-center rounded-xl border border-dashed px-6 text-center transition-colors duration-150",
@@ -571,8 +572,8 @@ function UploadDialog({ folderId, initial }: { folderId: string | null; initial?
         <span className="mb-3 flex size-10 items-center justify-center rounded-[10px] border border-line bg-white text-neutral-500 shadow-xs">
           <CloudUpload className="size-[18px]" strokeWidth={1.75} />
         </span>
-        <p className="text-[13.5px] font-medium text-ink">Glissez vos fichiers ici</p>
-        <p className="mt-1 text-[12.5px] text-neutral-500">ou choisissez-les sur votre ordinateur — plusieurs fichiers à la fois</p>
+        <p className="text-[13.5px] font-medium text-ink">Glissez vos fichiers ou un dossier ici</p>
+        <p className="mt-1 text-[12.5px] text-neutral-500">ou choisissez-les sur votre ordinateur — un dossier garde ses sous-dossiers</p>
         <input
           ref={input}
           id="upload-input"
@@ -581,13 +582,29 @@ function UploadDialog({ folderId, initial }: { folderId: string | null; initial?
           accept={ACCEPT_ATTR}
           className="sr-only"
           onChange={(e) => {
-            add(e.target.files);
+            add(pickedFromInput(e.target.files));
             e.target.value = "";
           }}
         />
-        <Button className="mt-4" onClick={() => input.current?.click()}>
-          Parcourir
-        </Button>
+        <input
+          ref={folderInput}
+          id="upload-folder-input"
+          type="file"
+          multiple
+          className="sr-only"
+          // Not in React's types: asks the browser for a folder instead of files.
+          {...({ webkitdirectory: "" } as object)}
+          onChange={(e) => {
+            add(pickedFromInput(e.target.files));
+            e.target.value = "";
+          }}
+        />
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <Button onClick={() => input.current?.click()}>Parcourir</Button>
+          <Button icon={FolderUp} onClick={() => folderInput.current?.click()}>
+            Choisir un dossier
+          </Button>
+        </div>
       </div>
 
       {pending > 0 && <p className="mt-3 text-[12.5px] text-neutral-500">Vérification du contenu de {count(pending, "fichier")}…</p>}
@@ -596,7 +613,10 @@ function UploadDialog({ folderId, initial }: { folderId: string | null; initial?
           {items.map((it, i) => (
             <li key={`${it.file.name}-${i}`} className="flex min-h-[44px] items-center gap-3 border-t border-hair px-3 py-1.5 first:border-t-0">
               <div className="min-w-0 flex-1 leading-tight">
-                <p className="truncate text-[13px] font-medium text-ink">{it.file.name}</p>
+                <p className="truncate text-[13px] font-medium text-ink">
+                  {it.path?.length ? <span className="font-normal text-neutral-500">{it.path.join(" / ")} / </span> : null}
+                  {it.file.name}
+                </p>
                 <p className={clsx("truncate text-[12px]", it.error ? "text-red-600" : "text-neutral-500")}>
                   {it.error ?? formatSize(it.file.size)}
                   {!it.error && twinOf(it, i) && <span className="text-amber-700"> · Identique à « {twinOf(it, i)} »</span>}
@@ -953,6 +973,8 @@ export function Dialogs() {
       return <AuditDialog />;
     case "protection":
       return <ProtectionDialog fileIds={dialog.fileIds} />;
+    case "unlockDoc":
+      return <UnlockDocDialog fileId={dialog.fileId} listIds={dialog.listIds} fullscreen={dialog.fullscreen} page={dialog.page} />;
     case "exportVault":
       return <ExportVaultDialog />;
     case "purge":
@@ -960,7 +982,7 @@ export function Dialogs() {
     case "reset":
       return <ResetDialog />;
     case "upload":
-      return <UploadDialog folderId={dialog.folderId} initial={dialog.files} />;
+      return <UploadDialog folderId={dialog.folderId} initial={dialog.files} picked={dialog.picked} />;
   }
 }
 

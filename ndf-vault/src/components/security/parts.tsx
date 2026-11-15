@@ -1,9 +1,9 @@
 "use client";
 
 import clsx from "clsx";
-import { Check, Copy, Download } from "lucide-react";
+import { Check, Copy, Download, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { MIN_PASSPHRASE_LENGTH, passphraseStrength } from "@/lib/crypto";
+import { generatePassphrase, MIN_PASSPHRASE_LENGTH, passphraseStrength, suggestedBits } from "@/lib/crypto";
 import { formatMoment } from "@/lib/format";
 import { saveToDisk } from "@/lib/uploads";
 import { Field, PassphraseInput } from "../dialog-kit";
@@ -13,6 +13,17 @@ import { Button } from "../ui";
  * Pieces shared by the security dialogs and the lock screen. None of them
  * reads the vault's state, so they also work while the vault is locked.
  */
+
+/** Copy something secret, and take it off the clipboard again a minute later. */
+async function copySecret(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    setTimeout(() => void navigator.clipboard.writeText("").catch(() => {}), 60_000);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const BAR = ["bg-neutral-200", "bg-red-500", "bg-amber-500", "bg-emerald-500", "bg-emerald-600"];
 
@@ -36,11 +47,39 @@ export function StrengthMeter({ passphrase }: { passphrase: string }) {
 /** A new passphrase, typed twice. Valid once it is long enough, not weak, and both entries match. */
 export function NewPassphrase({ value, onChange, confirm, onConfirm, idPrefix, autoFocus, label = "Nouvelle phrase secrète" }: { value: string; onChange: (v: string) => void; confirm: string; onConfirm: (v: string) => void; idPrefix: string; autoFocus?: boolean; label?: string }) {
   const mismatch = confirm.length > 0 && confirm !== value;
+  const [suggested, setSuggested] = useState("");
+  const [copied, setCopied] = useState(false);
+  const suggest = () => {
+    const phrase = generatePassphrase();
+    setSuggested(phrase);
+    setCopied(false);
+    onChange(phrase);
+    // Typed again by hand: the point of the second field is to prove the phrase was taken down.
+    onConfirm("");
+  };
   return (
     <>
       <Field label={label} hint={`Au moins ${MIN_PASSPHRASE_LENGTH} caractères. Plusieurs mots sans lien entre eux font une bonne phrase.`}>
         <PassphraseInput id={`${idPrefix}-new`} value={value} onChange={onChange} autoComplete="new-password" autoFocus={autoFocus} />
         <StrengthMeter passphrase={value} />
+        {suggested && suggested === value ? (
+          <div data-suggested className="mt-1 rounded-[10px] border border-line bg-subtle px-3 py-2.5">
+            <p className="select-all break-words font-mono text-[14px] font-semibold tracking-[0.01em] text-ink">{suggested}</p>
+            <p className="mt-1 text-[12px] leading-[17px] text-neutral-500">Tirée au hasard, environ {suggestedBits()} bits : hors de portée d’une recherche par essais. Notez-la, puis retapez-la ci-dessous.</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button size="sm" icon={copied ? Check : Copy} onClick={async () => setCopied(await copySecret(suggested))}>
+                {copied ? "Copiée · effacée du presse-papiers dans 1 min" : "Copier"}
+              </Button>
+              <Button size="sm" icon={Sparkles} onClick={suggest}>
+                Une autre
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" id={`${idPrefix}-suggest`} onClick={suggest} className="mt-0.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-neutral-600 underline-offset-2 hover:text-ink hover:underline">
+            <Sparkles className="size-3.5" strokeWidth={1.75} /> Proposer une phrase forte
+          </button>
+        )}
       </Field>
       <Field label="Confirmez-la">
         <PassphraseInput id={`${idPrefix}-confirm`} value={confirm} onChange={onConfirm} autoComplete="new-password" />
@@ -60,15 +99,8 @@ export const acceptable = (value: string, confirm: string) => passphraseStrength
  */
 export function RecoveryCodeCard({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* the code stays selectable on screen */
-    }
-  };
+  // The code stays selectable on screen when the clipboard is refused.
+  const copy = async () => setCopied(await copySecret(code));
   const save = () => {
     const text = `NDF Vault — code de récupération\r\n\r\n${code}\r\n\r\nCréé le ${formatMoment(new Date())}.\r\nCe code permet de choisir une nouvelle phrase secrète si la vôtre est oubliée.\r\nGardez-le hors de l’appareil qui contient le Vault.\r\n`;
     void saveToDisk("code-de-recuperation-ndf-vault.txt", new Blob([text], { type: "text/plain" }));
@@ -81,7 +113,7 @@ export function RecoveryCodeCard({ code }: { code: string }) {
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button size="sm" icon={copied ? Check : Copy} onClick={copy}>
-          {copied ? "Copié" : "Copier"}
+          {copied ? "Copié · effacé du presse-papiers dans 1 min" : "Copier"}
         </Button>
         <Button size="sm" icon={Download} onClick={save}>
           Enregistrer (.txt)

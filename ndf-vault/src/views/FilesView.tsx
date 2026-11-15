@@ -2,14 +2,16 @@
 
 import { Archive, Files, Trash2, User, Users } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useVault } from "@/lib/store";
+import { BIN_DAYS, useVault } from "@/lib/store";
 import type { VaultFile } from "@/lib/types";
 import { CURRENT_USER_ID } from "@/lib/sample-data";
 import { activeFiles, byModifiedDesc } from "@/lib/selectors";
 import { count } from "@/lib/format";
 import { ExplorerToolbar, useFileFilters, type KindGroup } from "@/components/files/Explorer";
+import { FileGrid } from "@/components/files/FileGrid";
 import { FileTable } from "@/components/files/FileTable";
-import { PageHeader, SegmentedTabs, TextTabs, type TabItem } from "@/components/ui";
+import { useViewMode } from "@/components/files/view-mode";
+import { Button, PageHeader, SegmentedTabs, TextTabs, type TabItem } from "@/components/ui";
 import { AddFileMenu, kindTabs, UploadButton } from "./shared";
 
 export type FilesMode = "files" | "private" | "shared" | "favorites" | "recent" | "archived";
@@ -116,6 +118,9 @@ export function FilesView({ mode }: { mode: FilesMode }) {
     );
 
   const trash = mode === "archived" && bin === "deleted";
+  const [view, setView] = useViewMode();
+  // The bin is always a list: restoring and erasing work on selections.
+  const grid = view === "grid" && !trash;
 
   return (
     <div className="space-y-6">
@@ -135,14 +140,28 @@ export function FilesView({ mode }: { mode: FilesMode }) {
       <SegmentedTabs<KindGroup> label="Type de fichier" items={kindTabs(true)} value={filters.state.kind} onChange={(kind) => filters.setState((s) => ({ ...s, kind }))} />
 
       <div className="space-y-4">
-        <ExplorerToolbar left={left} filters={filters} />
-        <FileTable
-          key={trash ? "deleted" : "files"}
-          files={filters.filtered}
-          trash={trash}
-          emptyTitle={trash ? "Aucun fichier supprimé" : base.length === 0 ? cfg.emptyTitle : "Aucun fichier ne correspond"}
-          emptyHint={trash ? "Les fichiers supprimés restent ici jusqu’à leur restauration ou leur suppression définitive." : base.length === 0 ? cfg.emptyHint : "Essayez un autre type, effacez la recherche ou réinitialisez les filtres."}
-        />
+        <ExplorerToolbar left={left} filters={filters} view={trash ? undefined : view} onView={setView} />
+        {trash && (
+          <div data-bin-notice className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-subtle px-4 py-3">
+            <p className="text-[13px] leading-[19px] text-neutral-600">
+              Les fichiers supprimés sont conservés <span className="font-medium text-ink">{BIN_DAYS} jours</span>, puis effacés définitivement, originaux et versions compris.
+            </p>
+            <Button size="sm" icon={Trash2} disabled={deleted.length === 0} onClick={() => v.openDialog({ type: "purge", fileIds: deleted.map((f) => f.id) })}>
+              Vider la corbeille
+            </Button>
+          </div>
+        )}
+        {grid ? (
+          <FileGrid files={filters.filtered} emptyTitle={base.length === 0 ? cfg.emptyTitle : "Aucun fichier ne correspond"} emptyHint={base.length === 0 ? cfg.emptyHint : "Essayez un autre type, effacez la recherche ou réinitialisez les filtres."} />
+        ) : (
+          <FileTable
+            key={trash ? "deleted" : "files"}
+            files={filters.filtered}
+            trash={trash}
+            emptyTitle={trash ? "Aucun fichier supprimé" : base.length === 0 ? cfg.emptyTitle : "Aucun fichier ne correspond"}
+            emptyHint={trash ? `Un fichier supprimé reste ici ${BIN_DAYS} jours : le temps de le restaurer.` : base.length === 0 ? cfg.emptyHint : "Essayez un autre type, effacez la recherche ou réinitialisez les filtres."}
+          />
+        )}
       </div>
     </div>
   );

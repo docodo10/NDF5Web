@@ -1,10 +1,17 @@
+import { scryptAsync } from "@noble/hashes/scrypt.js";
+
 /**
  * Encryption for the vault, built on the browser's Web Crypto API.
  *
  * A random 256-bit data key encrypts everything that is stored (AES-GCM, a
  * fresh nonce per record). The data key itself is stored wrapped by a key
- * derived from the passphrase (PBKDF2-SHA-256). Changing the passphrase only
- * re-wraps the data key; nothing else has to be re-encrypted.
+ * derived from the passphrase with scrypt, a memory-hard function: every
+ * guess costs 64 MiB of memory as well as time, which is what makes guessing
+ * on graphics cards expensive. Changing the passphrase only re-wraps the data
+ * key; nothing else has to be re-encrypted.
+ *
+ * None of this relies on the code being secret. It is public; what is not is
+ * the passphrase, and nothing derived from it is ever stored.
  *
  * What this protects: data at rest. Someone with the device or a copy of the
  * browser profile cannot read the vault without the passphrase. It does not
@@ -13,8 +20,20 @@
  * data key, shown once and meant to be kept away from the device.
  */
 
-/** OWASP's current floor for PBKDF2-HMAC-SHA-256. */
+/** OWASP's current floor for PBKDF2-HMAC-SHA-256. Vaults protected by earlier versions use it. */
 export const PBKDF2_ITERATIONS = 600_000;
+
+/** How a passphrase is turned into a key. */
+export type Kdf = { kind: "pbkdf2"; iterations: number } | { kind: "scrypt"; n: number; r: number; p: number };
+
+/** scrypt at one of OWASP's recommended settings: 64 MiB of memory, two passes. */
+export const DEFAULT_KDF: Kdf = { kind: "scrypt", n: 2 ** 16, r: 8, p: 2 };
+
+/** For a recovery code: 120 random bits need no stretching, only a key of the right shape. */
+const CODE_KDF: Kdf = { kind: "pbkdf2", iterations: 100_000 };
+
+/** A number is a PBKDF2 round count (what earlier versions and the tests pass); nothing means the default. */
+const kdfOf = (cost?: number | Kdf): Kdf => (cost === undefined ? DEFAULT_KDF : typeof cost === "number" ? { kind: "pbkdf2", iterations: cost } : cost);
 export const MIN_PASSPHRASE_LENGTH = 10;
 
 const NONCE_BYTES = 12;
@@ -22,11 +41,40 @@ const SALT_BYTES = 16;
 
 /** What is stored, in clear, to get the data key back from the passphrase. */
 export interface KeyEnvelope {
-  v: 1;
+  /** 1: PBKDF2 with `iterations` rounds. 2: scrypt with the cost in `scrypt`. */
+  v: 1 | 2;
   salt: string;
   iterations: number;
+  scrypt?: { n: number; r: number; p: number };
   /** Nonce followed by the AES-GCM encrypted data key, base64. */
   wrapped: string;
+}
+
+/** An envelope asks for more work than this page will do: refused rather than left to freeze the browser. */
+export class UnsupportedEnvelopeError extends Error {
+  constructor() {
+    super("unsupported key envelope");
+    this.name = "UnsupportedEnvelopeError";
+  }
+}
+
+const powerOfTwo = (n: number) => Number.isInteger(n) && n > 1 && (n & (n - 1)) === 0;
+
+/** How an envelope derives its key. Throws when its parameters are not ones this code would ever have written. */
+export function envelopeKdf(envelope: KeyEnvelope): Kdf {
+  if (envelope.v === 2) {
+    const s = envelope.scrypt;
+    // 128 * n * r bytes of memory: capped at 256 MiB, well above the default and far below what would stall a phone.
+    if (!s || !powerOfTwo(s.n) || !Number.isInteger(s.r) || !Number.isInteger(s.p) || s.r < 1 || s.p < 1 || s.p > 16 || 128 * s.n * s.r > 2 ** 28) throw new UnsupportedEnvelopeError();
+    return { kind: "scrypt", n: s.n, r: s.r, p: s.p };
+  }
+  if (envelope.v !== 1 || !Number.isInteger(envelope.iterations) || envelope.iterations < 1 || envelope.iterations > 5_000_000) throw new UnsupportedEnvelopeError();
+  return { kind: "pbkdf2", iterations: envelope.iterations };
+}
+
+/** True for an envelope written by an earlier version at its full strength: worth re-wrapping with the current default. */
+export function isLegacyEnvelope(envelope: KeyEnvelope): boolean {
+  return envelope.v === 1 && envelope.iterations >= PBKDF2_ITERATIONS;
 }
 
 export class WrongPassphraseError extends Error {
@@ -65,9 +113,19 @@ function passphraseBytes(passphrase: string): Uint8Array<ArrayBuffer> {
   return encoder.encode(passphrase.normalize("NFKC"));
 }
 
-async function deriveWrappingKey(passphrase: string, salt: Uint8Array<ArrayBuffer>, iterations: number): Promise<CryptoKey> {
+async function deriveWrappingKey(passphrase: string, salt: Uint8Array<ArrayBuffer>, kdf: Kdf): Promise<CryptoKey> {
+  if (kdf.kind === "scrypt") {
+    const secret = passphraseBytes(passphrase);
+    const raw = new Uint8Array(await scryptAsync(secret, salt, { N: kdf.n, r: kdf.r, p: kdf.p, dkLen: 32, maxmem: 2 ** 28 + 2 ** 20 }));
+    try {
+      return await crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+    } finally {
+      raw.fill(0);
+      secret.fill(0);
+    }
+  }
   const material = await crypto.subtle.importKey("raw", passphraseBytes(passphrase), "PBKDF2", false, ["deriveKey"]);
-  return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, material, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: kdf.iterations, hash: "SHA-256" }, material, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
 }
 
 /** Import raw key bytes as a non-extractable data key, then wipe the bytes. */
@@ -79,20 +137,20 @@ async function importDataKey(raw: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   }
 }
 
-async function wrap(raw: Uint8Array<ArrayBuffer>, passphrase: string, iterations: number): Promise<KeyEnvelope> {
+async function wrap(raw: Uint8Array<ArrayBuffer>, passphrase: string, kdf: Kdf): Promise<KeyEnvelope> {
   const salt = random(SALT_BYTES);
   const nonce = random(NONCE_BYTES);
-  const kek = await deriveWrappingKey(passphrase, salt, iterations);
+  const kek = await deriveWrappingKey(passphrase, salt, kdf);
   const sealed = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, kek, raw));
   const wrapped = new Uint8Array(nonce.length + sealed.length);
   wrapped.set(nonce);
   wrapped.set(sealed, nonce.length);
-  return { v: 1, salt: toBase64(salt), iterations, wrapped: toBase64(wrapped) };
+  return kdf.kind === "scrypt" ? { v: 2, salt: toBase64(salt), iterations: 0, scrypt: { n: kdf.n, r: kdf.r, p: kdf.p }, wrapped: toBase64(wrapped) } : { v: 1, salt: toBase64(salt), iterations: kdf.iterations, wrapped: toBase64(wrapped) };
 }
 
 async function unwrap(passphrase: string, envelope: KeyEnvelope): Promise<Uint8Array<ArrayBuffer>> {
   const wrapped = fromBase64(envelope.wrapped);
-  const kek = await deriveWrappingKey(passphrase, fromBase64(envelope.salt), envelope.iterations);
+  const kek = await deriveWrappingKey(passphrase, fromBase64(envelope.salt), envelopeKdf(envelope));
   try {
     return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: wrapped.subarray(0, NONCE_BYTES) }, kek, wrapped.subarray(NONCE_BYTES)));
   } catch {
@@ -102,9 +160,9 @@ async function unwrap(passphrase: string, envelope: KeyEnvelope): Promise<Uint8A
 }
 
 /** Start protecting a vault: a fresh data key, wrapped by the passphrase. */
-export async function createEnvelope(passphrase: string, iterations = PBKDF2_ITERATIONS): Promise<{ envelope: KeyEnvelope; key: CryptoKey }> {
+export async function createEnvelope(passphrase: string, cost?: number | Kdf): Promise<{ envelope: KeyEnvelope; key: CryptoKey }> {
   const raw = random(32);
-  const envelope = await wrap(raw, passphrase, iterations);
+  const envelope = await wrap(raw, passphrase, kdfOf(cost));
   return { envelope, key: await importDataKey(raw) };
 }
 
@@ -114,10 +172,10 @@ export async function openEnvelope(passphrase: string, envelope: KeyEnvelope): P
 }
 
 /** Change the passphrase: the same data key, wrapped again under a new salt. */
-export async function rewrapEnvelope(current: string, next: string, envelope: KeyEnvelope, iterations = PBKDF2_ITERATIONS): Promise<KeyEnvelope> {
+export async function rewrapEnvelope(current: string, next: string, envelope: KeyEnvelope, cost?: number | Kdf): Promise<KeyEnvelope> {
   const raw = await unwrap(current, envelope);
   try {
-    return await wrap(raw, next, iterations);
+    return await wrap(raw, next, kdfOf(cost));
   } finally {
     raw.fill(0);
   }
@@ -162,11 +220,11 @@ export function normalizeRecoveryCode(input: string): string | null {
 }
 
 /** Create a recovery code for a vault: the same data key, wrapped a second time under the code. Needs the passphrase. */
-export async function createRecovery(passphrase: string, envelope: KeyEnvelope, iterations = PBKDF2_ITERATIONS): Promise<{ code: string; recovery: KeyEnvelope }> {
+export async function createRecovery(passphrase: string, envelope: KeyEnvelope, cost?: number | Kdf): Promise<{ code: string; recovery: KeyEnvelope }> {
   const raw = await unwrap(passphrase, envelope);
   try {
     const code = generateRecoveryCode();
-    return { code, recovery: await wrap(raw, code, iterations) };
+    return { code, recovery: await wrap(raw, code, cost === undefined ? CODE_KDF : kdfOf(cost)) };
   } finally {
     raw.fill(0);
   }
@@ -177,13 +235,13 @@ export async function createRecovery(passphrase: string, envelope: KeyEnvelope, 
  * into a device, so it is replaced: a new one comes back with the new envelope.
  * Throws WrongPassphraseError when the code does not match.
  */
-export async function recoverEnvelope(code: string, recovery: KeyEnvelope, nextPassphrase: string, iterations = PBKDF2_ITERATIONS): Promise<{ envelope: KeyEnvelope; code: string; recovery: KeyEnvelope }> {
+export async function recoverEnvelope(code: string, recovery: KeyEnvelope, nextPassphrase: string, cost?: number | Kdf): Promise<{ envelope: KeyEnvelope; code: string; recovery: KeyEnvelope }> {
   const typed = normalizeRecoveryCode(code);
   if (!typed) throw new WrongPassphraseError();
   const raw = await unwrap(typed, recovery);
   try {
     const next = generateRecoveryCode();
-    return { envelope: await wrap(raw, nextPassphrase, iterations), code: next, recovery: await wrap(raw, next, iterations) };
+    return { envelope: await wrap(raw, nextPassphrase, kdfOf(cost)), code: next, recovery: await wrap(raw, next, cost === undefined ? CODE_KDF : kdfOf(cost)) };
   } finally {
     raw.fill(0);
   }
@@ -247,6 +305,7 @@ export function passphraseStrength(passphrase: string): Strength {
   let score = 1;
   if (p.length >= 14) score++;
   if (p.length >= 20) score++;
+  if (p.length >= 28) score++;
   if (classes >= 3) score++;
   if (unique < 6) score -= 2;
   else if (unique < 9) score--;
@@ -256,4 +315,37 @@ export function passphraseStrength(passphrase: string): Strength {
   const label = ["", "Faible", "Moyenne", "Bonne", "Forte"][s];
   const hint = s >= 3 ? "" : p.length < 14 ? "Allongez-la : plusieurs mots sans lien entre eux font une bonne phrase secrète." : "Évitez les mots courants et les suites, variez les caractères.";
   return { score: s, label, hint };
+}
+
+/* ------------------------------------------------------ Suggested passphrase */
+
+const CONSONANTS = "bdfgjklmnprstvz";
+const VOWELS = "aeiou";
+
+/** One character of an alphabet, every character equally likely. */
+function pick(alphabet: string): string {
+  // Bytes above the largest multiple of the alphabet's length would favor its first letters: drawn again.
+  const limit = 256 - (256 % alphabet.length);
+  for (;;) {
+    const [byte] = random(1);
+    if (byte < limit) return alphabet[byte % alphabet.length];
+  }
+}
+
+/** The strength of a suggested passphrase, in bits: what an attacker who knows exactly how it is made must still guess. */
+export const suggestedBits = (groups = 5) => Math.floor(groups * 3 * Math.log2(CONSONANTS.length * VOWELS.length));
+
+/**
+ * A passphrase nobody would choose and anyone can say aloud: groups of three
+ * syllables, such as "movida-kurelo-tabise-nofalu-ridemo". Five groups are
+ * worth about 93 bits, far beyond what guessing can reach.
+ */
+export function generatePassphrase(groups = 5): string {
+  const out: string[] = [];
+  for (let g = 0; g < groups; g++) {
+    let word = "";
+    for (let s = 0; s < 3; s++) word += pick(CONSONANTS) + pick(VOWELS);
+    out.push(word);
+  }
+  return out.join("-");
 }

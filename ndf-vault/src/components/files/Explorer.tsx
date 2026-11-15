@@ -1,5 +1,6 @@
 "use client";
 
+import { ViewToggle, type ViewMode } from "./view-mode";
 import clsx from "clsx";
 import * as Popover from "@radix-ui/react-popover";
 import { ListFilter, Search, X } from "lucide-react";
@@ -203,13 +204,14 @@ export function SearchField({ value, onChange, placeholder = "Rechercher un fich
 }
 
 /** Row with a left slot (tabs) and the search + filter controls on the right. */
-export function ExplorerToolbar({ left, filters, hideProject }: { left?: ReactNode; filters: Filters; hideProject?: boolean }) {
+export function ExplorerToolbar({ left, filters, hideProject, view, onView }: { left?: ReactNode; filters: Filters; hideProject?: boolean; view?: ViewMode; onView?: (mode: ViewMode) => void }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
       <div className="min-w-0 max-w-full">{left}</div>
       <div className="flex w-full items-center gap-2 sm:w-auto">
         <SearchField value={filters.state.query} onChange={(query) => filters.setState((s) => ({ ...s, query }))} />
         <FilterButton filters={filters} hideProject={hideProject} />
+        {view && onView && <ViewToggle mode={view} onChange={onView} />}
       </div>
     </div>
   );
