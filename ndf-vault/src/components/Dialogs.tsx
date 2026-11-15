@@ -15,7 +15,7 @@ import { ACCEPT_ATTR, inspectUpload, type UploadCheck } from "@/lib/uploads";
 import { Avatar, Button, Chip, IconButton } from "./ui";
 import { Field, INPUT, Modal, Note, Toggle } from "./dialog-kit";
 
-import { PassphraseDialog, ProtectDialog, UnprotectDialog } from "./security/SecurityDialogs";
+import { BackupDialog, PassphraseDialog, ProtectDialog, RecoveryDialog, RestoreDialog, UnprotectDialog } from "./security/SecurityDialogs";
 
 export { SwitchRow } from "./dialog-kit";
 
@@ -860,6 +860,12 @@ export function Dialogs() {
       return <PassphraseDialog />;
     case "unprotect":
       return <UnprotectDialog />;
+    case "recovery":
+      return <RecoveryDialog />;
+    case "backup":
+      return <BackupDialog />;
+    case "restore":
+      return <RestoreDialog />;
     case "purge":
       return <PurgeDialog fileIds={dialog.fileIds} />;
     case "reset":

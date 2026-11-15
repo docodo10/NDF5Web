@@ -8,8 +8,9 @@
  *
  * What this protects: data at rest. Someone with the device or a copy of the
  * browser profile cannot read the vault without the passphrase. It does not
- * protect a session that is already unlocked, and a forgotten passphrase
- * cannot be recovered.
+ * protect a session that is already unlocked. A forgotten passphrase cannot be
+ * recovered, except with the recovery code: a second, random key to the same
+ * data key, shown once and meant to be kept away from the device.
  */
 
 /** OWASP's current floor for PBKDF2-HMAC-SHA-256. */
@@ -117,6 +118,72 @@ export async function rewrapEnvelope(current: string, next: string, envelope: Ke
   const raw = await unwrap(current, envelope);
   try {
     return await wrap(raw, next, iterations);
+  } finally {
+    raw.fill(0);
+  }
+}
+
+/* ------------------------------------------------------------ Recovery code */
+
+/** Crockford's base 32: no I, L, O or U, so a code copied by hand or read aloud survives. */
+const CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+const CODE_LENGTH = 24; // 120 random bits
+
+const grouped = (code: string) => code.match(/.{4}/g)!.join("-");
+
+/** A fresh recovery code, as shown to the person: six groups of four characters. */
+export function generateRecoveryCode(): string {
+  const bytes = random((CODE_LENGTH * 5) / 8);
+  let acc = 0;
+  let bits = 0;
+  let out = "";
+  for (const b of bytes) {
+    acc = (acc << 8) | b;
+    bits += 8;
+    while (bits >= 5) {
+      out += CODE_ALPHABET[(acc >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+    acc &= (1 << bits) - 1;
+  }
+  return grouped(out);
+}
+
+/** What was typed, brought back to the code's exact form; null when it cannot be a code. */
+export function normalizeRecoveryCode(input: string): string | null {
+  const s = input
+    .toUpperCase()
+    .replace(/[\s\-_.·–—]/g, "")
+    .replace(/O/g, "0")
+    .replace(/[IL]/g, "1");
+  if (s.length !== CODE_LENGTH) return null;
+  for (const c of s) if (!CODE_ALPHABET.includes(c)) return null;
+  return grouped(s);
+}
+
+/** Create a recovery code for a vault: the same data key, wrapped a second time under the code. Needs the passphrase. */
+export async function createRecovery(passphrase: string, envelope: KeyEnvelope, iterations = PBKDF2_ITERATIONS): Promise<{ code: string; recovery: KeyEnvelope }> {
+  const raw = await unwrap(passphrase, envelope);
+  try {
+    const code = generateRecoveryCode();
+    return { code, recovery: await wrap(raw, code, iterations) };
+  } finally {
+    raw.fill(0);
+  }
+}
+
+/**
+ * Use a recovery code to set a new passphrase. The code has now been typed
+ * into a device, so it is replaced: a new one comes back with the new envelope.
+ * Throws WrongPassphraseError when the code does not match.
+ */
+export async function recoverEnvelope(code: string, recovery: KeyEnvelope, nextPassphrase: string, iterations = PBKDF2_ITERATIONS): Promise<{ envelope: KeyEnvelope; code: string; recovery: KeyEnvelope }> {
+  const typed = normalizeRecoveryCode(code);
+  if (!typed) throw new WrongPassphraseError();
+  const raw = await unwrap(typed, recovery);
+  try {
+    const next = generateRecoveryCode();
+    return { envelope: await wrap(raw, nextPassphrase, iterations), code: next, recovery: await wrap(raw, next, iterations) };
   } finally {
     raw.fill(0);
   }

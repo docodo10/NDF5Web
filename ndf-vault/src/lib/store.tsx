@@ -3,9 +3,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { ActivityItem, FileStatus, FileVersion, Folder, Profile, Project, Route, VaultFile } from "./types";
 import { ACTIVITY, CURRENT_USER_ID, FILES, FOLDERS, PROJECTS, USERS } from "./sample-data";
-import { count, descendantIds, folderPath, formatDate, formatTime, fullName, sanitizeName, STATUS_LABEL } from "./format";
+import { count, descendantIds, folderPath, formatDate, formatMoment, formatTime, fullName, sanitizeName, STATUS_LABEL } from "./format";
+import { BACKUP_EXTENSION, BackupError, createBackup as sealBackup, openBackup, type BackupProblem, type OpenedBackup } from "./backup";
 import * as db from "./db";
-import type { Meta, UnlockResult } from "./db";
+import type { Meta, RecoverResult, UnlockResult } from "./db";
 import { cryptoAvailable, sha256Hex } from "./crypto";
 import { toCsv } from "./csv";
 import { hashToRoute, routeToHash } from "./routes";
@@ -44,6 +45,9 @@ export type DialogState =
   | { type: "protect" }
   | { type: "passphrase" }
   | { type: "unprotect" }
+  | { type: "recovery" }
+  | { type: "backup" }
+  | { type: "restore" }
   | null;
 
 export interface Toast {
@@ -66,7 +70,12 @@ export interface SecurityState {
   available: boolean;
   protected: boolean;
   autoLockMinutes: number;
+  /** When the current recovery code was created; null when there is none. */
+  recoveryAt: string | null;
 }
+
+/** How a restore ended. "incomplete": the vault was replaced, but the device ran out of room for some originals. */
+export type RestoreOutcome = "ok" | "incomplete" | "no-space" | "failed" | BackupProblem;
 
 interface VaultContext {
   files: VaultFile[];
@@ -105,6 +114,12 @@ interface VaultContext {
   disableProtection: (passphrase: string) => Promise<boolean>;
   changePassphrase: (current: string, next: string) => Promise<boolean>;
   setAutoLock: (minutes: number) => void;
+  /** Create or replace the recovery code. Resolves the code, to show once; null when the passphrase is wrong. */
+  createRecoveryCode: (passphrase: string) => Promise<string | null>;
+  /** Save the whole vault as one encrypted file. */
+  createBackup: (passphrase: string) => Promise<boolean>;
+  /** Replace the vault with the content of a backup file. */
+  restoreBackup: (file: Blob, passphrase: string) => Promise<RestoreOutcome>;
   readOriginal: (file: Pick<VaultFile, "id" | "name" | "ext" | "sha256">, blobId?: string) => Promise<OriginalResult>;
   // files
   toggleFavorite: (id: string) => void;
@@ -177,6 +192,8 @@ function tourSeen(): boolean {
 export interface LockScreenProps {
   meta: Meta;
   unlock: (passphrase: string) => Promise<UnlockResult>;
+  /** Set a new passphrase with the recovery code. The vault stays locked: unlock with the new passphrase next. */
+  recover: (code: string, passphrase: string) => Promise<RecoverResult>;
   /** Erase the whole vault, protection included: the only way out when the passphrase is lost. */
   wipe: () => Promise<void>;
 }
@@ -184,7 +201,13 @@ export interface LockScreenProps {
 type Boot =
   | { phase: "loading" }
   | { phase: "locked"; meta: Meta }
-  | { phase: "ready"; session: number; initial: db.Persisted | null; unreadable: boolean; persistent: boolean; meta: Meta; unlocked?: { failedBefore: number } };
+  | { phase: "ready"; session: number; initial: db.Persisted | null; unreadable: boolean; persistent: boolean; meta: Meta; unlocked?: Unlocked; notice?: string };
+
+interface Unlocked {
+  failedBefore: number;
+  /** The passphrase had just been replaced with the recovery code. */
+  recovered: boolean;
+}
 
 type Ready = Extract<Boot, { phase: "ready" }>;
 
@@ -197,14 +220,14 @@ export function VaultProvider({ children, fallback, lockScreen }: { children: Re
   const [boot, setBoot] = useState<Boot>({ phase: "loading" });
   const sessions = useRef(0);
 
-  const start = useCallback(async (unlocked?: { failedBefore: number }) => {
+  const start = useCallback(async (unlocked?: Unlocked, notice?: string) => {
     const [persistent, meta] = await Promise.all([db.isAvailable(), db.readMeta()]);
     if (meta.protected && !db.isUnlocked()) {
       setBoot({ phase: "locked", meta });
       return;
     }
     const loaded = await db.loadState();
-    setBoot({ phase: "ready", session: ++sessions.current, initial: loaded.status === "ok" ? loaded.state : null, unreadable: loaded.status === "unreadable", persistent, meta, unlocked });
+    setBoot({ phase: "ready", session: ++sessions.current, initial: loaded.status === "ok" ? loaded.state : null, unreadable: loaded.status === "unreadable", persistent, meta, unlocked, notice });
   }, []);
 
   useEffect(() => {
@@ -214,11 +237,14 @@ export function VaultProvider({ children, fallback, lockScreen }: { children: Re
   const unlock = useCallback(
     async (passphrase: string) => {
       const result = await db.unlock(passphrase);
-      if (result.ok) await start({ failedBefore: result.failedBefore });
+      if (result.ok) await start({ failedBefore: result.failedBefore, recovered: result.recovered });
       return result;
     },
     [start],
   );
+  const recover = useCallback((code: string, passphrase: string) => db.recoverWithCode(code, passphrase), []);
+  // Read the stored vault again and start a fresh session on it: after a restore, what is on disk is not what is on screen.
+  const reload = useCallback((notice: string) => void start(undefined, notice), [start]);
   const wipe = useCallback(async () => {
     await db.wipeEverything();
     await start();
@@ -229,9 +255,9 @@ export function VaultProvider({ children, fallback, lockScreen }: { children: Re
   }, [start]);
 
   if (boot.phase === "loading") return <>{fallback}</>;
-  if (boot.phase === "locked") return <>{lockScreen({ meta: boot.meta, unlock, wipe })}</>;
+  if (boot.phase === "locked") return <>{lockScreen({ meta: boot.meta, unlock, recover, wipe })}</>;
   return (
-    <VaultSession key={boot.session} boot={boot} relock={relock}>
+    <VaultSession key={boot.session} boot={boot} relock={relock} reload={reload}>
       {children}
     </VaultSession>
   );
@@ -239,7 +265,7 @@ export function VaultProvider({ children, fallback, lockScreen }: { children: Re
 
 /* ------------------------------------------------------------------ Session */
 
-function VaultSession({ boot, relock, children }: { boot: Ready; relock: () => void; children: ReactNode }) {
+function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock: () => void; reload: (notice: string) => void; children: ReactNode }) {
   const init = boot.initial;
   const persistent = boot.persistent;
   const [files, setFiles] = useState<VaultFile[]>(init?.files ?? FILES);
@@ -271,7 +297,10 @@ function VaultSession({ boot, relock, children }: { boot: Ready; relock: () => v
   // Writes go through one queue and always carry the latest state, so a slow write
   // (encryption takes a moment) can never land after a newer one and undo it.
   const saving = useRef<Promise<unknown>>(Promise.resolve());
+  // Set once a restore has started writing: from then on this session's state is stale and must not be saved.
+  const frozen = useRef(false);
   const saveNow = useCallback(() => {
+    if (frozen.current) return saving.current;
     saving.current = saving.current.then(
       () => db.saveState(latest.current),
       () => db.saveState(latest.current),
@@ -333,8 +362,10 @@ function VaultSession({ boot, relock, children }: { boot: Ready; relock: () => v
     if (boot.unlocked) {
       const n = boot.unlocked.failedBefore;
       log("a déverrouillé le Vault", n > 0 ? `après ${count(n, "tentative")} ${n > 1 ? "échouées" : "échouée"}` : "", null, "security");
+      if (boot.unlocked.recovered) log("a choisi une nouvelle phrase secrète avec le code de récupération", "", null, "security");
       if (n > 0) notify(`${count(n, "tentative")} de déverrouillage ${n > 1 ? "échouées" : "échouée"} depuis votre dernière ouverture.`);
     }
+    if (boot.notice) notify(boot.notice);
     if (boot.unreadable) notify("Les données enregistrées sont illisibles : le Vault repart des données d’exemple.");
     if (!tourSeen()) setTourOpen(true);
   }, [boot, log, notify]);
@@ -413,7 +444,7 @@ function VaultSession({ boot, relock, children }: { boot: Ready; relock: () => v
     const unreadable = (status: OriginalResult["status"]) =>
       status === "missing" ? "Original introuvable dans ce navigateur." : status === "locked" ? "Le Vault est verrouillé." : "Ce fichier a été altéré : il ne peut pas être ouvert ni téléchargé.";
     const pathOf = (f: VaultFile) => zipPath([...folderPath(folders, f.folderId).filter((d) => d.parentId !== null).map((d) => (d.index ? `${d.index} ${d.name}` : d.name)), fullName(f)]);
-    const security: SecurityState = { available: persistent && cryptoAvailable(), protected: meta.protected, autoLockMinutes: meta.autoLockMinutes };
+    const security: SecurityState = { available: persistent && cryptoAvailable(), protected: meta.protected, autoLockMinutes: meta.autoLockMinutes, recoveryAt: meta.recovery ? (meta.recoveryAt ?? "") : null };
 
     const exportEntries = async (targets: VaultFile[]) => {
       const entries: ZipEntry[] = [];
@@ -502,6 +533,78 @@ function VaultSession({ boot, relock, children }: { boot: Ready; relock: () => v
       setAutoLock: (minutes) => {
         setMeta((m) => ({ ...m, autoLockMinutes: minutes }));
         void db.setAutoLock(minutes);
+      },
+      createRecoveryCode: async (passphrase) => {
+        // Asked of what is stored, not of this render: the dialog calls it right after turning protection on.
+        const replaced = Boolean((await db.readMeta()).recovery);
+        const code = await db.createRecoveryCode(passphrase);
+        if (!code) return null;
+        setMeta(await db.readMeta());
+        log(replaced ? "a remplacé le code de récupération" : "a créé un code de récupération", "", null, "security");
+        return code;
+      },
+      createBackup: async (passphrase) => {
+        if (persistent) await saveNow();
+        // Every stored original the state refers to: current versions and earlier ones.
+        const ids: string[] = [];
+        for (const f of files) {
+          if (f.sample) continue;
+          ids.push(f.id, ...(f.versions ?? []).map((ver) => ver.id));
+        }
+        const blobs: { id: string; data: Blob }[] = [];
+        let skipped = 0;
+        for (const id of ids) {
+          const r = await db.readBlob(id);
+          if (r.status === "ok") blobs.push({ id, data: r.blob });
+          else skipped++;
+        }
+        let backup: Blob;
+        try {
+          backup = await sealBackup(passphrase, latest.current, blobs);
+        } catch {
+          // Typically memory: every original is encrypted before the file can be handed over.
+          notify("La sauvegarde n’a pas pu être créée : le Vault est peut-être trop volumineux pour cet appareil.");
+          return false;
+        }
+        const result = await saveToDisk(`ndf-vault-${nowIso().slice(0, 10)}.${BACKUP_EXTENSION}`, backup);
+        if (result === "failed") notify("La sauvegarde n’est pas disponible dans cette vue.");
+        if (result !== "saved") return false;
+        log("a créé une sauvegarde chiffrée", count(blobs.length, "original", "originaux"), null, "security");
+        notify(`Sauvegarde créée : ${count(blobs.length, "original", "originaux")}${skipped ? ` · ${count(skipped, "original illisible ignoré", "originaux illisibles ignorés")}` : ""}`);
+        return true;
+      },
+      restoreBackup: async (file, passphrase) => {
+        if (!persistent) return "failed";
+        let opened: OpenedBackup;
+        try {
+          opened = await openBackup(file, passphrase);
+          // Every original must decrypt before anything here is replaced.
+          for (const b of opened.blobs) await b.read();
+        } catch (e) {
+          return e instanceof BackupError ? e.problem : "failed";
+        }
+        const usage = await db.storageUsage();
+        if (usage && opened.blobs.reduce((n, b) => n + b.size, 0) * 1.1 > usage.quota) return "no-space";
+
+        // From here on, what this session holds in memory is no longer the vault.
+        await saving.current;
+        frozen.current = true;
+        let stored = 0;
+        try {
+          await db.clearData();
+          for (const b of opened.blobs) {
+            if (!(await db.putBlob(b.id, await b.read()))) break;
+            stored++;
+          }
+        } catch {
+          // Whatever was written stays. The state saved below still describes the backup, and says what is missing.
+        }
+        const complete = stored === opened.blobs.length;
+        const when = formatMoment(opened.createdAt);
+        const entry: ActivityItem = { id: uid("a"), at: nowIso(), userId: CURRENT_USER_ID, verb: "a restauré la sauvegarde du", target: when, projectId: null, kind: "security" };
+        await db.saveState({ ...opened.state, activity: [entry, ...opened.state.activity].slice(0, 500) });
+        reload(complete ? `Sauvegarde du ${when} restaurée.` : "Restauration incomplète : l’espace a manqué sur cet appareil, certains originaux sont absents.");
+        return complete ? "ok" : "incomplete";
       },
       readOriginal,
 
@@ -854,7 +957,7 @@ function VaultSession({ boot, relock, children }: { boot: Ready; relock: () => v
         notify("Vault réinitialisé : les données d’exemple sont de retour.");
       },
     };
-  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany]);
+  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

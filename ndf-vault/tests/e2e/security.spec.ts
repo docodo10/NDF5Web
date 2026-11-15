@@ -180,11 +180,14 @@ test.describe("protection by passphrase", () => {
     await expect(row(page, "Entente secrète")).toBeVisible();
   });
 
-  test("a forgotten passphrase can only be answered by erasing the vault", async ({ page }) => {
+  test("without the passphrase or the recovery code, the only way out is erasing the vault", async ({ page }) => {
     await seeded(page);
     await protect(page);
     await page.reload();
     await page.getByRole("button", { name: "Phrase secrète oubliée ?" }).click();
+    // The recovery code is offered first; erasing is what remains without it.
+    await expect(page.locator("#recovery-code")).toBeVisible();
+    await page.getByRole("button", { name: "Je n’ai pas ce code" }).click();
     const erase = page.getByRole("button", { name: "Effacer le Vault" });
     await expect(erase).toBeDisabled();
     await page.fill("#wipe-word", "effacer");

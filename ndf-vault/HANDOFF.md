@@ -40,7 +40,7 @@ L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », con
 
 ## 3. État actuel
 
-**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (87 tests unitaires) et `npm run test:e2e` (55 tests dans un vrai navigateur) passent.
+**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (159 tests unitaires) et `npm run test:e2e` (70 tests dans un vrai navigateur) passent.
 
 ### Sécurité (2026-11-14)
 
@@ -54,16 +54,19 @@ Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc *
 | Verrouillage | store `lockNow`, effet d'auto-verrouillage dans `store.tsx` | Bouton dans la barre du haut et dans Réglages ; automatique après inactivité (réglable, 15 min par défaut), y compris quand l'onglet revient au premier plan après le délai |
 | Activer, changer, désactiver | `components/security/SecurityDialogs.tsx` | Phrase de 10 caractères minimum, indicateur de force (`passphraseStrength`, il faut au moins « Moyenne »), case « j'ai compris qu'elle ne peut pas être récupérée ». Changer la phrase ré-enveloppe la clé sans re-chiffrer les fichiers |
 | Conversion reprenable | `db.convertAll`, `Meta.pending` | Chiffrer ou déchiffrer tout le Vault est idempotent : un enregistrement se lit selon sa forme (`{enc}` ou `Blob`), donc une conversion interrompue reste lisible et reprend au déverrouillage suivant |
-| Phrase oubliée | `LockScreen` → `db.wipeEverything` | Aucune récupération possible. Seule issue : taper `EFFACER` pour tout effacer |
+| Code de récupération | `crypto.createRecovery`, `recoverEnvelope`, `db.createRecoveryCode`, `db.recoverWithCode`, `security/parts.tsx` (`RecoveryCodeCard`) | 24 caractères en base 32 sans lettres ambiguës (120 bits), remis **une seule fois** à l'activation de la protection. C'est une deuxième enveloppe de la même clé de données (`Meta.recovery`) : le code n'est jamais stocké. Sur l'écran de verrouillage, « Phrase secrète oubliée ? » demande le code et une nouvelle phrase ; le code utilisé est **remplacé** par un nouveau. Un mauvais code compte comme une tentative échouée (même délai). Remplaçable dans Réglages avec la phrase secrète |
+| Phrase et code perdus | `LockScreen` (mode `wipe`) → `db.wipeEverything` | Seule issue : taper `EFFACER` pour tout effacer |
+| Sauvegarde chiffrée | `src/lib/backup.ts`, store `createBackup`, `restoreBackup`, `BackupDialog`, `RestoreDialog` | Un fichier `.ndfvault` : tout l'état et tous les originaux (versions comprises), chiffrés sous une phrase choisie pour la sauvegarde. Seuls la date et les paramètres de dérivation sont en clair ; noms, tailles et ordre sont dans le manifeste chiffré, et chaque enregistrement est lié à sa position. La restauration **remplace** le Vault : tout est déchiffré une première fois avant de toucher à quoi que ce soit, l'état restauré passe par `validateState` (formes vérifiées, noms nettoyés, références réparées, boucles de dossiers coupées), puis la session est remontée (`reload`) |
 | Empreintes et intégrité | `sha256Hex`, store `readOriginal` | SHA-256 calculé au téléversement, revérifié à **chaque** ouverture et téléchargement. Un original altéré est refusé (`altered`) et consigné dans le journal de sécurité. Bloc « Empreinte SHA-256 » (copier, vérifier) dans Modifier les détails |
-| Contrôle du contenu | `uploads.detectContent`, `inspectUpload` | Les premiers octets doivent correspondre à l'extension (un exécutable renommé en `.pdf` est refusé). Exécutables et binaires inconnus refusés. 100 Mo par fichier. Doublons signalés par empreinte |
+| Contrôle du contenu | `uploads.detectContent`, `inspectUpload`, `office.inspectOffice` | Les premiers octets doivent correspondre à l'extension (un exécutable renommé en `.pdf` est refusé). Exécutables et binaires inconnus refusés. Un fichier Office doit être un vrai conteneur du bon type (un ZIP quelconque renommé `.docx` est refusé) et **sans macros ni contrôles ActiveX**. 100 Mo par fichier. Doublons signalés par empreinte |
+| Lecture défensive des fichiers Office | `src/lib/unzip.ts`, `src/lib/xml.ts`, `src/lib/office.ts` | Écrits pour l'aperçu, sans librairie. ZIP : nombre d'entrées plafonné, jamais plus de 24 Mo décompressés par partie ni 96 Mo par document quelle que soit la taille annoncée (bombe de décompression), somme de contrôle vérifiée. XML : toute déclaration `<!DOCTYPE` est refusée (donc ni entités externes ni expansion exponentielle), profondeur et nombre de nœuds plafonnés, analyse en une seule passe (pas d'expression régulière à temps quadratique). Les liens externes d'un document ne sont jamais suivis. Tout ce qui sort est du texte, affiché par React : rien ne peut agir comme du balisage |
 | Noms sûrs | `format.sanitizeName` | Retire caractères de contrôle, marques de direction (usurpation `‮`), séparateurs de chemin, points en tête ; 120 caractères maximum. Appliqué aux fichiers, dossiers et projets |
 | Exports sûrs | `src/lib/csv.ts`, `src/lib/zip.ts` | CSV : les cellules commençant par `= + - @` sont neutralisées (injection de formules). ZIP : chemins nettoyés segment par segment (pas de `..`, pas de chemin absolu), noms en double numérotés |
 | Filigrane personnel | `lib/stamp.ts`, `brand/Brand.tsx` (`PersonalWatermark`) | « Nom · Société · courriel · date, heure · Confidentiel – NDF5 » sur chaque page consultée, et **incrusté dans le fichier** avec « Télécharger avec filigrane » (PDF via pdf-lib, images via canvas) |
-| Journal de sécurité | `ActivityItem.kind = "security"` | Activation, changement et retrait de la protection, déverrouillages (avec le nombre d'essais refusés avant), fichiers altérés. Onglet « Sécurité » dans Activité, export CSV. Les verrouillages eux-mêmes ne sont pas consignés |
+| Journal de sécurité | `ActivityItem.kind = "security"` | Activation, changement et retrait de la protection, création, remplacement et utilisation du code de récupération, sauvegardes créées et restaurées, déverrouillages (avec le nombre d'essais refusés avant), fichiers altérés. Onglet « Sécurité » dans Activité, export CSV. Les verrouillages eux-mêmes ne sont pas consignés |
 | Stockage durable | `db.requestPersistence`, Réglages → Stockage | Demande au navigateur de ne pas évincer les données |
 
-**Limites à dire à l'utilisateur, sans les enjoliver :** la protection vaut contre quelqu'un qui accède à l'appareil ou au profil du navigateur pendant que le Vault est verrouillé. Elle ne protège pas d'un logiciel malveillant sur une session déverrouillée, ni ne remplace l'authentification des invités, les permissions par dossier et le journal côté serveur, qui restent à construire. Une phrase oubliée est irrécupérable.
+**Limites à dire à l'utilisateur, sans les enjoliver :** la protection vaut contre quelqu'un qui accède à l'appareil ou au profil du navigateur pendant que le Vault est verrouillé. Elle ne protège pas d'un logiciel malveillant sur une session déverrouillée, ni ne remplace l'authentification des invités, les permissions par dossier et le journal côté serveur, qui restent à construire. Sans la phrase secrète **et** sans le code de récupération, le contenu est irrécupérable. Le code de récupération vaut la phrase secrète : il ne doit pas rester sur l'appareil.
 
 ### Fonctions réelles
 
@@ -73,7 +76,8 @@ Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc *
 | Stockage persistant | `src/lib/db.ts` | IndexedDB (`ndf-vault` : `state`, `blobs`, et `meta` en clair pour l'état de la protection). Rien ne quitte l'appareil. `SCHEMA = 4` ; `migrate()` accepte encore le schéma 3 |
 | Sauvegarde immédiate | `saveNow()` dans `store.tsx` | File d'écritures ordonnée, déclenchée à chaque changement et à `pagehide`. **Ne pas remettre de délai (debounce)** : un rechargement juste après un téléversement perdait la liste des fichiers |
 | Téléchargement | `saveToDisk` dans `uploads.ts` | Capacité `downloads` de l'hébergeur quand elle existe, sinon téléchargement normal. Les fichiers d'exemple n'ont pas d'original et le disent |
-| Aperçu réel | `viewer/PreviewModal.tsx`, `viewer/pdf.ts` | PDF (PDF.js sur le fil principal), images, TXT, CSV. DOCX/XLSX/PPTX : téléchargement proposé |
+| Aperçu réel | `viewer/PreviewModal.tsx`, `viewer/pdf.ts`, `viewer/OfficePreview.tsx` | PDF (PDF.js sur le fil principal), images, TXT, CSV |
+| Aperçu Office | `src/lib/office.ts`, `viewer/OfficePreview.tsx` | **Aperçu simplifié, annoncé comme tel à l'écran** : le contenu, pas la mise en page. Word : titres (d'après la feuille de styles du document, donc aussi « Titre 1 » d'un Word français), gras, italique, souligné, listes, tableaux, sauts de page ; le texte supprimé en suivi des modifications est écarté. Excel : feuilles en onglets, valeurs et derniers résultats des formules, dates et pourcentages, 300 lignes × 40 colonnes par feuille ; **les feuilles masquées sont montrées et signalées**. PowerPoint : diapositives dans l'ordre du diaporama, titres, puces et niveaux, **notes du présentateur et diapositives masquées signalées**. Non reproduits : images, graphiques, en-têtes, zones de texte, cellules fusionnées |
 | Historique des versions | `VersionsDialog`, store `addVersion`, `restoreVersion`, `deleteVersion`, `downloadVersion` | Même format exigé, version identique refusée (empreinte), anciennes versions téléchargeables, restaurables, supprimables |
 | Dossiers | `FolderMenu` dans `views/shared.tsx`, `selectors.folderRules` | Renommer, déplacer, supprimer, exporter en ZIP. Règles : racine intouchable ; dossiers numérotés 00–10 renommables mais ni déplaçables ni supprimables ; dossier d'un projet non supprimable ; un dossier non vide (fichiers archivés ou supprimés compris) ne se supprime pas. Une action bloquée reste au menu et dit pourquoi |
 | Projets | `ProjectMenu`, `EditProjectDialog` | Modifier (nom, code, période, résumé), archiver, restaurer ; onglets Actifs / Archivés |
@@ -86,10 +90,10 @@ Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc *
 
 | Suite | Commande | Contenu |
 |---|---|---|
-| Unitaires (87) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `uploads` (octets magiques, exécutables déguisés), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
-| Navigateur (55) | `npm run test:e2e` | `tests/e2e/` : visite guidée, fichiers, téléversement, versions, dossiers et projets, exports, sécurité (20 tests : rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré, phrase oubliée…), téléphone |
+| Unitaires (159) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `recovery` (code, récupération, remplacement, tentatives), `backup` (aller-retour, rien en clair, fichier altéré, enregistrements échangés, validation de l'état restauré), `uploads` (octets magiques, exécutables déguisés, faux fichiers Office, macros), `unzip` (bombe de décompression, somme de contrôle, archives tronquées), `xml` (DOCTYPE refusé, entrées hostiles en temps linéaire), `office` (Word, Excel, PowerPoint, limites), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
+| Navigateur (70) | `npm run test:e2e` | `tests/e2e/` : visite guidée, fichiers, téléversement, aperçus Office, versions, dossiers et projets, exports, sécurité (rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré…), code de récupération, sauvegarde et restauration (dont la restauration dans un second profil de navigateur, comme sur un autre appareil), téléphone |
 
-`npm run test:e2e` reconstruit d'abord `dist/` puis sert ce dossier (`scripts/serve-dist.mjs`, port 4173) : les tests s'exécutent sur **la page réellement publiée**, pas sur le serveur de développement. `tests/e2e/helpers.ts` contient les aides (`openVault`, `upload`, `protect`, `unlock`, `diskDump`, `tamperFirstOriginal`, `readZip`…).
+`npm run test:e2e` reconstruit d'abord `dist/` puis sert ce dossier (`scripts/serve-dist.mjs`, port 4173) : les tests s'exécutent sur **la page réellement publiée**, pas sur le serveur de développement. `tests/e2e/helpers.ts` contient les aides (`openVault`, `upload`, `protect` qui rend le code de récupération, `noteRecoveryCode`, `unlock`, `diskDump`, `tamperFirstOriginal`, `readZip`…). `tests/fixtures/office.ts` fabrique de vrais fichiers Word, Excel et PowerPoint compressés, pour les deux suites.
 
 ### Page hébergée
 
@@ -101,18 +105,18 @@ Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc *
 |---|---|
 | `src/lib/types.ts` | `VaultFile` (avec `sha256`, `versions`), `FileVersion`, `Folder`, `Project`, `Profile`, `ActivityItem`, `Route`, statuts |
 | `src/lib/sample-data.ts` | 42 fichiers d'exemple en français, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 services, activité |
-| `src/lib/crypto.ts`, `db.ts`, `uploads.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
+| `src/lib/crypto.ts`, `db.ts`, `backup.ts`, `uploads.ts`, `unzip.ts`, `xml.ts`, `office.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
 | `src/lib/format.ts` | Dates et tailles à la française, `KIND_LABEL`, `STATUS_LABEL`, `count()`, `sanitizeName` |
 | `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory`, `folderRules` |
 | `src/lib/routes.ts` | `routeToHash`, `hashToRoute` |
 | `src/lib/store.tsx` | `VaultProvider` (démarrage, verrouillage) → `VaultSession` (tout l'état) ; `useVault()` : routage, toasts, dialogues, aperçu, mutations, sécurité, exports |
 | `src/components/brand/` | Logo NDF5 vectorisé, `VaultLockup`, `AppWatermark`, `PageWatermark`, `PersonalWatermark` |
 | `src/components/ui.tsx`, `dialog-kit.tsx` | Boutons, onglets, badges… ; `Modal`, `Field`, `Note`, `Toggle`, `PassphraseInput` |
-| `src/components/security/` | `LockScreen`, `ProtectDialog`, `PassphraseDialog`, `UnprotectDialog` |
+| `src/components/security/` | `LockScreen` (déverrouiller, récupérer, effacer), `SecurityDialogs` (`ProtectDialog`, `PassphraseDialog`, `UnprotectDialog`, `RecoveryDialog`, `BackupDialog`, `RestoreDialog`), `parts.tsx` (pièces sans état du Vault, utilisables quand il est verrouillé) |
 | `src/components/Shell.tsx` | Sidebar, topbar (verrou, aide), tiroir mobile, dépôt de fichiers sur toute la fenêtre |
 | `src/components/files/` | `FileTable` (complète, compacte, corbeille, actions groupées), `Explorer` (filtres, recherche) |
 | `src/components/Dialogs.tsx` | Tous les dialogues de fichiers, dossiers et projets, `ToastHost` |
-| `src/components/viewer/` | `PreviewModal`, `pdf.ts` |
+| `src/components/viewer/` | `PreviewModal`, `OfficePreview`, `pdf.ts` |
 | `src/components/CommandPalette.tsx`, `Tour.tsx` | Recherche globale ⌘K / Ctrl+K / « / » ; visite guidée |
 | `src/views/` | `Home`, `FilesView`, `FolderView`, `ProjectsView`, `ProjectView`, `ActivityView`, `SettingsView`, `shared.tsx` |
 
@@ -127,12 +131,14 @@ Tout est local : le Vault n'a pas encore de serveur. La protection couvre donc *
 
 ### Suite prévue
 
-Aperçus Office (DOCX, XLSX, PPTX), puis le serveur : authentification des invités par code, permissions par dossier et par niveau (0 à 3), Terms of Access et NDA, journal « qui a ouvert quoi » côté serveur, expiration et révocation, questions, signature. Fournisseur à confirmer avec l'utilisateur (section 1 bis).
+Le serveur : authentification des invités par code, permissions par dossier et par niveau (0 à 3), Terms of Access et NDA, journal « qui a ouvert quoi » côté serveur, expiration et révocation, questions, signature. Fournisseur à confirmer avec l'utilisateur (section 1 bis).
 
 ## 4. Architecture et décisions
 
 - **Une seule page, vues pilotées par l'état.** `route` vit dans le store et se synchronise avec `location.hash`. Noms de hash simples : `#home`, `#files`, `#projects`, `#private`, `#shared`, `#favorites`, `#recent`, `#archived`, `#activity`, `#preferences`, `#project-<id>`, `#folder-<id>`. La vue Settings s'appelle `preferences` dans le code (le hash `#settings` est réservé par l'hébergeur d'aperçu).
 - **Le store est la seule couture vers la persistance.** Les composants n'appellent que `useVault()`. Pour le serveur, brancher le nouveau stockage derrière les mutations du store (ou extraire une interface `VaultRepository`), sans toucher aux composants.
+- **Lire l'état stocké, pas l'état du rendu, dans une action qui en suit une autre.** `ProtectDialog` appelle `enableProtection` puis `createRecoveryCode` dans le même geste : la seconde fonction vient encore du rendu précédent, où le Vault n'était pas protégé. Elle interroge donc `db.readMeta()`. Même piège pour toute action enchaînée.
+- **Après une restauration, la session en mémoire est périmée** : `frozen` bloque ses sauvegardes et `reload()` en remonte une nouvelle sur ce qui est stocké.
 - **Deux étages dans le store** : `VaultProvider` gère le démarrage et le verrouillage ; `VaultSession` (remonté avec une nouvelle `key` à chaque déverrouillage) porte l'état déchiffré. Verrouiller démonte la session : rien de déchiffré ne survit en mémoire React.
 - **La clé de données ne vit qu'en mémoire** (`dataKey` dans `db.ts`, non extractible) et disparaît au verrouillage ou au rechargement.
 - **Retirés plutôt que simulés** : imprimer et chercher dans le document (boutons enlevés de la visionneuse), créer un document ou un tableur dans l'app (cartes remplacées par Téléverser et Visite guidée).
@@ -182,6 +188,8 @@ Note de fidélité : on reprend le langage visuel (layout, densité, composants)
 - **Styles globaux dans `@layer base`** : une règle CSS hors couche l'emporte sur toutes les classes utilitaires de Tailwind v4.
 - **Playwright est épinglé à 1.63.0**, la version du Chromium préinstallé. Ne pas lancer `playwright install`.
 - **Tests : locale UTF-8 obligatoire pour le navigateur.** Sans elle, un téléchargement au nom accentué s'appelle « download ». `playwright.config.ts` force `C.UTF-8` quand l'environnement n'en a pas.
+- **Pas d'expression régulière sur du contenu venu d'un fichier sans borne de longueur.** Un motif comme `[^=]+\s*=` ou `\[[^\]]*\]` prend un temps quadratique sur une entrée piégée et gèle la page. `xml.ts` lit les attributs en une passe ; `classifyFormat` tronque son entrée. Les tests `hostile input` le vérifient au chronomètre.
+- **Tests : attendre la fin d'une action qui navigue** (la réinitialisation revient à l'accueil) avant de changer de vue, sinon la navigation de l'app passe après celle du test.
 - **Tests de verrouillage automatique** : avec l'horloge simulée de Playwright le verrou tombe environ 2 s après l'échéance ; utiliser des attentes avec délai (`expect.poll`, `toBeVisible({ timeout })`), pas une vérification immédiate.
 - **`crypto.getRandomValues` refuse plus de 65 536 octets** par appel : générer les gros tampons de test autrement.
 - **Tests téléphone** : utiliser un profil d'appareil (`devices["Pixel 7"]`), pas seulement une petite fenêtre, sinon le survol de la souris est émulé et les clics tombent sur les boutons de survol.
@@ -206,11 +214,12 @@ Lis HANDOFF.md en entier, puis docs/brief.txt. Lis aussi AGENTS.md et les guides
 Next concernés dans node_modules/next/dist/docs/.
 
 L'interface est en français. Fonctionnent déjà : téléversement, stockage chiffré dans
-le navigateur (phrase secrète, verrouillage), aperçus, versions, dossiers, projets,
-exports, filigrane personnel, journal de sécurité, visite guidée, et deux suites de tests.
+le navigateur (phrase secrète, verrouillage, code de récupération), sauvegarde chiffrée
+et restauration, aperçus (PDF, images, texte, Word, Excel, PowerPoint), versions,
+dossiers, projets, exports, filigrane personnel, journal de sécurité, visite guidée,
+et deux suites de tests.
 Demande à l'utilisateur ses ajustements après son essai sur PC, puis la suite :
-aperçus Office, puis l'accès des invités et le serveur (fournisseur à confirmer,
-voir section 1 bis).
+l'accès des invités et le serveur (fournisseur à confirmer, voir section 1 bis).
 
 Après chaque changement : npx tsc --noEmit, npm test, npm run test:e2e.
 Toute nouvelle fonction arrive avec ses tests.

@@ -12,6 +12,15 @@ export function formatTime(iso: string): string {
   return `${h} h ${String(min).padStart(2, "0")}`;
 }
 
+/** A moment in this device's time zone: "14 nov. 2026, 15 h 04". */
+export function formatMoment(when: Date | string): string {
+  const d = typeof when === "string" ? new Date(when) : when;
+  if (Number.isNaN(d.getTime())) return "";
+  const two = (n: number) => String(n).padStart(2, "0");
+  const local = `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}T${two(d.getHours())}:${two(d.getMinutes())}`;
+  return `${formatDate(local)}, ${formatTime(local)}`;
+}
+
 const decimal = (n: number) => n.toFixed(1).replace(".", ",");
 
 export function formatSize(bytes: number): string {

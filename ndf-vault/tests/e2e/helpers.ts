@@ -2,6 +2,7 @@ import { expect, type Download, type Locator, type Page } from "@playwright/test
 import { readFile } from "node:fs/promises";
 import { crc32, deflateSync } from "node:zlib";
 import { PDFDocument, StandardFonts } from "pdf-lib";
+import { docx, para, pptx, xlsx, type SheetSpec, type SlideSpec } from "../fixtures/office";
 
 export const PASS = "tortue lampe orage fenêtre";
 
@@ -46,8 +47,14 @@ export const textFile = (name: string, text: string): Upload => ({ name, mimeTyp
 /** The first bytes of a Windows executable. */
 export const EXE = Buffer.from([0x4d, 0x5a, 0x90, 0, 3, 0, 0, 0, 4, 0, 0, 0, 0xff, 0xff, 0, 0, 0xb8, 0, 0, 0]);
 
-/** Something shaped like an Office file: a ZIP container. */
-export const docxFile = (name: string): Upload => ({ name, mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", buffer: Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.from("fake office container for tests")]) });
+const OFFICE_MIME = "application/vnd.openxmlformats-officedocument";
+
+/** A real Word document. `body` is WordprocessingML; by default, one paragraph. */
+export const docxFile = (name: string, body = para("Lettre de test.")): Upload => ({ name, mimeType: `${OFFICE_MIME}.wordprocessingml.document`, buffer: docx(body) });
+export const xlsxFile = (name: string, sheets: SheetSpec[]): Upload => ({ name, mimeType: `${OFFICE_MIME}.spreadsheetml.sheet`, buffer: xlsx(sheets) });
+export const pptxFile = (name: string, slides: SlideSpec[]): Upload => ({ name, mimeType: `${OFFICE_MIME}.presentationml.presentation`, buffer: pptx(slides) });
+/** A ZIP that is not an Office document, whatever it is named. */
+export const fakeOffice = (name: string): Upload => ({ name, mimeType: `${OFFICE_MIME}.wordprocessingml.document`, buffer: Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.from("fake office container for tests")]) });
 
 /* --------------------------------------------------------------- Navigation */
 
@@ -104,14 +111,28 @@ export async function upload(page: Page, files: Upload[], folder?: string): Prom
   await expect(d).toBeHidden();
 }
 
-export async function protect(page: Page, passphrase = PASS): Promise<void> {
+/** The recovery code on screen, once written down as the dialog asks. */
+export async function noteRecoveryCode(page: Page): Promise<string> {
+  const shown = page.locator("[data-recovery-code]");
+  await expect(shown).toBeVisible({ timeout: 20_000 });
+  const code = (await shown.innerText()).trim();
+  await page.check("#recovery-noted");
+  return code;
+}
+
+/** Turn protection on. Resolves the recovery code handed out at the end. */
+export async function protect(page: Page, passphrase = PASS): Promise<string> {
   await go(page, "preferences");
   await main(page).getByRole("button", { name: "Activer", exact: true }).click();
   await page.fill("#protect-new", passphrase);
   await page.fill("#protect-confirm", passphrase);
   await page.check("#protect-understood");
   await dialog(page).locator("button[type=submit]").click();
-  await expect(main(page).getByText("Activée", { exact: true })).toBeVisible({ timeout: 20_000 });
+  const code = await noteRecoveryCode(page);
+  await dialog(page).getByRole("button", { name: "Terminer" }).click();
+  await expect(dialog(page)).toBeHidden();
+  await expect(main(page).getByText("Activée", { exact: true })).toBeVisible();
+  return code;
 }
 
 export const lockScreen = (page: Page): Locator => page.getByRole("heading", { name: "Vault verrouillé" });

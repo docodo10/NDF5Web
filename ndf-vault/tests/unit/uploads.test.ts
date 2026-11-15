@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkUpload, contentMatches, detectContent, inspectUpload, MAX_UPLOAD_BYTES } from "@/lib/uploads";
+import { docx, para, pptx, xlsx, zipBuffer } from "../fixtures/office";
 
 const b = (...v: number[]) => new Uint8Array(v);
 const s = (text: string) => new TextEncoder().encode(text);
@@ -111,6 +112,26 @@ describe("inspectUpload", () => {
   it("refuses HTML dressed up as a PDF or an image", async () => {
     expect((await inspectUpload(file("page.pdf", "<html><script>alert(1)</script></html>"))).error).toMatch(/ne correspond pas/);
     expect((await inspectUpload(file("page.png", "<svg onload=alert(1)>"))).error).toMatch(/ne correspond pas/);
+  });
+
+  it("accepts real Office documents", async () => {
+    expect((await inspectUpload(file("Lettre.docx", new Uint8Array(docx(para("Bonjour")))))).error).toBeNull();
+    expect((await inspectUpload(file("Budget.xlsx", new Uint8Array(xlsx([{ name: "A", rows: [[1]] }]))))).error).toBeNull();
+    expect((await inspectUpload(file("Pitch.pptx", new Uint8Array(pptx([{ title: "Titre" }]))))).error).toBeNull();
+  });
+
+  it("refuses a ZIP that is not the Office document its name claims", async () => {
+    const archive = new Uint8Array(zipBuffer([{ name: "n'importe quoi.txt", data: "x" }]));
+    expect((await inspectUpload(file("archive.docx", archive))).error).toBe("Ce fichier n’est pas un document Word valide.");
+    expect((await inspectUpload(file("feuille.xlsx", new Uint8Array(docx(para("x")))))).error).toBe("Ce fichier n’est pas un classeur Excel valide.");
+    expect((await inspectUpload(file("diapos.pptx", archive))).error).toBe("Ce fichier n’est pas une présentation PowerPoint valide.");
+  });
+
+  it("refuses Office documents that carry macros", async () => {
+    const macro = new Uint8Array(docx(para("x"), [{ name: "word/vbaProject.bin", data: "macro" }]));
+    const c = await inspectUpload(file("Facture.docx", macro));
+    expect(c.error).toMatch(/macros/);
+    expect(c.sha256).toBeUndefined();
   });
 
   it("points out a file the vault already holds", async () => {

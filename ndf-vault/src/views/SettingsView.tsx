@@ -1,11 +1,11 @@
 "use client";
 
-import { Download, LockKeyhole, RotateCcw } from "lucide-react";
+import { Download, HardDriveDownload, HardDriveUpload, KeyRound, LockKeyhole, RotateCcw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import { requestPersistence, storageUsage } from "@/lib/db";
 import { USERS } from "@/lib/sample-data";
-import { formatSize } from "@/lib/format";
+import { formatMoment, formatSize } from "@/lib/format";
 import { watermarkText } from "@/lib/stamp";
 import { Ndf5Logo } from "@/components/brand/Brand";
 import { INPUT, SwitchRow } from "@/components/dialog-kit";
@@ -45,7 +45,8 @@ const STEPS: { label: string; hint: string; state: StepState }[] = [
   { label: "Intégrité et journal", hint: "Empreinte SHA-256 vérifiée à chaque ouverture, journal des accès exportable", state: "done" },
   { label: "Téléchargement et export", hint: "Originaux, copies filigranées (PDF et images), export ZIP", state: "done" },
   { label: "Historique des versions", hint: "Nouvelles versions, restauration et téléchargement des précédentes", state: "done" },
-  { label: "Aperçu réel", hint: "PDF, images, texte et CSV. Les fichiers Office se téléchargent pour l’instant", state: "partial" },
+  { label: "Récupération et sauvegarde", hint: "Code de récupération si la phrase est oubliée, sauvegarde chiffrée de tout le Vault et restauration", state: "done" },
+  { label: "Aperçu réel", hint: "PDF, images, texte, CSV, et le contenu des fichiers Word, Excel et PowerPoint", state: "done" },
   { label: "Accès des invités", hint: "Connexion par courriel, niveaux d’accès, conditions et NDA à signer", state: "pending" },
   { label: "Serveur", hint: "Stockage privé partagé entre appareils et utilisateurs", state: "pending" },
 ];
@@ -119,6 +120,21 @@ export function SettingsView() {
                   </Button>
                 </>
               )}
+            </Line>
+            <Line
+              label="Code de récupération"
+              hint={
+                !security.protected
+                  ? "Créé avec la protection : il permet de choisir une nouvelle phrase secrète si la vôtre est oubliée."
+                  : security.recoveryAt !== null
+                    ? `${security.recoveryAt ? `Créé le ${formatMoment(security.recoveryAt)}. ` : ""}Il permet de choisir une nouvelle phrase secrète si la vôtre est oubliée.`
+                    : "Aucun code : si la phrase secrète est oubliée, le contenu du Vault sur cet appareil est perdu."
+              }
+            >
+              {security.protected && security.recoveryAt === null && <Chip className="!border-amber-300 !text-amber-700">Aucun</Chip>}
+              <Button size="sm" icon={KeyRound} disabled={!security.protected} onClick={() => v.openDialog({ type: "recovery" })}>
+                {security.recoveryAt !== null ? "Remplacer le code" : "Créer un code"}
+              </Button>
             </Line>
             <Line label="Verrouillage automatique" hint="Verrouille le Vault après une période sans activité.">
               <label className="sr-only" htmlFor="auto-lock">
@@ -219,7 +235,15 @@ export function SettingsView() {
                 )}
               </Line>
             )}
-            <Line label="Exporter tout le Vault" hint="Une archive ZIP de vos originaux, rangés par dossier, avec un manifeste.">
+            <Line label="Sauvegarde chiffrée" hint="Tout le Vault dans un seul fichier, chiffré par une phrase secrète : dossiers, projets, journal, originaux et versions. À garder hors de cet appareil.">
+              <Button size="sm" icon={HardDriveDownload} onClick={() => v.openDialog({ type: "backup" })}>
+                Sauvegarder
+              </Button>
+              <Button size="sm" icon={HardDriveUpload} disabled={!persistent} onClick={() => v.openDialog({ type: "restore" })}>
+                Restaurer
+              </Button>
+            </Line>
+            <Line label="Exporter tout le Vault" hint="Une archive ZIP de vos originaux, rangés par dossier, avec un manifeste. Non chiffrée.">
               <Button size="sm" icon={Download} disabled={uploaded.length === 0} onClick={() => void v.exportVault()}>
                 Exporter
               </Button>

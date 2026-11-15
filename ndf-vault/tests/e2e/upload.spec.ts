@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { dialog, docxFile, downloaded, EXE, go, main, openVault, pdfFile, pngFile, row, rows, textFile, toast, upload } from "./helpers";
+import { dialog, docxFile, downloaded, EXE, fakeOffice, go, main, openVault, pdfFile, pngFile, row, rows, textFile, toast, upload } from "./helpers";
+import { docx, para } from "../fixtures/office";
 
 test("uploads real files and keeps them after a reload", async ({ page }) => {
   await openVault(page);
@@ -25,9 +26,13 @@ test("refuses files it should not accept, and says why", async ({ page }) => {
     { name: "image.png", mimeType: "image/png", buffer: Buffer.from("<svg onload=alert(1)>") },
     { name: "notes.txt", mimeType: "text/plain", buffer: EXE },
     { name: "dessin.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg/>") },
+    fakeOffice("archive.docx"), // a ZIP, but not a Word document
+    { name: "macro.docx", mimeType: "application/octet-stream", buffer: docx(para("x"), [{ name: "word/vbaProject.bin", data: "macro" }]) },
   ]);
   const list = d.getByRole("list", { name: "Fichiers choisis" });
-  await expect(list.getByRole("listitem")).toHaveCount(7);
+  await expect(list.getByRole("listitem")).toHaveCount(9);
+  await expect(list.getByRole("listitem").filter({ hasText: "archive.docx" })).toContainText("Ce fichier n’est pas un document Word valide.");
+  await expect(list.getByRole("listitem").filter({ hasText: "macro.docx" })).toContainText("Ce fichier contient des macros ou des contrôles actifs : il est refusé.");
   await expect(list.getByRole("listitem").filter({ hasText: "virus.exe" })).toContainText("Le format .exe n’est pas accepté.");
   await expect(list.getByRole("listitem").filter({ hasText: "vide.pdf" })).toContainText("Ce fichier est vide.");
   for (const name of ["facture.pdf", "page.pdf", "image.png", "notes.txt"]) await expect(list.getByRole("listitem").filter({ hasText: name })).toContainText("Le contenu ne correspond pas à l’extension");
@@ -65,7 +70,7 @@ test("accepts files dropped anywhere on the window", async ({ page }) => {
   await expect(row(page, "Scène déposée")).toBeVisible();
 });
 
-test("previews a real PDF, an image, text and CSV, and offers Office files as a download", async ({ page }) => {
+test("previews a real PDF, an image, text, CSV and a Word document", async ({ page }) => {
   await openVault(page);
   await upload(page, [await pdfFile("Contrat.pdf", 3), pngFile("Affiche.png", 640, 400), textFile("Notes.txt", "Première ligne.\nDeuxième ligne é à ç.\n"), textFile("Budget.csv", "Poste,Montant\nDécors,\"1 200\"\n"), docxFile("Lettre.docx")], "legal");
   const viewer = dialog(page);
@@ -102,8 +107,7 @@ test("previews a real PDF, an image, text and CSV, and offers Office files as a 
   await page.keyboard.press("Escape");
 
   await row(page, "Lettre").click();
-  await expect(body).toContainText("Pas d’aperçu pour ce format (.docx)");
-  await expect(body.getByRole("button", { name: "Télécharger l’original" })).toBeVisible();
+  await expect(body.locator("[data-office=docx]")).toContainText("Lettre de test.");
 });
 
 test("downloads the original byte for byte", async ({ page }) => {

@@ -1,5 +1,6 @@
 import { sha256Hex } from "./crypto";
 import { sanitizeName } from "./format";
+import { inspectOffice, OFFICE_LABEL, type OfficeFormat } from "./office";
 import { EXT_KIND } from "./sample-data";
 import type { FileKind } from "./types";
 
@@ -92,6 +93,12 @@ export async function inspectUpload(file: File, existing: { sha256?: string; lab
   try {
     const head = new Uint8Array(await file.slice(0, SNIFF_BYTES).arrayBuffer());
     if (!contentMatches(check.ext, head)) return { ...check, error: `Le contenu ne correspond pas à l’extension .${check.ext}.` };
+    // An Office file is a ZIP, and so is much else: look inside before trusting the name.
+    if (check.ext === "docx" || check.ext === "xlsx" || check.ext === "pptx") {
+      const verdict = await inspectOffice(file, check.ext as OfficeFormat);
+      if (verdict === "active-content") return { ...check, error: "Ce fichier contient des macros ou des contrôles actifs : il est refusé." };
+      if (verdict !== "ok") return { ...check, error: `Ce fichier n’est pas ${OFFICE_LABEL[check.ext as OfficeFormat]} valide.` };
+    }
     const sha256 = await sha256Hex(file);
     const twin = existing.find((e) => e.sha256 === sha256);
     return { ...check, sha256, duplicateOf: twin?.label };

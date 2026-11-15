@@ -31,14 +31,17 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useVault, type OriginalResult } from "@/lib/store";
 import type { VaultFile } from "@/lib/types";
 import { parseCsv } from "@/lib/csv";
+import { OfficeError, readDocx, readPptx, readXlsx, type DocxContent, type PptxContent, type XlsxContent } from "@/lib/office";
 import { watermarkText } from "@/lib/stamp";
 import { formatDate, fullName, KIND_LABEL } from "@/lib/format";
 import { Ndf5Mark, PageWatermark, PersonalWatermark } from "../brand/Brand";
 import { FileIcon } from "../files/FileTable";
 import { Button, IconButton } from "../ui";
+import { DocxView, SheetView, SimplifiedNote, SlidesView } from "./OfficePreview";
 import { openPdf, type PDFDocumentProxy } from "./pdf";
 
 const LETTER = { w: 816, h: 1056 }; // US Letter at 96 dpi
+const SLIDE = { w: 960, h: 540 }; // 16:9
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 3;
 const TEXT_PREVIEW_BYTES = 300 * 1024;
@@ -57,7 +60,11 @@ type Doc =
   | { kind: "pdf"; pdf: PDFDocumentProxy; base: Size }
   | { kind: "image"; url: string; base: Size }
   | { kind: "text"; text: string; rows: string[][] | null; truncated: boolean }
+  | { kind: "docx"; content: DocxContent }
+  | { kind: "xlsx"; content: XlsxContent }
+  | { kind: "pptx"; content: PptxContent }
   | { kind: "unsupported" }
+  | { kind: "tooLarge" }
   | { kind: "altered" }
   | { kind: "missing" };
 
@@ -107,7 +114,7 @@ function SamplePage({ file, n, folderName, watermark, personal }: { file: VaultF
               {KIND_LABEL[file.kind]} · {folderName} · Modifié le {formatDate(file.modifiedAt)}
             </p>
             <p className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-[13.5px] leading-[21px] text-neutral-600">
-              Cette page tient lieu de document : c’est un fichier d’exemple, sans contenu réel. Téléversez un PDF, une image ou un fichier texte pour voir un vrai aperçu.
+              Cette page tient lieu de document : c’est un fichier d’exemple, sans contenu réel. Téléversez un PDF, une image, un fichier texte ou un document Office pour voir un vrai aperçu.
             </p>
           </>
         ) : (
@@ -248,11 +255,20 @@ function useDocument(file: VaultFile | undefined, read: (file: VaultFile) => Pro
           const text = await blob.slice(0, TEXT_PREVIEW_BYTES).text();
           const rows = kind === "csv" ? parseCsv(text, CSV_PREVIEW_ROWS) : null;
           if (alive) setDoc({ kind: "text", text, rows, truncated: blob.size > TEXT_PREVIEW_BYTES || (rows !== null && rows.length >= CSV_PREVIEW_ROWS) });
+        } else if (kind === "docx") {
+          const content = await readDocx(blob);
+          if (alive) setDoc({ kind: "docx", content });
+        } else if (kind === "xlsx") {
+          const content = await readXlsx(blob);
+          if (alive) setDoc({ kind: "xlsx", content });
+        } else if (kind === "pptx") {
+          const content = await readPptx(blob);
+          if (alive) setDoc({ kind: "pptx", content });
         } else {
           setDoc({ kind: "unsupported" });
         }
-      } catch {
-        if (alive) setDoc({ kind: "unsupported" });
+      } catch (e) {
+        if (alive) setDoc({ kind: e instanceof OfficeError && e.reason === "too-large" ? "tooLarge" : "unsupported" });
       }
     })();
     return () => {
@@ -302,10 +318,12 @@ export function PreviewModal() {
   const [canvasEl, setCanvasEl] = useState<HTMLDivElement | null>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const base: Size = doc.kind === "pdf" || doc.kind === "image" ? doc.base : LETTER;
+  // Content that reflows to the width it is given, instead of having pages of a fixed size.
+  const reflow = doc.kind === "text" || doc.kind === "docx" || doc.kind === "xlsx" || doc.kind === "pptx";
+  const base: Size = doc.kind === "pdf" || doc.kind === "image" ? doc.base : doc.kind === "pptx" ? SLIDE : LETTER;
   const pageCount = doc.kind === "pdf" ? doc.pdf.numPages : doc.kind === "sample" && file ? file.pages : 1;
   // Zoom, fit and thumbnails apply to paged or image content; text reflows and notices are static.
-  const zoomable = doc.kind === "sample" || doc.kind === "pdf" || doc.kind === "image" || doc.kind === "text";
+  const zoomable = doc.kind === "sample" || doc.kind === "pdf" || doc.kind === "image" || reflow;
   const paged = doc.kind === "sample" || doc.kind === "pdf";
 
   // Reset per-file state when the modal opens or the file changes.
@@ -327,7 +345,7 @@ export function PreviewModal() {
   // Fit-to-page / fit-to-width track the canvas size.
   const baseW = base.w;
   const baseH = base.h;
-  const docKind = doc.kind;
+  const docKind = doc.kind === "pptx" ? "slides" : reflow ? "text" : doc.kind;
   useLayoutEffect(() => {
     if (!canvasEl || !fit) return;
     const apply = () => {
@@ -336,11 +354,12 @@ export function PreviewModal() {
       const cs = inner ? getComputedStyle(inner) : null;
       const pad = (cs ? parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) : 48) + 2;
       const byWidth = (canvasEl.clientWidth - pad) / baseW;
-      const byHeight = (canvasEl.clientHeight - 50) / baseH;
+      // Slides sit under a line of explanation, which takes its share of the height.
+      const byHeight = (canvasEl.clientHeight - (docKind === "slides" ? 96 : 50)) / baseH;
       // Text has no fixed page height, and a small image should not be blown up to fill the window.
       let next = fit === "width" || docKind === "text" ? byWidth : Math.min(byWidth, byHeight);
       if (docKind === "image" && fit === "page") next = Math.min(next, 1);
-      if (docKind === "text") next = Math.min(next, 1.25);
+      if (docKind === "text" || docKind === "slides") next = Math.min(next, 1.25);
       setZoom(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, next)));
     };
     apply();
@@ -503,11 +522,12 @@ export function PreviewModal() {
               {doc.kind === "unsupported" && (
                 <Notice
                   file={file}
-                  title={`Pas d’aperçu pour ce format (.${file.ext})`}
+                  title={file.kind === "docx" || file.kind === "xlsx" || file.kind === "pptx" ? "Aperçu impossible pour ce fichier" : `Pas d’aperçu pour ce format (.${file.ext})`}
                   text="L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application."
                   onDownload={download}
                 />
               )}
+              {doc.kind === "tooLarge" && <Notice file={file} title="Fichier trop volumineux pour l’aperçu" text="L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application." onDownload={download} />}
               {doc.kind === "altered" && (
                 <div className="flex h-full flex-col items-center justify-center px-6 text-center">
                   <ShieldAlert className="size-10 text-red-500" strokeWidth={1.5} />
@@ -573,6 +593,41 @@ export function PreviewModal() {
                     )}
                     {doc.truncated && <p className="mt-[1.5em] border-t border-neutral-200 pt-[1em] text-neutral-500">Aperçu limité au début du fichier. Téléchargez l’original pour tout voir.</p>}
                     {personal && <PersonalWatermark text={personal} />}
+                  </div>
+                </div>
+              )}
+              {doc.kind === "docx" && (
+                <div className="mx-auto flex w-max min-w-full flex-col items-center px-3 py-6 sm:px-8">
+                  <div style={{ width: Math.round(LETTER.w * zoom) }}>
+                    <SimplifiedNote>Aperçu simplifié : le texte, les titres et les tableaux. La mise en page, les images, les en-têtes et les notes de bas de page ne sont pas reproduits.</SimplifiedNote>
+                    <div data-office="docx" className="relative border border-line bg-white shadow-page" style={{ fontSize: 13.5 * zoom, padding: `${4.4 * zoom}em ${4.8 * zoom}em` }}>
+                      {v.watermark && <PageWatermark />}
+                      <div className="relative">
+                        <DocxView content={doc.content} />
+                      </div>
+                      {personal && <PersonalWatermark text={personal} />}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {doc.kind === "xlsx" && (
+                <div className="mx-auto flex w-max min-w-full flex-col items-center px-3 py-6 sm:px-8">
+                  <div style={{ minWidth: Math.round(LETTER.w * zoom) }}>
+                    <SimplifiedNote>Aperçu simplifié : les valeurs des cellules, feuille par feuille. Les formules affichent leur dernier résultat ; la mise en forme, les graphiques et les cellules fusionnées ne sont pas reproduits.</SimplifiedNote>
+                    <div data-office="xlsx" className="relative border border-line bg-white shadow-page" style={{ fontSize: 12.5 * zoom, padding: `${2 * zoom}em` }}>
+                      <div className="relative">
+                        <SheetView key={file.id} content={doc.content} />
+                      </div>
+                      {personal && <PersonalWatermark text={personal} />}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {doc.kind === "pptx" && (
+                <div className="mx-auto flex w-max min-w-full flex-col items-center px-3 py-6 sm:px-8">
+                  <div data-office="pptx" style={{ width: Math.round(SLIDE.w * zoom), fontSize: 15 * zoom }}>
+                    <SimplifiedNote>Aperçu simplifié : le texte de chaque diapositive et les notes du présentateur. Les images, les graphiques et la mise en page ne sont pas reproduits.</SimplifiedNote>
+                    <SlidesView content={doc.content} watermark={v.watermark} personal={personal} />
                   </div>
                 </div>
               )}

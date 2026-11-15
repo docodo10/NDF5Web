@@ -1,5 +1,5 @@
 import type { ActivityItem, Folder, Profile, Project, VaultFile } from "./types";
-import { createEnvelope, decryptBytes, decryptJson, encryptBytes, encryptJson, openEnvelope, rewrapEnvelope, WrongPassphraseError, type KeyEnvelope } from "./crypto";
+import { createEnvelope, createRecovery, decryptBytes, decryptJson, encryptBytes, encryptJson, openEnvelope, recoverEnvelope, rewrapEnvelope, WrongPassphraseError, type KeyEnvelope } from "./crypto";
 
 /**
  * Local storage for the vault: IndexedDB in this browser only. Nothing here is
@@ -48,6 +48,11 @@ export interface Meta {
   lastFailedAt?: string;
   /** Lock after this many minutes without activity; 0 never locks. */
   autoLockMinutes: number;
+  /** The data key wrapped under the recovery code, when one has been created. */
+  recovery?: KeyEnvelope;
+  recoveryAt?: string;
+  /** Set when the passphrase was just replaced with the recovery code; reported and cleared at the next unlock. */
+  recovered?: boolean;
 }
 
 const DEFAULT_META: Meta = { protected: false, failed: 0, autoLockMinutes: 15 };
@@ -151,11 +156,11 @@ export function isUnlocked(): boolean {
 
 /* --------------------------------------------------------- Lock and unlock */
 
-export type UnlockResult = { ok: true; failedBefore: number; lastFailedAt?: string } | { ok: false; failed: number };
+export type UnlockResult = { ok: true; failedBefore: number; lastFailedAt?: string; recovered: boolean } | { ok: false; failed: number };
 
 export async function unlock(passphrase: string): Promise<UnlockResult> {
   const meta = await readMeta();
-  if (!meta.protected || !meta.envelope) return { ok: true, failedBefore: 0 };
+  if (!meta.protected || !meta.envelope) return { ok: true, failedBefore: 0, recovered: false };
   try {
     dataKey = await openEnvelope(passphrase, meta.envelope);
   } catch (e) {
@@ -164,8 +169,8 @@ export async function unlock(passphrase: string): Promise<UnlockResult> {
     await writeMeta({ ...meta, failed, lastFailedAt: new Date().toISOString() });
     return { ok: false, failed };
   }
-  const result: UnlockResult = { ok: true, failedBefore: meta.failed, lastFailedAt: meta.lastFailedAt };
-  let next: Meta = { ...meta, failed: 0, lastFailedAt: undefined };
+  const result: UnlockResult = { ok: true, failedBefore: meta.failed, lastFailedAt: meta.lastFailedAt, recovered: meta.recovered === true };
+  let next: Meta = { ...meta, failed: 0, lastFailedAt: undefined, recovered: undefined };
   if (meta.pending === "encrypt") {
     sealing = true;
     await convertAll("encrypt");
@@ -228,6 +233,45 @@ export async function changePassphrase(current: string, next: string, iterations
   } catch (e) {
     if (e instanceof WrongPassphraseError) return false;
     throw e;
+  }
+}
+
+/**
+ * Create the recovery code, or replace the one there was. Returns the code,
+ * to be shown once and never stored in clear; null when the passphrase is wrong.
+ */
+export async function createRecoveryCode(passphrase: string, iterations?: number): Promise<string | null> {
+  const meta = await readMeta();
+  if (!meta.protected || !meta.envelope) return null;
+  try {
+    const { code, recovery } = await createRecovery(passphrase, meta.envelope, iterations);
+    return (await writeMeta({ ...meta, recovery, recoveryAt: new Date().toISOString() })) ? code : null;
+  } catch (e) {
+    if (e instanceof WrongPassphraseError) return null;
+    throw e;
+  }
+}
+
+export type RecoverResult = { ok: true; code: string } | { ok: false; failed: number };
+
+/**
+ * The passphrase is lost: the recovery code sets a new one. The vault stays
+ * locked; it opens with the new passphrase. A wrong code counts as a failed
+ * attempt, like a wrong passphrase. On success the code is replaced by the
+ * one returned.
+ */
+export async function recoverWithCode(code: string, nextPassphrase: string, iterations?: number): Promise<RecoverResult> {
+  const meta = await readMeta();
+  if (!meta.protected || !meta.recovery) return { ok: false, failed: meta.failed };
+  try {
+    const next = await recoverEnvelope(code, meta.recovery, nextPassphrase, iterations);
+    if (!(await writeMeta({ ...meta, envelope: next.envelope, recovery: next.recovery, recoveryAt: new Date().toISOString(), recovered: true }))) return { ok: false, failed: meta.failed };
+    return { ok: true, code: next.code };
+  } catch (e) {
+    if (!(e instanceof WrongPassphraseError)) throw e;
+    const failed = meta.failed + 1;
+    await writeMeta({ ...meta, failed, lastFailedAt: new Date().toISOString() });
+    return { ok: false, failed };
   }
 }
 
@@ -348,6 +392,11 @@ export async function deleteBlobs(ids: string[]): Promise<void> {
   await write(BLOBS, (st) => {
     for (const id of ids) st.delete(id);
   });
+}
+
+/** The key of every stored original. */
+export async function listBlobIds(): Promise<string[]> {
+  return ((await run<IDBValidKey[]>(BLOBS, "readonly", (st) => st.getAllKeys())) ?? []).map(String);
 }
 
 /** Erase the documents and the saved state. Protection settings stay. */
