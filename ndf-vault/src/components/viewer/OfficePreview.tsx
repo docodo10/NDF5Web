@@ -102,8 +102,8 @@ export function DocxView({ content }: { content: DocxContent }) {
 
 const NUMERIC = /^-?[\d\s  ]+(,\d+)?( %)?$/;
 
-export function SheetView({ content }: { content: XlsxContent }) {
-  const [active, setActive] = useState(0);
+export function SheetView({ content, initial = 0 }: { content: XlsxContent; initial?: number }) {
+  const [active, setActive] = useState(initial);
   const sheet = content.sheets[Math.min(active, content.sheets.length - 1)];
   if (!sheet) return <p className="text-neutral-500">Ce classeur ne contient aucune feuille.</p>;
   const width = sheet.rows[0]?.length ?? 0;

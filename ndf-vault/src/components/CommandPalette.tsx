@@ -7,6 +7,8 @@ import { FolderIcon, KanbanIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import { count, formatDate, folderLabel, KIND_LABEL } from "@/lib/format";
+import { pageLabel } from "@/lib/extract";
+import { MIN_QUERY_LENGTH } from "@/lib/search";
 import { fileMatches } from "./files/Explorer";
 import { FileIcon } from "./files/FileTable";
 import { Kbd } from "./ui";
@@ -17,6 +19,8 @@ interface Result {
   icon: ReactNode;
   title: string;
   meta: string;
+  /** For a match inside a document: the words around it. */
+  excerpt?: { before: string; match: string; after: string };
   run: () => void;
 }
 
@@ -54,6 +58,16 @@ export function CommandPalette() {
     const folders = v.folders.filter((d) => d.parentId && (!needle || `${d.name} ${d.code ?? ""}`.toLowerCase().includes(needle))).slice(0, needle ? 5 : 0);
     const projects = v.projects.filter((p) => !needle || `${p.name} ${p.code} ${p.period}`.toLowerCase().includes(needle));
     const ids = files.map((f) => f.id);
+    // Inside the documents themselves, once the query is long enough to mean something.
+    const inContent =
+      needle.length >= MIN_QUERY_LENGTH
+        ? v
+            .searchContent(q)
+            .map((m) => ({ ...m, file: live.find((f) => f.id === m.fileId) }))
+            .filter((m) => m.file)
+            .slice(0, 6)
+        : [];
+    const contentIds = inContent.map((m) => m.fileId);
     return [
       ...files.map<Result>((f) => ({
         key: `file-${f.id}`,
@@ -63,6 +77,19 @@ export function CommandPalette() {
         meta: `${KIND_LABEL[f.kind]} · ${v.folders.find((d) => d.id === f.folderId)?.name ?? ""} · ${formatDate(f.modifiedAt)}`,
         run: () => v.openPreview(f.id, ids),
       })),
+      ...inContent.map<Result>(({ file, hit, pages }) => {
+        const f = file!;
+        const where = pageLabel(f.kind, hit.page, pages);
+        return {
+          key: `content-${f.id}`,
+          group: "Dans le contenu",
+          icon: <FileIcon kind={f.kind} size={32} />,
+          title: `${f.name}.${f.ext}`,
+          meta: [where, hit.count > 1 ? count(hit.count, "occurrence") : ""].filter(Boolean).join(" · "),
+          excerpt: { before: hit.before, match: hit.match, after: hit.after },
+          run: () => v.openPreview(f.id, contentIds, false, hit.page + 1),
+        };
+      }),
       ...folders.map<Result>((d) => ({
         key: `folder-${d.id}`,
         group: "Dossiers",
@@ -132,7 +159,7 @@ export function CommandPalette() {
                   choose(results[active]);
                 }
               }}
-              placeholder="Nom, dossier, projet, type, étiquette, responsable ou date"
+              placeholder="Nom, dossier, projet, étiquette… ou un mot du contenu"
               aria-label="Rechercher dans NDF Vault"
               className="h-full min-w-0 flex-1 bg-transparent text-[14.5px] text-ink placeholder:text-neutral-400"
             />
@@ -156,7 +183,16 @@ export function CommandPalette() {
                     {r.icon}
                     <span className="min-w-0 flex-1 leading-tight">
                       <span className="block truncate text-[13.5px] font-medium text-ink">{r.title}</span>
-                      <span className="block truncate text-[12px] text-neutral-500">{r.meta}</span>
+                      {r.excerpt ? (
+                        <span data-excerpt className="mt-0.5 block text-[12px] leading-[17px] text-neutral-500 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
+                          {r.meta && <span className="font-medium text-neutral-600">{r.meta} — </span>}
+                          {r.excerpt.before}
+                          <mark className="rounded-[3px] bg-amber-100 px-0.5 font-medium text-ink">{r.excerpt.match}</mark>
+                          {r.excerpt.after}
+                        </span>
+                      ) : (
+                        <span className="block truncate text-[12px] text-neutral-500">{r.meta}</span>
+                      )}
                     </span>
                     {i === active && <CornerDownLeft className="size-4 shrink-0 text-neutral-400" strokeWidth={1.75} />}
                   </button>
@@ -173,6 +209,11 @@ export function CommandPalette() {
               <Kbd>↵</Kbd> Ouvrir
             </span>
             <span className="ml-auto">
+              {v.indexStatus.done < v.indexStatus.total && (
+                <span data-indexing className="mr-3 text-neutral-400">
+                  Lecture du contenu : {v.indexStatus.done} / {v.indexStatus.total}
+                </span>
+              )}
               {count(results.length, "résultat")}
             </span>
           </div>

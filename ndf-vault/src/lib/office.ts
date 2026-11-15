@@ -231,7 +231,7 @@ function readTable(tbl: XmlNode): DocBlock {
   return { type: "table", rows };
 }
 
-export function readDocx(file: Blob): Promise<DocxContent> {
+export function readDocx(file: Blob, maxBlocks = MAX_BLOCKS): Promise<DocxContent> {
   return guarded(async () => {
     const zip = await open(file);
     const xml = await zip.text(MAIN_PART.docx);
@@ -246,7 +246,7 @@ export function readDocx(file: Blob): Promise<DocxContent> {
 
     const read = (container: XmlNode) => {
       for (const c of kids(container)) {
-        if (blocks.length >= MAX_BLOCKS) {
+        if (blocks.length >= maxBlocks) {
           truncated = true;
           return;
         }
@@ -386,7 +386,7 @@ function sharedStrings(xml: string | null): string[] {
   return out;
 }
 
-function readSheet(xml: string, strings: string[], formats: CellFormat[], date1904: boolean): { rows: string[][]; truncated: boolean } {
+function readSheet(xml: string, strings: string[], formats: CellFormat[], date1904: boolean, maxRows: number, maxCols: number): { rows: string[][]; truncated: boolean } {
   const rows: string[][] = [];
   let truncated = false;
   let row: string[] | null = null;
@@ -414,10 +414,10 @@ function readSheet(xml: string, strings: string[], formats: CellFormat[], date19
         // Rows that are entirely empty are simply absent from the file: keep the gap so the layout holds.
         const number = Number(t.attrs.r);
         if (Number.isInteger(number) && number > rows.length + 1) {
-          const gap = Math.min(number - 1, MAX_SHEET_ROWS) - rows.length;
+          const gap = Math.min(number - 1, maxRows) - rows.length;
           for (let i = 0; i < gap; i++) rows.push([]);
         }
-        if (rows.length >= MAX_SHEET_ROWS) {
+        if (rows.length >= maxRows) {
           truncated = true;
           break;
         }
@@ -439,7 +439,7 @@ function readSheet(xml: string, strings: string[], formats: CellFormat[], date19
     } else if (t.type === "close") {
       if (t.name === "v" || t.name === "t") reading = null;
       else if (t.name === "c" && cell && row) {
-        if (cell.col < MAX_SHEET_COLS) {
+        if (cell.col < maxCols) {
           const text = display(cell);
           if (text !== "") {
             while (row.length < cell.col) row.push("");
@@ -461,7 +461,8 @@ function readSheet(xml: string, strings: string[], formats: CellFormat[], date19
   return { rows, truncated };
 }
 
-export function readXlsx(file: Blob): Promise<XlsxContent> {
+/** `limits` caps what is read from each sheet: the preview shows a first screenful, the search index reads further. */
+export function readXlsx(file: Blob, limits: { rows: number; cols: number } = { rows: MAX_SHEET_ROWS, cols: MAX_SHEET_COLS }): Promise<XlsxContent> {
   return guarded(async () => {
     const zip = await open(file);
     const xml = await zip.text(MAIN_PART.xlsx);
@@ -482,7 +483,7 @@ export function readXlsx(file: Blob): Promise<XlsxContent> {
       const hidden = sheet.attrs.state === "hidden" || sheet.attrs.state === "veryHidden";
       const sheetXml = await zip.text(path);
       // A chart sheet or a missing part has no cells to show.
-      sheets.push({ name, hidden, ...(sheetXml ? readSheet(sheetXml, strings, formats, date1904) : { rows: [], truncated: false }) });
+      sheets.push({ name, hidden, ...(sheetXml ? readSheet(sheetXml, strings, formats, date1904, limits.rows, limits.cols) : { rows: [], truncated: false }) });
     }
     return { sheets, truncated: listed.length > MAX_SHEETS };
   });

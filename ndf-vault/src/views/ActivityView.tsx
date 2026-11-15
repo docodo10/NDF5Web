@@ -38,7 +38,7 @@ export function ActivityView() {
         <ActivityList
           items={shown}
           emptyTitle={scope === "security" ? "Aucun événement de sécurité" : "Aucune activité pour l’instant"}
-          emptyHint={scope === "security" ? "Les déverrouillages, changements de phrase secrète et fichiers altérés s’afficheront ici." : "Ouvrez, renommez, déplacez ou téléchargez un fichier : ce sera consigné ici."}
+          emptyHint={scope === "security" ? "Les verrouillages, déverrouillages, changements de phrase secrète et fichiers altérés s’afficheront ici." : "Ouvrez, renommez, déplacez ou téléchargez un fichier : ce sera consigné ici."}
         />
       </div>
     </div>

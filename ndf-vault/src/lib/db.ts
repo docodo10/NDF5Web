@@ -33,6 +33,8 @@ export interface Persisted {
   watermark: boolean;
   personalMark: boolean;
   profile: Profile;
+  /** Hide the content whenever the window is not the active one. */
+  privacy?: boolean;
 }
 
 export const DEFAULT_PROFILE: Profile = { name: "Admin NDF5", company: "NDF5 Productions", email: "" };
@@ -154,6 +156,11 @@ export function isUnlocked(): boolean {
   return dataKey !== null;
 }
 
+/** True when a record written now could be read back: the vault is not protected, or it is and its key is in memory. */
+export function isAvailableKey(): boolean {
+  return !sealing || dataKey !== null;
+}
+
 /* --------------------------------------------------------- Lock and unlock */
 
 export type UnlockResult = { ok: true; failedBefore: number; lastFailedAt?: string; recovered: boolean } | { ok: false; failed: number };
@@ -221,6 +228,19 @@ export async function disableProtection(passphrase: string): Promise<boolean> {
   await writeMeta({ ...DEFAULT_META, autoLockMinutes: meta.autoLockMinutes });
   dataKey = null;
   return true;
+}
+
+/** Is this the vault's passphrase? Changes nothing: used to ask again before an action that takes content out of the vault or erases it. */
+export async function verifyPassphrase(passphrase: string): Promise<boolean> {
+  const meta = await readMeta();
+  if (!meta.protected || !meta.envelope) return true;
+  try {
+    await openEnvelope(passphrase, meta.envelope);
+    return true;
+  } catch (e) {
+    if (e instanceof WrongPassphraseError) return false;
+    throw e;
+  }
 }
 
 /** Change the passphrase. The stored data is untouched: only the key's wrapping changes. */
@@ -326,6 +346,7 @@ export function migrate(saved: Partial<Persisted> & { schema?: number }): Persis
     watermark: saved.watermark ?? true,
     personalMark: saved.personalMark ?? true,
     profile: { ...DEFAULT_PROFILE, ...(saved.profile ?? {}) },
+    ...(saved.privacy === true && { privacy: true }),
   };
 }
 

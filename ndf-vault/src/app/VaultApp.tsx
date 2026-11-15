@@ -8,6 +8,7 @@ import { PreviewModal } from "@/components/viewer/PreviewModal";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Tour } from "@/components/Tour";
 import { LockScreen } from "@/components/security/LockScreen";
+import { PrivacyVeil } from "@/components/security/PrivacyVeil";
 import { VaultLockup } from "@/components/brand/Brand";
 import { Home } from "@/views/Home";
 import { FilesView } from "@/views/FilesView";
@@ -75,6 +76,7 @@ export function VaultApp() {
       <CommandPalette />
       <ToastHost />
       <Tour />
+      <PrivacyVeil />
     </VaultProvider>
   );
 }

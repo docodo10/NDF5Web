@@ -292,6 +292,7 @@ export function validateState(raw: unknown): Persisted | null {
     activity,
     watermark: migrated.watermark !== false,
     personalMark: migrated.personalMark !== false,
+    ...(migrated.privacy === true && { privacy: true }),
     profile: {
       name: (str(profile.name, 200) && sanitizeName(profile.name)) || DEFAULT_PROFILE.name,
       company: str(profile.company, 200) ? sanitizeName(profile.company) : "",

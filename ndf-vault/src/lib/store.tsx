@@ -9,6 +9,8 @@ import * as db from "./db";
 import type { Meta, RecoverResult, UnlockResult } from "./db";
 import { cryptoAvailable, sha256Hex } from "./crypto";
 import { toCsv } from "./csv";
+import { extractText } from "./extract";
+import { indexText, searchText, type DocText, type Hit, type IndexedText } from "./search";
 import { hashToRoute, routeToHash } from "./routes";
 import { folderRules } from "./selectors";
 import { stampImage, stampPdf, watermarkText } from "./stamp";
@@ -48,6 +50,8 @@ export type DialogState =
   | { type: "recovery" }
   | { type: "backup" }
   | { type: "restore" }
+  | { type: "audit" }
+  | { type: "exportVault" }
   | null;
 
 export interface Toast {
@@ -60,6 +64,16 @@ interface PreviewState {
   fileId: string;
   listIds: string[];
   fullscreen?: boolean;
+  /** Page, slide or sheet to show first, counted from 1: where a search found its match. */
+  page?: number;
+}
+
+/** A document whose content matches a search. */
+export interface ContentMatch {
+  fileId: string;
+  hit: Hit;
+  /** How many pages, slides or sheets the document has. */
+  pages: number;
 }
 
 /** A stored original, or why it cannot be given. "altered" means its fingerprint no longer matches. */
@@ -72,6 +86,15 @@ export interface SecurityState {
   autoLockMinutes: number;
   /** When the current recovery code was created; null when there is none. */
   recoveryAt: string | null;
+}
+
+export type AuditState = "altered" | "missing" | "unverified";
+
+/** What a check of every stored original found. */
+export interface AuditReport {
+  total: number;
+  intact: number;
+  problems: { label: string; state: AuditState }[];
 }
 
 /** How a restore ended. "incomplete": the vault was replaced, but the device ran out of room for some originals. */
@@ -90,6 +113,9 @@ interface VaultContext {
   setWatermark: (v: boolean) => void;
   personalMark: boolean;
   setPersonalMark: (v: boolean) => void;
+  /** Hide the content whenever the window is not the active one. */
+  privacy: boolean;
+  setPrivacy: (v: boolean) => void;
   profile: Profile;
   setProfile: (p: Profile) => void;
   paletteOpen: boolean;
@@ -97,7 +123,11 @@ interface VaultContext {
   dialog: DialogState;
   openDialog: (d: DialogState) => void;
   preview: PreviewState | null;
-  openPreview: (fileId: string, listIds?: string[], fullscreen?: boolean) => void;
+  openPreview: (fileId: string, listIds?: string[], fullscreen?: boolean, page?: number) => void;
+  /** Search inside the uploaded documents. Best matches first. */
+  searchContent: (query: string) => ContentMatch[];
+  /** How far the content index is: documents read, out of those that have text to read. */
+  indexStatus: { done: number; total: number };
   closePreview: () => void;
   toast: Toast | null;
   notify: (message: string, undo?: () => void) => void;
@@ -109,11 +139,15 @@ interface VaultContext {
   endTour: () => void;
   // security
   security: SecurityState;
-  lockNow: () => Promise<void>;
+  lockNow: (idle?: boolean) => Promise<void>;
   enableProtection: (passphrase: string) => Promise<boolean>;
   disableProtection: (passphrase: string) => Promise<boolean>;
   changePassphrase: (current: string, next: string) => Promise<boolean>;
   setAutoLock: (minutes: number) => void;
+  /** True when the vault is not protected, or when this is its passphrase. */
+  verifyPassphrase: (passphrase: string) => Promise<boolean>;
+  /** Recompute the fingerprint of every stored original and compare it with the one taken at upload. */
+  auditVault: (onProgress?: (done: number, total: number) => void) => Promise<AuditReport>;
   /** Create or replace the recovery code. Resolves the code, to show once; null when the passphrase is wrong. */
   createRecoveryCode: (passphrase: string) => Promise<string | null>;
   /** Save the whole vault as one encrypted file. */
@@ -274,6 +308,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   const [activity, setActivity] = useState<ActivityItem[]>(init?.activity ?? ACTIVITY);
   const [watermark, setWatermark] = useState(init?.watermark ?? true);
   const [personalMark, setPersonalMark] = useState(init?.personalMark ?? true);
+  const [privacy, setPrivacy] = useState(init?.privacy === true);
   const [profile, setProfileState] = useState<Profile>(init?.profile ?? db.DEFAULT_PROFILE);
   const [meta, setMeta] = useState<Meta>(boot.meta);
   // The session only mounts in the browser (see VaultApp), so the first render can read the URL.
@@ -287,8 +322,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const persisted = useMemo<db.Persisted>(
-    () => ({ schema: db.SCHEMA, files, folders, projects, activity: activity.slice(0, 500), watermark, personalMark, profile }),
-    [files, folders, projects, activity, watermark, personalMark, profile],
+    () => ({ schema: db.SCHEMA, files, folders, projects, activity: activity.slice(0, 500), watermark, personalMark, profile, ...(privacy && { privacy: true }) }),
+    [files, folders, projects, activity, watermark, personalMark, profile, privacy],
   );
   const latest = useRef(persisted);
   latest.current = persisted;
@@ -349,6 +384,80 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
     });
   }, []);
 
+  /* ---------------------------------------------------------- Content index */
+
+  // The text of every uploaded document, in memory only while the vault is open.
+  // On disk it sits next to the originals, under "t-<file id>", encrypted like them.
+  const textIndex = useRef(new Map<string, { sha256: string; text: IndexedText }>());
+  const [indexedCount, setIndexedCount] = useState(0);
+  const indexQueue = useRef<Promise<void>>(Promise.resolve());
+  const alive = useRef(true);
+  useEffect(
+    () => () => {
+      alive.current = false;
+    },
+    [],
+  );
+  const indexable = useMemo(() => files.filter((f) => !f.sample && f.kind !== "image" && f.sha256), [files]);
+
+  useEffect(() => {
+    if (!persistent || !cryptoAvailable()) return;
+    const present = new Set(indexable.map((f) => f.id));
+    for (const id of textIndex.current.keys()) if (!present.has(id)) textIndex.current.delete(id);
+    const todo = indexable.filter((f) => textIndex.current.get(f.id)?.sha256 !== f.sha256);
+    if (todo.length === 0) return;
+
+    const read = async (f: VaultFile): Promise<IndexedText> => {
+      const saved = await db.getBlob(`t-${f.id}`);
+      if (saved) {
+        try {
+          const record = JSON.parse(await saved.text()) as { v?: number; sha256?: string; pages?: unknown };
+          if (record.v === 1 && record.sha256 === f.sha256 && Array.isArray(record.pages) && record.pages.every((p) => typeof p === "string")) return indexText({ pages: record.pages as string[] });
+        } catch {
+          /* not a usable record: read the original again */
+        }
+      }
+      let doc: DocText | null = null;
+      const original = await db.readBlob(f.id);
+      // Only an original that still matches its fingerprint feeds the search.
+      if (original.status !== "ok" || (await sha256Hex(original.blob)) !== f.sha256) return indexText({ pages: [] });
+      try {
+        doc = await extractText(f.kind, original.blob);
+      } catch {
+        /* unreadable: indexed as empty, so it is not tried again at every opening */
+      }
+      const text = indexText(doc ?? { pages: [] });
+      await db.putBlob(`t-${f.id}`, new Blob([JSON.stringify({ v: 1, sha256: f.sha256, pages: text.pages })], { type: "application/json" }));
+      return text;
+    };
+
+    // One document at a time, in the background, letting the page breathe in between.
+    indexQueue.current = indexQueue.current.then(async () => {
+      for (const f of todo) {
+        if (!alive.current || !db.isAvailableKey()) return;
+        if (!f.sha256 || textIndex.current.get(f.id)?.sha256 === f.sha256) continue;
+        try {
+          const text = await read(f);
+          if (!alive.current) return;
+          textIndex.current.set(f.id, { sha256: f.sha256, text });
+          setIndexedCount((n) => n + 1);
+        } catch {
+          /* storage refused: the document simply stays out of the search */
+        }
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    });
+  }, [indexable, persistent]);
+
+  const searchContent = useCallback((query: string): ContentMatch[] => {
+    const out: ContentMatch[] = [];
+    for (const [fileId, entry] of textIndex.current) {
+      const hit = searchText(entry.text, query);
+      if (hit) out.push({ fileId, hit, pages: entry.text.pages.length });
+    }
+    return out.sort((a, b) => Number(b.hit.phrase) - Number(a.hit.phrase) || b.hit.count - a.hit.count);
+  }, []);
+
   const patchMany = useCallback((ids: string[], patch: (f: VaultFile) => Partial<VaultFile>) => {
     const set = new Set(ids);
     setFiles((fs) => fs.map((f) => (set.has(f.id) ? { ...f, ...patch(f) } : f)));
@@ -388,12 +497,20 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
 
   /* ------------------------------------------------------------- Security */
 
-  const lockNow = useCallback(async () => {
-    if (!meta.protected) return;
-    // Write the last changes while the key is still there, then forget it.
-    if (persistent) await saveNow();
-    relock();
-  }, [meta.protected, persistent, relock, saveNow]);
+  const lockNow = useCallback(
+    async (idle = false) => {
+      if (!meta.protected) return;
+      // Write the last changes while the key is still there, with the lock itself in the journal, then forget the key.
+      if (persistent) {
+        await saveNow();
+        frozen.current = true;
+        const entry: ActivityItem = { id: uid("a"), at: nowIso(), userId: CURRENT_USER_ID, verb: "a verrouillé le Vault", target: idle ? "automatiquement, après une période sans activité" : "", projectId: null, kind: "security" };
+        await db.saveState({ ...latest.current, activity: [entry, ...latest.current.activity].slice(0, 500) });
+      }
+      relock();
+    },
+    [meta.protected, persistent, relock, saveNow],
+  );
   const lockRef = useRef(lockNow);
   lockRef.current = lockNow;
 
@@ -406,7 +523,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       last = Date.now();
     };
     const check = () => {
-      if (Date.now() - last >= limit) void lockRef.current();
+      if (Date.now() - last >= limit) void lockRef.current(true);
     };
     const events = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"] as const;
     for (const e of events) window.addEventListener(e, touch, { passive: true, capture: true });
@@ -478,6 +595,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       setWatermark,
       personalMark,
       setPersonalMark,
+      privacy,
+      setPrivacy,
       profile,
       setProfile: (p) => {
         setProfileState({ name: sanitizeName(p.name) || db.DEFAULT_PROFILE.name, company: sanitizeName(p.company), email: p.email.trim().slice(0, 120) });
@@ -488,12 +607,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       dialog,
       openDialog,
       preview,
-      openPreview: (fileId, listIds, fullscreen) => {
-        setPreview({ fileId, listIds: listIds && listIds.length ? listIds : [fileId], fullscreen });
+      openPreview: (fileId, listIds, fullscreen, page) => {
+        setPreview({ fileId, listIds: listIds && listIds.length ? listIds : [fileId], fullscreen, page });
         const f = byId(fileId);
         if (f) log("a ouvert", fullName(f), f.projectId, "file", true);
       },
       closePreview: () => setPreview(null),
+      searchContent,
+      indexStatus: { done: indexable.filter((f) => textIndex.current.get(f.id)?.sha256 === f.sha256).length, total: indexable.length },
       toast,
       notify,
       dismissToast,
@@ -533,6 +654,27 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       setAutoLock: (minutes) => {
         setMeta((m) => ({ ...m, autoLockMinutes: minutes }));
         void db.setAutoLock(minutes);
+      },
+      verifyPassphrase: (passphrase) => db.verifyPassphrase(passphrase),
+      auditVault: async (onProgress) => {
+        const targets = files.filter((f) => !f.sample);
+        const total = targets.reduce((n, f) => n + 1 + (f.versions?.length ?? 0), 0);
+        const problems: AuditReport["problems"] = [];
+        let done = 0;
+        const check = async (blobId: string, sha256: string | undefined, name: string) => {
+          const r = await db.readBlob(blobId);
+          // "corrupt": the encrypted record no longer authenticates. A mismatch: the content is not what was uploaded.
+          const state: AuditState | "intact" = r.status === "missing" ? "missing" : r.status !== "ok" ? "altered" : !sha256 ? "unverified" : (await sha256Hex(r.blob)) === sha256 ? "intact" : "altered";
+          if (state !== "intact") problems.push({ label: name, state });
+          onProgress?.(++done, total);
+        };
+        for (const f of targets) {
+          await check(f.id, f.sha256, fullName(f));
+          for (const ver of f.versions ?? []) await check(ver.id, ver.sha256, `${fullName(f)} — version du ${formatDate(ver.at)}`);
+        }
+        const bad = problems.filter((p) => p.state !== "unverified").length;
+        log("a vérifié l’intégrité du Vault :", total === 0 ? "aucun original à vérifier" : bad ? `${count(bad, "problème")} sur ${count(total, "original", "originaux")}` : count(total, "original intact", "originaux intacts"), null, "security");
+        return { total, intact: total - problems.length, problems };
       },
       createRecoveryCode: async (passphrase) => {
         // Asked of what is stored, not of this render: the dialog calls it right after turning protection on.
@@ -684,7 +826,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       purgeFiles: (ids) => {
         const what = label(ids);
         const set = new Set(ids);
-        const blobs = files.filter((f) => set.has(f.id)).flatMap((f) => [f.id, ...(f.versions ?? []).map((v) => v.id)]);
+        const blobs = files.filter((f) => set.has(f.id)).flatMap((f) => [f.id, `t-${f.id}`, ...(f.versions ?? []).map((v) => v.id)]);
         setFiles((fs) => fs.filter((f) => !set.has(f.id)));
         void db.deleteBlobs(blobs);
         log("a supprimé définitivement", what);
@@ -951,13 +1093,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         setActivity(ACTIVITY);
         setWatermark(true);
         setPersonalMark(true);
+        setPrivacy(false);
         setProfileState(db.DEFAULT_PROFILE);
         setPreview(null);
         navigate({ view: "home" });
         notify("Vault réinitialisé : les données d’exemple sont de retour.");
       },
     };
-  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload]);
+  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, privacy, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload, searchContent, indexable, indexedCount]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

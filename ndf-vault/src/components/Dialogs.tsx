@@ -13,9 +13,9 @@ import { count, descendantIds, folderLabel, formatDate, formatSize, formatTime, 
 import { folderRules } from "@/lib/selectors";
 import { ACCEPT_ATTR, inspectUpload, type UploadCheck } from "@/lib/uploads";
 import { Avatar, Button, Chip, IconButton } from "./ui";
-import { Field, INPUT, Modal, Note, Toggle } from "./dialog-kit";
+import { Field, INPUT, Modal, Note, PassphraseInput, Toggle } from "./dialog-kit";
 
-import { BackupDialog, PassphraseDialog, ProtectDialog, RecoveryDialog, RestoreDialog, UnprotectDialog } from "./security/SecurityDialogs";
+import { AuditDialog, BackupDialog, ExportVaultDialog, PassphraseDialog, ProtectDialog, RecoveryDialog, RestoreDialog, UnprotectDialog } from "./security/SecurityDialogs";
 
 export { SwitchRow } from "./dialog-kit";
 
@@ -669,18 +669,29 @@ function PurgeDialog({ fileIds }: { fileIds: string[] }) {
 }
 
 function ResetDialog() {
-  const { resetVault, openDialog } = useVault();
+  const { resetVault, verifyPassphrase, security, openDialog } = useVault();
+  const [current, setCurrent] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [wrong, setWrong] = useState(false);
   return (
     <Modal
       title="Réinitialiser le Vault ?"
-      onSubmit={() => {
+      onSubmit={async () => {
+        if (busy || (security.protected && !current)) return;
+        setBusy(true);
+        setWrong(false);
+        // Erasing a protected vault takes its passphrase.
+        if (!(await verifyPassphrase(current))) {
+          setWrong(true);
+          return setBusy(false);
+        }
         openDialog(null);
         void resetVault();
       }}
       footer={
         <>
           <Button onClick={() => openDialog(null)}>Annuler</Button>
-          <Button variant="primary" type="submit" className="!bg-red-600 hover:!bg-red-700">
+          <Button variant="primary" type="submit" disabled={busy || (security.protected && !current)} className="!bg-red-600 hover:!bg-red-700 disabled:!bg-neutral-400">
             Tout réinitialiser
           </Button>
         </>
@@ -689,6 +700,16 @@ function ResetDialog() {
       <p className="text-[13.5px] leading-[21px] text-neutral-600">
         Tous les fichiers téléversés, dossiers et projets créés dans ce navigateur seront effacés, et les données d’exemple reviendront. Cette action est irréversible.
       </p>
+      {security.protected && (
+        <div className="mt-4">
+          <Field label="Phrase secrète">
+            <PassphraseInput id="reset-passphrase" value={current} onChange={setCurrent} autoComplete="current-password" autoFocus />
+            <p role="alert" className="mt-1.5 min-h-[18px] text-[12px] text-red-600">
+              {wrong ? "Phrase secrète incorrecte." : ""}
+            </p>
+          </Field>
+        </div>
+      )}
     </Modal>
   );
 }
@@ -866,6 +887,10 @@ export function Dialogs() {
       return <BackupDialog />;
     case "restore":
       return <RestoreDialog />;
+    case "audit":
+      return <AuditDialog />;
+    case "exportVault":
+      return <ExportVaultDialog />;
     case "purge":
       return <PurgeDialog fileIds={dialog.fileIds} />;
     case "reset":

@@ -38,7 +38,7 @@ import { Ndf5Mark, PageWatermark, PersonalWatermark } from "../brand/Brand";
 import { FileIcon } from "../files/FileTable";
 import { Button, IconButton } from "../ui";
 import { DocxView, SheetView, SimplifiedNote, SlidesView } from "./OfficePreview";
-import { openPdf, type PDFDocumentProxy } from "./pdf";
+import { openPdf, type PDFDocumentProxy } from "@/lib/pdf";
 
 const LETTER = { w: 816, h: 1056 }; // US Letter at 96 dpi
 const SLIDE = { w: 960, h: 540 }; // 16:9
@@ -380,6 +380,16 @@ export function PreviewModal() {
     setPage(n);
   }, []);
 
+  // Opened from a search result: go to where the match was found, once the document is on screen.
+  const wantedPage = preview?.page;
+  useEffect(() => {
+    if (!wantedPage || wantedPage < 2 || !canvasEl) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (doc.kind === "pdf") timer = setTimeout(() => goToPage(Math.min(wantedPage, doc.pdf.numPages)), 120);
+    else if (doc.kind === "pptx") timer = setTimeout(() => canvasEl.querySelector(`[aria-label="Diapositive ${wantedPage}"]`)?.scrollIntoView({ block: "start" }), 120);
+    return () => clearTimeout(timer);
+  }, [doc, wantedPage, canvasEl, goToPage]);
+
   const onScroll = () => {
     if (!canvasEl || !paged) return;
     const mid = canvasEl.scrollTop + canvasEl.clientHeight / 2;
@@ -616,7 +626,7 @@ export function PreviewModal() {
                     <SimplifiedNote>Aperçu simplifié : les valeurs des cellules, feuille par feuille. Les formules affichent leur dernier résultat ; la mise en forme, les graphiques et les cellules fusionnées ne sont pas reproduits.</SimplifiedNote>
                     <div data-office="xlsx" className="relative border border-line bg-white shadow-page" style={{ fontSize: 12.5 * zoom, padding: `${2 * zoom}em` }}>
                       <div className="relative">
-                        <SheetView key={file.id} content={doc.content} />
+                        <SheetView key={file.id} content={doc.content} initial={preview.page ? preview.page - 1 : 0} />
                       </div>
                       {personal && <PersonalWatermark text={personal} />}
                     </div>

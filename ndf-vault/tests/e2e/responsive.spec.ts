@@ -42,7 +42,8 @@ test("on a phone a file can be uploaded and opened full screen", async ({ page }
   const first = viewer.locator("[data-viewer-canvas] canvas").first();
   await expect(first).toBeVisible();
   const width = page.viewportSize()!.width;
-  expect(Math.round((await viewer.boundingBox())!.width)).toBe(width);
+  // Full width once its opening animation has settled, to within the fraction of a pixel a phone's pixel ratio leaves.
+  await expect.poll(async () => Math.abs((await viewer.boundingBox())!.width - width)).toBeLessThan(1);
   // The page fits the screen instead of overflowing it.
   const box = (await first.boundingBox())!;
   expect(box.x).toBeGreaterThanOrEqual(0);

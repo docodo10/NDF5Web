@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { dialog, diskDump, downloaded, go, main, openVault, pdfFile, protect, row, rows, textFile, toast, unlock, upload } from "./helpers";
+import { dialog, diskDump, downloaded, go, main, openVault, PASS, pdfFile, protect, row, rows, textFile, toast, unlock, upload } from "./helpers";
 
 type Page = import("@playwright/test").Page;
 
@@ -160,7 +160,14 @@ test.describe("encrypted backup", () => {
     await protect(page);
     await chooseBackup(page, file, BACKUP_PASS);
     await page.check("#restore-understood");
-    await dialog(page).locator("button[type=submit]").click();
+    // Replacing a protected vault also takes its own passphrase.
+    const submit = dialog(page).locator("button[type=submit]");
+    await expect(submit).toBeDisabled();
+    await page.fill("#restore-own-passphrase", "pas la phrase du Vault");
+    await submit.click();
+    await expect(dialog(page)).toContainText("Phrase secrète du Vault incorrecte.");
+    await page.fill("#restore-own-passphrase", PASS);
+    await submit.click();
     await expect(toast(page)).toContainText("restaurée", { timeout: 20_000 });
 
     const dump = await diskDump(page);

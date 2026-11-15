@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, HardDriveDownload, HardDriveUpload, KeyRound, LockKeyhole, RotateCcw } from "lucide-react";
+import { Download, HardDriveDownload, HardDriveUpload, KeyRound, LockKeyhole, RotateCcw, ScanSearch } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import { requestPersistence, storageUsage } from "@/lib/db";
@@ -47,6 +47,7 @@ const STEPS: { label: string; hint: string; state: StepState }[] = [
   { label: "Historique des versions", hint: "Nouvelles versions, restauration et téléchargement des précédentes", state: "done" },
   { label: "Récupération et sauvegarde", hint: "Code de récupération si la phrase est oubliée, sauvegarde chiffrée de tout le Vault et restauration", state: "done" },
   { label: "Aperçu réel", hint: "PDF, images, texte, CSV, et le contenu des fichiers Word, Excel et PowerPoint", state: "done" },
+  { label: "Recherche dans le contenu", hint: "Le texte des PDF, des fichiers Office et des fichiers texte, indexé sur cet appareil et chiffré comme le reste", state: "done" },
   { label: "Accès des invités", hint: "Connexion par courriel, niveaux d’accès, conditions et NDA à signer", state: "pending" },
   { label: "Serveur", hint: "Stockage privé partagé entre appareils et utilisateurs", state: "pending" },
 ];
@@ -153,6 +154,14 @@ export function SettingsView() {
                 Verrouiller
               </Button>
             </Line>
+            <Line label="Intégrité des fichiers" hint="Recalcule l’empreinte de chaque original et la compare à celle prise au téléversement.">
+              <Button size="sm" icon={ScanSearch} disabled={!persistent} onClick={() => v.openDialog({ type: "audit" })}>
+                Vérifier
+              </Button>
+            </Line>
+            <div className="border-t border-hair">
+              <SwitchRow on={v.privacy} onChange={v.setPrivacy} label="Écran de confidentialité" hint="Masque le contenu dès que la fenêtre n’est plus active : autre onglet, autre application, partage d’écran." />
+            </div>
           </div>
         </Panel>
 
@@ -244,7 +253,7 @@ export function SettingsView() {
               </Button>
             </Line>
             <Line label="Exporter tout le Vault" hint="Une archive ZIP de vos originaux, rangés par dossier, avec un manifeste. Non chiffrée.">
-              <Button size="sm" icon={Download} disabled={uploaded.length === 0} onClick={() => void v.exportVault()}>
+              <Button size="sm" icon={Download} disabled={uploaded.length === 0} onClick={() => (security.protected ? v.openDialog({ type: "exportVault" }) : void v.exportVault())}>
                 Exporter
               </Button>
             </Line>
