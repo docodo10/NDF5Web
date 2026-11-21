@@ -32,7 +32,7 @@ L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », con
 - **Étape par étape.** Finir **toute l'interface d'abord**, la faire valider, et seulement ensuite coder les grosses fonctions (upload, IndexedDB, PDF.js, Supabase).
 - **Logo et watermark NDF5** partout où c'est pertinent (déjà intégrés, voir section 5).
 - **Écrire dans le chat pendant le travail** : donner l'avancement au fur et à mesure, ne pas rester silencieux jusqu'à la fin.
-- Répondre **en français**. **L'interface est en français** (demande du 2026-11-14, vocabulaire québécois : téléverser, courriel). Le code, les noms de fichiers et les commits restent en anglais américain.
+- Répondre **en français**. **L'interface est bilingue, l'anglais d'abord** (demande du 2026-11-21 : la plupart des utilisateurs seront anglophones ; le Vault s'ouvre en anglais, en français quand on arrive du côté français du site, et chacun peut changer à tout moment). Le français garde le vocabulaire québécois (téléverser, courriel). **Un seul type de dossier** : pas de dossiers par langue, un document en français se reconnaît à son nom. Le code, les noms de fichiers et les commits restent en anglais américain.
 - **Ne rien inventer** : pas de chiffres financiers, de contrats, d'approbations ou de contenu de documents. Tout contenu d'exemple est étiqueté « Sample ».
 - **Ne jamais écrire les titres des parties des films NDF** dans l'interface ou les données. Utiliser seulement « FS1 Film Part 1 », « FS1 Film Part 2 », etc.
 - Pas de bouton mort ni de fausse action : ce qui n'est pas branché doit le dire clairement (voir `notReady()` dans le store).
@@ -40,7 +40,7 @@ L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », con
 
 ## 3. État actuel
 
-**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (225 tests unitaires) et `npm run test:e2e` (130 tests dans un vrai navigateur) passent.
+**Interface bilingue (anglais par défaut, français), vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (contrôle des traductions puis 240 tests unitaires) et `npm run test:e2e` (144 tests dans un vrai navigateur) passent.
 
 ### Sécurité (2026-11-14)
 
@@ -108,6 +108,21 @@ Demande de l'utilisateur : que l'application ressemble à Dropbox dans ses geste
 
 Pas fait, parce que cela demande le serveur : liens de partage, demandes de fichiers, commentaires entre personnes.
 
+### Deux langues (2026-11-21)
+
+| Sujet | Où | Notes |
+|---|---|---|
+| Mécanisme | `src/lib/i18n.ts` : `t(fr, en)`, `localized({ k: [fr, en] })`, `getLang`, `setLang`, `subscribeLang`, `initLang` | Pas de dictionnaire ni de clés : chaque texte est écrit dans les deux langues là où il sert, **le français en premier, l'anglais en second**. `VaultApp` et `VaultSession` s'abonnent à la langue (`useSyncExternalStore`) : tout se redessine au changement, sans recharger, sans verrouiller et sans perdre ce qui était en cours |
+| Règle à ne pas oublier | — | **Jamais de `t()` au niveau du module** (dans un `const` hors fonction) : la langue serait figée à celle du chargement. Pour une table de libellés : `localized({...})` ou un accesseur (`get label() { return t(…) }`) |
+| Langue de départ | `initLang()` | Dans l'ordre : `?lang=fr` ou `?lang=en` dans l'adresse (le côté du site d'où l'on arrive), sinon le choix déjà fait sur cet appareil (`localStorage["ndf-vault-lang"]`), sinon **l'anglais**. Une valeur inconnue est ignorée. Quand l'adresse porte `?lang=`, le bouton la met à jour : recharger ne défait pas le choix |
+| Lien depuis le site | — | Côté français du site : `…/vault/?lang=fr`. Côté anglais : `…/vault/` ou `…/vault/?lang=en`. **Le site lui-même n'a pas été touché** : ces liens restent à poser quand le Vault y sera rattaché |
+| Bouton EN / FR | `components/LanguageSwitch.tsx` | Dans la barre du haut, dans Réglages → Langue, sur l'écran de verrouillage, et dans le menu latéral au téléphone (la barre du haut n'a pas la place). Nommé dans les deux langues (« Language / Langue ») |
+| Données intégrées | `src/lib/builtin.ts`, vues `files` / `folders` / `projects` du store | L'index 00–10, les deux projets, les 42 fichiers d'exemple et leurs étiquettes sont **stockés une seule fois, en français**, et montrés en anglais tant que le nom est encore celui d'origine. Un dossier renommé, un fichier téléversé gardent leur nom dans les deux langues. Un formulaire qui montre un nom d'origine en anglais et qu'on enregistre sans y toucher ne change pas le nom stocké |
+| Journal | `src/lib/journal.ts` (`journalText`) | Le journal est **stocké en français** (les arguments de `log()` ne se traduisent pas) et traduit à l'affichage et à l'export CSV. Tout nouveau verbe passé à `log()` doit avoir son anglais dans `journal.ts` : un test unitaire lit `store.tsx` et échoue sinon |
+| Dates, heures, tailles | `src/lib/format.ts` | « 14 nov. 2026 », « 15 h 04 », « 2,4 Mo » / “Nov 14, 2026”, “3:04 PM”, “2.4 MB” ; `count()` accorde le pluriel selon la langue |
+| Garde-fou | `scripts/check-i18n.mjs`, lancé par `npm test` | Parcourt l'arbre syntaxique : échoue si un texte français est hors d'une traduction, ou dans la moitié anglaise d'une traduction. Une exception voulue s'annonce par `i18n-ok: raison` sur la ligne ou la précédente |
+| Laissé en français exprès | `store.tsx` (export ZIP) | Les clés du manifeste d'export (`manifeste.json`, `chemin`…) : c'est un format de fichier, pas de l'interface. Le mot `EFFACER` à taper pour confirmer un effacement est le même dans les deux langues |
+
 ### Travailler sur un document (2026-11-21)
 
 | Fonction | Où | Notes |
@@ -143,8 +158,10 @@ Pas fait, parce que cela demande le serveur : liens de partage, demandes de fich
 
 | Suite | Commande | Contenu |
 |---|---|---|
-| Unitaires (225) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `recovery` (code, récupération, remplacement, tentatives), `backup` (aller-retour, rien en clair, fichier altéré, enregistrements échangés, validation de l'état restauré), `uploads` (octets magiques, exécutables déguisés, faux fichiers Office, macros), `unzip` (bombe de décompression, somme de contrôle, archives tronquées), `xml` (DOCTYPE refusé, entrées hostiles en temps linéaire), `office` (Word, Excel, PowerPoint, limites), `search` (casse et accents, extraits, limites), `protection` (niveaux, codes, filigrane dessiné, effacement après tentatives), `familiar` (glisser-déposer, dossiers téléversés, corbeille), `diff` (comparaison de textes), `due` (échéances, notifications, import d'archive), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
-| Navigateur (130) | `npm run test:e2e` | `tests/e2e/` : panneau d'informations, commentaires, échéances, notifications, comparaison de versions et import ZIP (`workspace`), dérivation de clé, phrase proposée, redemande de la phrase et verrouillage après refus (`passphrase`), gestes familiers (`familiar` : glisser-déposer, clic droit, grille, dossier entier, doublons, corbeille, jauge), protection des documents (consultation seule, filigrane dans les pixels, lecture protégée, code de consultation, touche de capture, effacement, verrouillage d'urgence, bilan), visite guidée, fichiers, téléversement, aperçus Office, recherche dans le contenu, vérification d'intégrité, actions sensibles, journal des verrouillages, écran de confidentialité, versions, dossiers et projets, exports, sécurité (rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré…), code de récupération, sauvegarde et restauration (dont la restauration dans un second profil de navigateur, comme sur un autre appareil), téléphone |
+| Unitaires (240) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `recovery` (code, récupération, remplacement, tentatives), `backup` (aller-retour, rien en clair, fichier altéré, enregistrements échangés, validation de l'état restauré), `uploads` (octets magiques, exécutables déguisés, faux fichiers Office, macros), `unzip` (bombe de décompression, somme de contrôle, archives tronquées), `xml` (DOCTYPE refusé, entrées hostiles en temps linéaire), `office` (Word, Excel, PowerPoint, limites), `search` (casse et accents, extraits, limites), `protection` (niveaux, codes, filigrane dessiné, effacement après tentatives), `familiar` (glisser-déposer, dossiers téléversés, corbeille), `diff` (comparaison de textes), `due` (échéances, notifications, import d'archive), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
+| Navigateur (144) | `npm run test:e2e` | `tests/e2e/` : panneau d'informations, commentaires, échéances, notifications, comparaison de versions et import ZIP (`workspace`), dérivation de clé, phrase proposée, redemande de la phrase et verrouillage après refus (`passphrase`), gestes familiers (`familiar` : glisser-déposer, clic droit, grille, dossier entier, doublons, corbeille, jauge), protection des documents (consultation seule, filigrane dans les pixels, lecture protégée, code de consultation, touche de capture, effacement, verrouillage d'urgence, bilan), visite guidée, fichiers, téléversement, aperçus Office, recherche dans le contenu, vérification d'intégrité, actions sensibles, journal des verrouillages, écran de confidentialité, versions, dossiers et projets, exports, sécurité (rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré…), code de récupération, sauvegarde et restauration (dont la restauration dans un second profil de navigateur, comme sur un autre appareil), téléphone |
+
+**Les suites existantes s'exécutent sur l'interface française** : `openVault` arrive avec `?lang=fr` et `tests/unit/setup.ts` règle la langue sur le français. L'anglais a ses propres tests : `tests/unit/i18n.test.ts` et `tests/e2e/language.spec.ts` (langue de départ, arrivée de chaque côté du site, changement en cours de travail, écran de verrouillage, téléphone, journal dans les deux langues, et un **balayage de chaque page, menu, dialogue et visionneuse** qui échoue s'il reste du français à l'écran en anglais). Pour ouvrir en anglais dans un test : `openVault(page, hash, { lang: "" })` ou `{ lang: "en" }`.
 
 `npm run test:e2e` reconstruit d'abord `dist/` puis sert ce dossier (`scripts/serve-dist.mjs`, port 4173) : les tests s'exécutent sur **la page réellement publiée**, pas sur le serveur de développement. `tests/e2e/helpers.ts` contient les aides (`openVault`, `upload`, `protect` qui rend le code de récupération, `noteRecoveryCode`, `unlock`, `diskDump`, `tamperFirstOriginal`, `readZip`…). `tests/fixtures/office.ts` fabrique de vrais fichiers Word, Excel et PowerPoint compressés, pour les deux suites.
 
@@ -159,7 +176,8 @@ Pas fait, parce que cela demande le serveur : liens de partage, demandes de fich
 | `src/lib/types.ts` | `VaultFile` (avec `sha256`, `versions`), `FileVersion`, `Folder`, `Project`, `Profile`, `ActivityItem`, `Route`, statuts |
 | `src/lib/sample-data.ts` | 42 fichiers d'exemple en français, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 services, activité |
 | `src/lib/crypto.ts`, `db.ts`, `backup.ts`, `uploads.ts`, `unzip.ts`, `xml.ts`, `office.ts`, `search.ts`, `extract.ts`, `diff.ts`, `due.ts`, `notices.ts`, `protection.ts`, `dnd.ts`, `pdf.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
-| `src/lib/format.ts` | Dates et tailles à la française, `KIND_LABEL`, `STATUS_LABEL`, `count()`, `sanitizeName` |
+| `src/lib/format.ts` | Dates et tailles dans la langue courante, `KIND_LABEL`, `STATUS_LABEL`, `count()`, `sanitizeName` |
+| `src/lib/i18n.ts`, `builtin.ts`, `journal.ts` | Les deux langues : voir « Deux langues » plus haut |
 | `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory`, `folderRules` |
 | `src/lib/routes.ts` | `routeToHash`, `hashToRoute` |
 | `src/lib/store.tsx` | `VaultProvider` (démarrage, verrouillage) → `VaultSession` (tout l'état) ; `useVault()` : routage, toasts, dialogues, aperçu, mutations, sécurité, exports |
@@ -264,7 +282,7 @@ npm run dev         # http://localhost:3000
 npx tsc --noEmit    # doit rester sans erreur
 npm run build       # build Next.js
 npm run build:page  # dist/ndf-vault.html (page hébergée) et dist/preview.html
-npm test            # tests unitaires (Vitest)
+npm test            # contrôle des traductions (scripts/check-i18n.mjs) puis tests unitaires (Vitest)
 npm run test:e2e    # reconstruit la page puis lance les tests navigateur (Playwright)
 npm run test:all    # les deux
 ```
@@ -275,7 +293,9 @@ npm run test:all    # les deux
 Lis HANDOFF.md en entier, puis docs/brief.txt. Lis aussi AGENTS.md et les guides
 Next concernés dans node_modules/next/dist/docs/.
 
-L'interface est en français. Fonctionnent déjà : téléversement, stockage chiffré dans
+L'interface est bilingue : anglais par défaut, français par ?lang=fr ou par le bouton
+EN / FR. Tout texte s'écrit t("français", "anglais") ; jamais de t() au niveau du module.
+Fonctionnent déjà : téléversement, stockage chiffré dans
 le navigateur (phrase secrète, verrouillage, code de récupération), sauvegarde chiffrée
 et restauration, aperçus (PDF, images, texte, Word, Excel, PowerPoint), recherche dans
 le contenu, vérification d'intégrité, protection des documents (consultation seule,

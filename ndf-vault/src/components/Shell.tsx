@@ -265,6 +265,8 @@ function Sidebar() {
       </div>
 
       <div className="shrink-0 border-t border-line px-4 py-3">
+        {/* On a phone the top bar has no room for it: the menu carries the switch instead. */}
+        <LanguageSwitch className="mb-3 sm:hidden" />
         <StorageMeter />
         <div className="flex items-center gap-2.5">
           <Avatar user={me} size={30} />

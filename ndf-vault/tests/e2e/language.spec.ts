@@ -5,7 +5,8 @@ import { docx, para, pptx, xlsx } from "../fixtures/office";
 type Page = import("@playwright/test").Page;
 
 const PASS = "turtle lamp storm window";
-const switcher = (page: Page) => page.locator("[data-language-switch]").first();
+// One switch is on screen at a time: in the top bar, or in the menu on a phone.
+const switcher = (page: Page) => page.locator("[data-language-switch]:visible").first();
 const setLanguage = (page: Page, lang: "en" | "fr") => switcher(page).locator(`button[lang=${lang}]`).click();
 
 /**
@@ -172,6 +173,22 @@ test.describe("switching language", () => {
     await expect(page.locator("aside").getByText("Contracts and rights").first()).toBeVisible();
     // Its neighbors, still built-in, follow the language.
     await expect(page.locator("aside").getByText("Affaires et finances").first()).toBeVisible();
+  });
+});
+
+test.describe("on a phone", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("the switch is in the menu, where the top bar has no room for it", async ({ page }) => {
+    await arrive(page);
+    await expect(page.locator("[data-language-switch]:visible")).toHaveCount(0);
+    await page.getByRole("button", { name: "Open the menu" }).click();
+    await expect(page.locator("[data-language-switch]:visible")).toHaveCount(1);
+    await setLanguage(page, "fr");
+    await expect(page.locator("html")).toHaveAttribute("lang", "fr-CA");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bienvenue dans NDF Vault");
+    // The menu stays open: the change is seen where it was made.
+    await expect(page.getByRole("button", { name: "Accueil" }).first()).toBeVisible();
   });
 });
 
