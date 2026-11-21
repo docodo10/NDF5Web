@@ -1,4 +1,5 @@
 import { scryptAsync } from "@noble/hashes/scrypt.js";
+import { t } from "./i18n";
 
 /**
  * Encryption for the vault, built on the browser's Web Crypto API.
@@ -298,7 +299,7 @@ const COMMON = ["password", "motdepasse", "azerty", "qwerty", "123456", "ndf5", 
 export function passphraseStrength(passphrase: string): Strength {
   const p = passphrase.normalize("NFKC");
   if (p.length === 0) return { score: 0, label: "", hint: "" };
-  if (p.length < MIN_PASSPHRASE_LENGTH) return { score: 0, label: "Trop courte", hint: `Au moins ${MIN_PASSPHRASE_LENGTH} caractères.` };
+  if (p.length < MIN_PASSPHRASE_LENGTH) return { score: 0, label: t("Trop courte", "Too short"), hint: t(`Au moins ${MIN_PASSPHRASE_LENGTH} caractères.`, `At least ${MIN_PASSPHRASE_LENGTH} characters.`) };
   const lower = p.toLowerCase();
   const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((r) => r.test(p)).length;
   const unique = new Set(p).size;
@@ -312,8 +313,8 @@ export function passphraseStrength(passphrase: string): Strength {
   if (COMMON.some((w) => lower.includes(w))) score--;
   if (/^(.)\1+$/.test(p) || /0123|1234|2345|3456|4567|5678|6789|abcd|azer|qwer/.test(lower)) score--;
   const s = Math.max(1, Math.min(4, score)) as 1 | 2 | 3 | 4;
-  const label = ["", "Faible", "Moyenne", "Bonne", "Forte"][s];
-  const hint = s >= 3 ? "" : p.length < 14 ? "Allongez-la : plusieurs mots sans lien entre eux font une bonne phrase secrète." : "Évitez les mots courants et les suites, variez les caractères.";
+  const label = ["", t("Faible", "Weak"), t("Moyenne", "Fair"), t("Bonne", "Good"), t("Forte", "Strong")][s];
+  const hint = s >= 3 ? "" : p.length < 14 ? t("Allongez-la : plusieurs mots sans lien entre eux font une bonne phrase secrète.", "Make it longer: several unrelated words make a good passphrase.") : t("Évitez les mots courants et les suites, variez les caractères.", "Avoid common words and sequences, vary the characters.");
   return { score: s, label, hint };
 }
 

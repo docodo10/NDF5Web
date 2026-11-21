@@ -3,6 +3,8 @@
  * renew, a signature expected by a given day.
  */
 
+import { t } from "./i18n";
+
 export type DueState = "overdue" | "today" | "soon" | "later";
 
 export interface Due {
@@ -41,8 +43,8 @@ export function dueOf(dueAt: string | undefined, now = new Date()): Due | null {
   const day = parseDay(dueAt);
   if (!day) return null;
   const days = Math.round((stamp(day) - stamp(today(now))) / DAY);
-  if (days < 0) return { days, state: "overdue", label: days === -1 ? "Échue depuis hier" : `Échue depuis ${-days} jours` };
-  if (days === 0) return { days, state: "today", label: "Aujourd’hui" };
-  if (days === 1) return { days, state: "soon", label: "Demain" };
-  return { days, state: days <= SOON_DAYS ? "soon" : "later", label: `Dans ${days} jours` };
+  if (days < 0) return { days, state: "overdue", label: days === -1 ? t("Échue depuis hier", "Overdue since yesterday") : t(`Échue depuis ${-days} jours`, `${-days} days overdue`) };
+  if (days === 0) return { days, state: "today", label: t("Aujourd’hui", "Today") };
+  if (days === 1) return { days, state: "soon", label: t("Demain", "Tomorrow") };
+  return { days, state: days <= SOON_DAYS ? "soon" : "later", label: t(`Dans ${days} jours`, `In ${days} days`) };
 }

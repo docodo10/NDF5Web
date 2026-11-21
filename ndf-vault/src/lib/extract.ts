@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 import { readDocx, readPptx, readXlsx } from "./office";
 import { openPdf } from "./pdf";
 import { MAX_TEXT_CHARS, type DocText } from "./search";
@@ -54,8 +55,8 @@ export async function extractText(kind: FileKind, blob: Blob): Promise<DocText |
 
 /** What a page of the document is called, for a search result: "Page 3", "Diapositive 2", "Feuille 1". */
 export function pageLabel(kind: FileKind, page: number, pages: number): string {
-  if (kind === "pdf") return `Page ${page + 1}`;
-  if (kind === "pptx") return `Diapositive ${page + 1}`;
-  if (kind === "xlsx") return pages > 1 ? `Feuille ${page + 1}` : "";
+  if (kind === "pdf") return t(`Page ${page + 1}`, `Page ${page + 1}`);
+  if (kind === "pptx") return t(`Diapositive ${page + 1}`, `Slide ${page + 1}`);
+  if (kind === "xlsx") return pages > 1 ? t(`Feuille ${page + 1}`, `Sheet ${page + 1}`) : "";
   return "";
 }

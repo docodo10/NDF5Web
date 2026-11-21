@@ -1,6 +1,7 @@
 import { createEnvelope, decryptBytes, decryptJson, encryptBytes, encryptJson, envelopeKdf, openEnvelope, WrongPassphraseError, type Kdf, type KeyEnvelope } from "./crypto";
 import { DEFAULT_PROFILE, SCHEMA, migrate, type Persisted } from "./db";
 import { sanitizeName } from "./format";
+import { t } from "./i18n";
 import { parseDay } from "./due";
 import type { ActivityItem, FileComment, FileKind, FileStatus, FileVersion, Folder, Project, VaultFile } from "./types";
 import { STATUSES } from "./types";
@@ -166,7 +167,7 @@ const hex = (v: unknown) => (typeof v === "string" && /^[0-9a-f]{64}$/.test(v) ?
 
 function comment(v: unknown): FileComment | null {
   if (!obj(v) || !id(v.id) || !str(v.at, 40) || !str(v.author, 120) || !str(v.text, 2000) || !v.text.trim()) return null;
-  return { id: v.id, at: v.at, author: sanitizeName(v.author) || "Quelqu’un", text: v.text };
+  return { id: v.id, at: v.at, author: sanitizeName(v.author) || t("Quelqu’un", "Someone"), text: v.text };
 }
 
 function version(v: unknown): FileVersion | null {

@@ -1,3 +1,4 @@
+import { getLang, localized, t } from "./i18n";
 import { listZip, readZipText, ZipError, type ZipItem } from "./unzip";
 import { attr, descendants, dig, kid, kids, parseXml, textOf, xmlTokens, type XmlNode } from "./xml";
 
@@ -15,7 +16,11 @@ export type OfficeFormat = "docx" | "xlsx" | "pptx";
 const MAIN_PART: Record<OfficeFormat, string> = { docx: "word/document.xml", xlsx: "xl/workbook.xml", pptx: "ppt/presentation.xml" };
 
 /** With its article, as it reads in a sentence. */
-export const OFFICE_LABEL: Record<OfficeFormat, string> = { docx: "un document Word", xlsx: "un classeur Excel", pptx: "une présentation PowerPoint" };
+export const OFFICE_LABEL: Record<OfficeFormat, string> = localized({
+  docx: ["un document Word", "a Word document"],
+  xlsx: ["un classeur Excel", "an Excel workbook"],
+  pptx: ["une présentation PowerPoint", "a PowerPoint presentation"],
+});
 
 const has = (items: ZipItem[], name: string) => items.some((i) => i.name.toLowerCase() === name.toLowerCase());
 
@@ -329,7 +334,8 @@ const two = (n: number) => String(n).padStart(2, "0");
 
 /** A number as a person would write it in French, without the noise of binary floating point. */
 export function showNumber(n: number): string {
-  return String(parseFloat(n.toPrecision(15))).replace(".", ",");
+  const text = String(parseFloat(n.toPrecision(15)));
+  return getLang() === "fr" ? text.replace(".", ",") : text;
 }
 
 /** An Excel date serial (days since the end of 1899, or since 1904 on old Mac workbooks) as text. */
@@ -399,12 +405,12 @@ function readSheet(xml: string, strings: string[], formats: CellFormat[], date19
     const v = c.value;
     if (v === "") return "";
     if (c.type === "s") return strings[Number(v)] ?? "";
-    if (c.type === "b") return v === "1" ? "VRAI" : "FAUX";
+    if (c.type === "b") return v === "1" ? t("VRAI", "TRUE") : t("FAUX", "FALSE");
     if (c.type === "str" || c.type === "e" || c.type === "d") return v;
     const n = Number(v);
     if (!Number.isFinite(n)) return v;
     const format = formats[c.style] ?? null;
-    if (format === "percent") return `${showNumber(n * 100)} %`;
+    if (format === "percent") return t(`${showNumber(n * 100)} %`, `${showNumber(n * 100)}%`);
     return format ? serialToText(n, format, date1904) : showNumber(n);
   };
 
@@ -479,7 +485,7 @@ export function readXlsx(file: Blob, limits: { rows: number; cols: number } = { 
     for (const [i, sheet] of listed.slice(0, MAX_SHEETS).entries()) {
       const id = relId(sheet);
       const path = (id && rels.get(id)?.target) || `xl/worksheets/sheet${i + 1}.xml`;
-      const name = sheet.attrs.name || `Feuille ${i + 1}`;
+      const name = sheet.attrs.name || t(`Feuille ${i + 1}`, `Sheet ${i + 1}`);
       const hidden = sheet.attrs.state === "hidden" || sheet.attrs.state === "veryHidden";
       const sheetXml = await zip.text(path);
       // A chart sheet or a missing part has no cells to show.

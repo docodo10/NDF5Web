@@ -1,4 +1,5 @@
 import { formatDate, formatTime } from "./format";
+import { t } from "./i18n";
 import type { Profile } from "./types";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -6,7 +7,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 /** The personal watermark line: who is looking, and when. */
 export function watermarkText(profile: Profile, at = new Date()): string {
   const iso = `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}T${pad(at.getHours())}:${pad(at.getMinutes())}:00`;
-  return [profile.name, profile.company, profile.email, `${formatDate(iso)}, ${formatTime(iso)}`, "Confidentiel – NDF5"]
+  return [profile.name, profile.company, profile.email, `${formatDate(iso)}, ${formatTime(iso)}`, t("Confidentiel – NDF5", "Confidential – NDF5")]
     .map((s) => s.trim())
     .filter(Boolean)
     .join(" · ");

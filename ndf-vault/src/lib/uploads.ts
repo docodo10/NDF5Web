@@ -1,5 +1,6 @@
 import { sha256Hex } from "./crypto";
 import { sanitizeName } from "./format";
+import { t } from "./i18n";
 import { listZip, readZipEntry } from "./unzip";
 import { inspectOffice, OFFICE_LABEL, type OfficeFormat } from "./office";
 import { EXT_KIND } from "./sample-data";
@@ -100,12 +101,12 @@ export function pickedFromDrop(data: DataTransfer | null): Promise<Picked[]> {
 export function checkUpload(file: File): UploadCheck {
   const dot = file.name.lastIndexOf(".");
   const ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : "";
-  const name = sanitizeName(dot > 0 ? file.name.slice(0, dot) : file.name) || "Sans titre";
+  const name = sanitizeName(dot > 0 ? file.name.slice(0, dot) : file.name) || t("Sans titre", "Untitled");
   const kind = EXT_KIND[ext] ?? null;
   let error: string | null = null;
-  if (!kind) error = ext ? `Le format .${ext} n’est pas accepté.` : "Ce fichier n’a pas d’extension.";
-  else if (file.size === 0) error = "Ce fichier est vide.";
-  else if (file.size > MAX_UPLOAD_BYTES) error = "Ce fichier dépasse la limite de 100 Mo.";
+  if (!kind) error = ext ? t(`Le format .${ext} n’est pas accepté.`, `The .${ext} format is not accepted.`) : t("Ce fichier n’a pas d’extension.", "This file has no extension.");
+  else if (file.size === 0) error = t("Ce fichier est vide.", "This file is empty.");
+  else if (file.size > MAX_UPLOAD_BYTES) error = t("Ce fichier dépasse la limite de 100 Mo.", "This file exceeds the 100 MB limit.");
   return { file, name, ext, kind, error };
 }
 
@@ -164,18 +165,18 @@ export async function inspectUpload(file: File, existing: { sha256?: string; lab
   if (check.error) return check;
   try {
     const head = new Uint8Array(await file.slice(0, SNIFF_BYTES).arrayBuffer());
-    if (!contentMatches(check.ext, head)) return { ...check, error: `Le contenu ne correspond pas à l’extension .${check.ext}.` };
+    if (!contentMatches(check.ext, head)) return { ...check, error: t(`Le contenu ne correspond pas à l’extension .${check.ext}.`, `The content does not match the .${check.ext} extension.`) };
     // An Office file is a ZIP, and so is much else: look inside before trusting the name.
     if (check.ext === "docx" || check.ext === "xlsx" || check.ext === "pptx") {
       const verdict = await inspectOffice(file, check.ext as OfficeFormat);
-      if (verdict === "active-content") return { ...check, error: "Ce fichier contient des macros ou des contrôles actifs : il est refusé." };
-      if (verdict !== "ok") return { ...check, error: `Ce fichier n’est pas ${OFFICE_LABEL[check.ext as OfficeFormat]} valide.` };
+      if (verdict === "active-content") return { ...check, error: t("Ce fichier contient des macros ou des contrôles actifs : il est refusé.", "This file contains macros or active controls: it is refused.") };
+      if (verdict !== "ok") return { ...check, error: t(`Ce fichier n’est pas ${OFFICE_LABEL[check.ext as OfficeFormat]} valide.`, `This file is not a valid ${OFFICE_LABEL[check.ext as OfficeFormat].replace(/^an? /, "")}.`) };
     }
     const sha256 = await sha256Hex(file);
     const twin = existing.find((e) => e.sha256 === sha256);
     return { ...check, sha256, duplicateOf: twin?.label };
   } catch {
-    return { ...check, error: "Ce fichier est illisible." };
+    return { ...check, error: t("Ce fichier est illisible.", "This file cannot be read.") };
   }
 }
 
