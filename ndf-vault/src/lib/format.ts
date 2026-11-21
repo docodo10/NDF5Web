@@ -61,7 +61,9 @@ export const STATUS_LABEL: Record<FileStatus, string> = localized({
 
 /** "1 fichier", "3 fichiers"; "1 file", "3 files". The caller gives the noun in the current language. */
 export function count(n: number, singular: string, plural = `${singular}s`): string {
-  return `${n} ${n > 1 ? plural : singular}`;
+  // French keeps the singular for zero ("0 fichier"); English does not ("0 files").
+  const many = getLang() === "en" ? n !== 1 : n > 1;
+  return `${n} ${many ? plural : singular}`;
 }
 
 export function fullName(f: Pick<VaultFile, "name" | "ext">): string {

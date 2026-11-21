@@ -59,6 +59,7 @@ describe("dates, times and sizes", () => {
     expect(formatDate("2026-12-01")).toBe("1er déc. 2026");
     expect(formatTime("2026-11-14T15:04:00")).toBe("15 h 04");
     expect(formatSize(2_516_582)).toBe("2,4 Mo");
+    expect(count(0, "fichier")).toBe("0 fichier");
     inEnglish(() => {
       expect(formatDate("2026-11-14T15:04:00")).toBe("Nov 14, 2026");
       expect(formatDate("2026-12-01")).toBe("Dec 1, 2026");
@@ -73,6 +74,7 @@ describe("dates, times and sizes", () => {
       expect(formatMoment(new Date(2026, 10, 14, 15, 4))).toBe("Nov 14, 2026, 3:04 PM");
       expect(count(1, "file")).toBe("1 file");
       expect(count(3, "file")).toBe("3 files");
+      expect(count(0, "file")).toBe("0 files");
     });
   });
 
