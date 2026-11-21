@@ -1,6 +1,7 @@
 import { getLang, localized } from "./i18n";
 import type { FileKind, FileStatus, Folder, VaultFile } from "./types";
 
+// i18n-ok: paired with MONTHS_EN.
 const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "août", "sept.", "oct.", "nov.", "déc."];
 const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 

@@ -67,6 +67,7 @@ export function folderRules(folder: Folder, folders: Folder[], files: VaultFile[
   // Archived and deleted files still live in their folder, so they count too.
   const held = files.filter((f) => inside.has(f.folderId)).length;
   if (subfolders > 0 || held > 0) {
+    // i18n-ok: the French half of the sentence below.
     const parts = [held > 0 ? count(held, "fichier") : "", subfolders > 0 ? count(subfolders, "sous-dossier") : ""].filter(Boolean).join(" et ");
     const partsEn = [held > 0 ? count(held, "file") : "", subfolders > 0 ? count(subfolders, "subfolder") : ""].filter(Boolean).join(" and ");
     return { renamable: true, moveBlocked: null, deleteBlocked: t(`Ce dossier contient ${parts} (fichiers archivés et supprimés compris). Videz-le d’abord.`, `This folder contains ${partsEn} (archived and deleted files included). Empty it first.`) };

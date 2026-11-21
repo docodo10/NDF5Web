@@ -21,7 +21,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geist.variable} h-full`}>
+    // The language is settled in the browser (the address, then the choice kept on the device): it may differ from what was rendered ahead of time.
+    <html lang="en" suppressHydrationWarning className={`${geist.variable} h-full`}>
       <body className="h-full">{children}</body>
     </html>
   );

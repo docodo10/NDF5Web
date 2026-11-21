@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "build:page": "node scripts/build-standalone.mjs",
-    "test": "vitest run",
+    "test": "node scripts/check-i18n.mjs && vitest run",
     "test:e2e": "npm run build:page && playwright test",
     "test:all": "npm test && npm run test:e2e"
   },

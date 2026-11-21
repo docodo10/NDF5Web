@@ -678,7 +678,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
     const byId = (id: string) => files.find((f) => f.id === id);
     const label = (ids: string[]) => {
       const first = byId(ids[0]);
-      return ids.length === 1 && first ? fullName(first) : count(ids.length, "fichier");
+      return ids.length === 1 && first ? fullName(first) : count(ids.length, "fichier"); // i18n-ok: journal
     };
     // The same, for a message in English. `label` stays French: it is also what the journal stores.
     const labelEn = (ids: string[]) => {
@@ -986,7 +986,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const f = byId(id);
         const clean = sanitizeName(name);
         if (!f || !clean) return;
-        patchMany([id], () => ({ name: clean, modifiedAt: nowIso() }));
+        // A sample file shown under its English name and saved untouched keeps its stored name.
+        patchMany([id], (x) => ({ name: clean === f.name ? x.name : clean, modifiedAt: nowIso() }));
         log("a renommé", `${clean}.${f.ext}`, f.projectId);
         notify(t("Fichier renommé", "File renamed"));
       },
@@ -996,6 +997,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const safe: Partial<VaultFile> = { ...patch };
         if (safe.notes !== undefined) safe.notes = safe.notes.slice(0, 2000);
         if (safe.tags !== undefined) safe.tags = safe.tags.map((t) => sanitizeName(t).slice(0, 40)).filter(Boolean).slice(0, 20);
+        // Tags of a sample file shown in English and saved untouched stay as stored.
+        if (safe.tags && safe.tags.length === f.tags.length && safe.tags.every((tag, i) => tag === f.tags[i])) delete safe.tags;
         patchMany([id], () => ({ ...safe, modifiedAt: nowIso() }));
         log("a modifié les détails de", fullName(f), f.projectId);
         notify(t("Détails enregistrés", "Details saved"));
@@ -1242,7 +1245,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const folder = folders.find((f) => f.id === id);
         const clean = sanitizeName(name);
         if (!folder || !clean || !folderRules(folder, folders, files, projects).renamable) return;
-        setFolders((fs) => fs.map((f) => (f.id === id ? { ...f, name: clean } : f)));
+        // A numbered folder shown under its English name and saved untouched keeps its stored name.
+        setFolders((fs) => fs.map((f) => (f.id === id && clean !== folder.name ? { ...f, name: clean } : f)));
         log("a renommé le dossier", clean);
         notify(t("Dossier renommé", "Folder renamed"));
       },
@@ -1278,6 +1282,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const id = uid("p");
         const folderId = uid("d");
         setFolders((fs) => [...fs, { id: folderId, name: clean, code: cleanCode || undefined, parentId: fs.some((f) => f.id === "production") ? "production" : "root" }]);
+        // i18n-ok: stored in French, shown in English by `localizeProjects`.
         setProjects((ps) => [...ps, { id, code: cleanCode || clean.slice(0, 3).toUpperCase(), name: clean, period: sanitizeName(period) || "Dates à définir", summary: "Nouvel espace de projet.", storyYears: [], folderId, archived: false }]);
         log("a créé le projet", clean);
         notify(t(`Projet « ${clean} » créé`, `Project “${clean}” created`));
@@ -1288,7 +1293,11 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const name = sanitizeName(patch.name);
         if (!p || !name) return;
         const code = sanitizeName(patch.code).toUpperCase().slice(0, 5) || p.code;
-        setProjects((ps) => ps.map((x) => (x.id === id ? { ...x, name, code, period: sanitizeName(patch.period) || "Dates à définir", summary: patch.summary.trim().slice(0, 300) } : x)));
+        // i18n-ok: stored in French, shown in English by `localizeProjects`.
+        const period = sanitizeName(patch.period) || "Dates à définir";
+        const summary = patch.summary.trim().slice(0, 300);
+        // Built-in texts shown in English and saved untouched stay as stored.
+        setProjects((ps) => ps.map((x) => (x.id === id ? { ...x, name, code, period: period === p.period ? x.period : period, summary: summary === p.summary ? x.summary : summary } : x)));
         setFolders((fs) => fs.map((f) => (f.id === p.folderId ? { ...f, code } : f)));
         log("a modifié le projet", name);
         notify(t("Projet enregistré", "Project saved"));

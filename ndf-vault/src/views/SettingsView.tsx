@@ -2,6 +2,7 @@
 
 import { CircleAlert, CircleCheck, Download, HardDriveDownload, HardDriveUpload, KeyRound, LockKeyhole, RotateCcw, ScanSearch } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { useVault } from "@/lib/store";
 import { requestPersistence, storageUsage } from "@/lib/db";
 import { USERS } from "@/lib/sample-data";
@@ -202,6 +203,20 @@ export function SettingsView() {
       <PageHeader title={t("Réglages", "Settings")} description={t("Sécurité, profil, stockage et état de cette version.", "Security, profile, storage and the status of this version.")} />
 
       <div className="mt-8">
+        <Panel title={t("Langue", "Language")} description={t("L’interface existe en anglais et en français.", "The interface comes in English and in French.")}>
+          <div className={box}>
+            <Line
+              label={t("Langue de l’interface", "Interface language")}
+              hint={t(
+                "Le Vault s’ouvre en anglais, ou en français quand on y arrive depuis le côté français du site. Ce choix est gardé sur cet appareil ; les documents, eux, restent dans la langue où ils ont été écrits.",
+                "The Vault opens in English, or in French when reached from the French side of the site. This choice is kept on this device; the documents themselves stay in the language they were written in.",
+              )}
+            >
+              <LanguageSwitch />
+            </Line>
+          </div>
+        </Panel>
+
         <Panel title={t("Bilan de sécurité", "Security checkup")} description={t("Ce qui est en place sur cet appareil, et ce qu’il reste à faire.", "What is in place on this device, and what is left to do.")}>
           <div data-checkup className={box}>
             <div className="flex items-center gap-4 py-3">

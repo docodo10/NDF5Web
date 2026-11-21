@@ -6,6 +6,7 @@ import type { LockScreenProps } from "@/lib/store";
 import { normalizeRecoveryCode } from "@/lib/crypto";
 import { count } from "@/lib/format";
 import { t } from "@/lib/i18n";
+import { LanguageSwitch } from "../LanguageSwitch";
 import { VaultLockup } from "../brand/Brand";
 import { INPUT, PassphraseInput } from "../dialog-kit";
 import { Button } from "../ui";
@@ -142,7 +143,9 @@ export function LockScreen({ meta, unlock, recover, wipe }: LockScreenProps) {
   }[mode];
 
   return (
-    <div className="flex h-full flex-col items-center overflow-y-auto bg-subtle px-4 py-10">
+    <div className="relative flex h-full flex-col items-center overflow-y-auto bg-subtle px-4 py-10">
+      {/* Whoever cannot read the screen must be able to change its language before anything else. */}
+      <LanguageSwitch className="absolute right-4 top-4" />
       <div className="my-auto flex w-full flex-col items-center">
         <div className="mb-8">
           <VaultLockup />

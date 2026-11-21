@@ -30,6 +30,7 @@ import { pickedFromDrop, type Picked } from "@/lib/uploads";
 import { AppWatermark, Ndf5Logo, VaultLockup } from "./brand/Brand";
 import { Avatar, IconButton, Kbd } from "./ui";
 import { useFolderDrop } from "./files/drop";
+import { LanguageSwitch } from "./LanguageSwitch";
 import { InfoPanel } from "./files/InfoPanel";
 import { MENU_CONTENT, MENU_ITEM } from "./files/menu-styles";
 
@@ -309,6 +310,7 @@ function Topbar() {
             <IconButton icon={ShieldAlert} label={t("Vault non protégé : ajouter une phrase secrète", "Vault not protected: add a passphrase")} disabled={!security.available} onClick={() => openDialog({ type: "protect" })} />
           )}
         </span>
+        <LanguageSwitch className="!h-9 max-sm:hidden" />
         <span data-tour="help">
           <IconButton icon={CircleHelp} label={t("Visite guidée", "Guided tour")} onClick={startTour} />
         </span>

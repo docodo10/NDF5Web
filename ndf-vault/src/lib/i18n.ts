@@ -15,7 +15,7 @@ export type Lang = "en" | "fr";
 
 export const LANGS: { id: Lang; label: string }[] = [
   { id: "en", label: "English" },
-  { id: "fr", label: "Français" },
+  { id: "fr", label: "Français" }, // i18n-ok: a language is named in itself
 ];
 
 const KEY = "ndf-vault-lang";
