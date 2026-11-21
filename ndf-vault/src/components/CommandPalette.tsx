@@ -6,6 +6,7 @@ import { CornerDownLeft, Search } from "lucide-react";
 import { FolderIcon, KanbanIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
+import { t } from "@/lib/i18n";
 import { count, formatDate, folderLabel, KIND_LABEL } from "@/lib/format";
 import { pageLabel } from "@/lib/extract";
 import { MIN_QUERY_LENGTH } from "@/lib/search";
@@ -71,7 +72,7 @@ export function CommandPalette() {
     return [
       ...files.map<Result>((f) => ({
         key: `file-${f.id}`,
-        group: needle ? "Fichiers" : "Fichiers récents",
+        group: needle ? t("Fichiers", "Files") : t("Fichiers récents", "Recent files"),
         icon: <FileIcon kind={f.kind} size={32} />,
         title: `${f.name}.${f.ext}`,
         meta: `${KIND_LABEL[f.kind]} · ${v.folders.find((d) => d.id === f.folderId)?.name ?? ""} · ${formatDate(f.modifiedAt)}`,
@@ -82,7 +83,7 @@ export function CommandPalette() {
         const where = pageLabel(f.kind, hit.page, pages);
         return {
           key: `content-${f.id}`,
-          group: "Dans le contenu",
+          group: t("Dans le contenu", "In the content"),
           icon: <FileIcon kind={f.kind} size={32} />,
           title: `${f.name}.${f.ext}`,
           meta: [where, hit.count > 1 ? count(hit.count, "occurrence") : ""].filter(Boolean).join(" · "),
@@ -92,19 +93,19 @@ export function CommandPalette() {
       }),
       ...folders.map<Result>((d) => ({
         key: `folder-${d.id}`,
-        group: "Dossiers",
+        group: t("Dossiers", "Folders"),
         icon: (
           <span className="flex size-8 items-center justify-center rounded-lg bg-fill text-neutral-700">
             <FolderIcon weight="fill" className="size-[17px]" />
           </span>
         ),
         title: folderLabel(d),
-        meta: "Dossier",
+        meta: t("Dossier", "Folder"),
         run: () => v.navigate({ view: "folder", id: d.id }),
       })),
       ...projects.map<Result>((p) => ({
         key: `project-${p.id}`,
-        group: "Projets",
+        group: t("Projets", "Projects"),
         icon: (
           <span className="flex size-8 items-center justify-center rounded-lg bg-fill text-neutral-700">
             <KanbanIcon weight="fill" className="size-[17px]" />
@@ -137,7 +138,7 @@ export function CommandPalette() {
           aria-describedby={undefined}
           className="fixed left-1/2 top-[12vh] z-[81] flex max-h-[70vh] w-[calc(100vw-32px)] max-w-[600px] -translate-x-1/2 animate-pop flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-modal focus:outline-none"
         >
-          <Dialog.Title className="sr-only">Rechercher dans NDF Vault</Dialog.Title>
+          <Dialog.Title className="sr-only">{t("Rechercher dans NDF Vault", "Search NDF Vault")}</Dialog.Title>
           <div className="flex h-[52px] shrink-0 items-center gap-3 border-b border-line px-4">
             <Search className="size-[18px] shrink-0 text-neutral-400" strokeWidth={1.75} />
             <input
@@ -159,14 +160,14 @@ export function CommandPalette() {
                   choose(results[active]);
                 }
               }}
-              placeholder="Nom, dossier, projet, étiquette… ou un mot du contenu"
-              aria-label="Rechercher dans NDF Vault"
+              placeholder={t("Nom, dossier, projet, étiquette… ou un mot du contenu", "Name, folder, project, tag… or a word from the content")}
+              aria-label={t("Rechercher dans NDF Vault", "Search NDF Vault")}
               className="h-full min-w-0 flex-1 bg-transparent text-[14.5px] text-ink placeholder:text-neutral-400"
             />
             <Kbd>Esc</Kbd>
           </div>
           <div ref={listRef} className="scroll-quiet min-h-0 flex-1 overflow-y-auto p-2">
-            {results.length === 0 && <p className="px-3 py-10 text-center text-[13px] text-neutral-500">Aucun résultat pour « {q} ».</p>}
+            {results.length === 0 && <p className="px-3 py-10 text-center text-[13px] text-neutral-500">{t(`Aucun résultat pour « ${q} ».`, `No results for “${q}”.`)}</p>}
             {results.map((r, i) => {
               const header = r.group !== lastGroup ? r.group : null;
               lastGroup = r.group;
@@ -203,18 +204,18 @@ export function CommandPalette() {
           <div className="hidden h-10 shrink-0 items-center gap-4 border-t border-hair px-4 text-[12px] text-neutral-500 sm:flex">
             <span className="flex items-center gap-1.5">
               <Kbd>↑</Kbd>
-              <Kbd>↓</Kbd> Naviguer
+              <Kbd>↓</Kbd> {t("Naviguer", "Navigate")}
             </span>
             <span className="flex items-center gap-1.5">
-              <Kbd>↵</Kbd> Ouvrir
+              <Kbd>↵</Kbd> {t("Ouvrir", "Open")}
             </span>
             <span className="ml-auto">
               {v.indexStatus.done < v.indexStatus.total && (
                 <span data-indexing className="mr-3 text-neutral-400">
-                  Lecture du contenu : {v.indexStatus.done} / {v.indexStatus.total}
+                  {t(`Lecture du contenu : ${v.indexStatus.done} / ${v.indexStatus.total}`, `Reading content: ${v.indexStatus.done} / ${v.indexStatus.total}`)}
                 </span>
               )}
-              {count(results.length, "résultat")}
+              {t(count(results.length, "résultat"), `${results.length} ${results.length === 1 ? "result" : "results"}`)}
             </span>
           </div>
         </Dialog.Content>

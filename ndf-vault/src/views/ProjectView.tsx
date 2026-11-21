@@ -21,7 +21,7 @@ const tabs = (): TabItem<Tab>[] => [
   { id: "overview", label: t("Aperçu", "Overview"), icon: LayoutDashboard },
   { id: "files", label: t("Fichiers", "Files"), icon: Files },
   { id: "financial", label: t("Documents financiers", "Financial documents"), icon: Landmark },
-  { id: "production", label: t("Production", "Production"), icon: Clapperboard },
+  { id: "production", label: "Production", icon: Clapperboard },
   { id: "legal", label: t("Juridique", "Legal"), icon: Scale },
   { id: "team", label: t("Équipe", "Team"), icon: Users },
   { id: "activity", label: t("Activité", "Activity"), icon: Activity },

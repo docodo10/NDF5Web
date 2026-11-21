@@ -3,6 +3,8 @@
 import { Download, Eye, History, Trash2, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
+import { t } from "@/lib/i18n";
+import { journalText } from "@/lib/journal";
 import type { VaultFile } from "@/lib/types";
 import { CURRENT_USER_ID, USERS } from "@/lib/sample-data";
 import { dueOf, today } from "@/lib/due";
@@ -56,21 +58,21 @@ function DueEditor({ file }: { file: VaultFile }) {
       )}
       <div className="grid gap-2">
         <label className="block">
-          <span className="sr-only">Date de l’échéance</span>
+          <span className="sr-only">{t("Date de l’échéance", "Due date")}</span>
           <input id="due-date" type="date" value={date} min="2000-01-01" max="2100-12-31" onChange={(e) => setDate(e.target.value)} className={INPUT} />
         </label>
         <label className="block">
-          <span className="sr-only">Ce que cette date représente</span>
-          <input id="due-label" value={label} maxLength={80} onChange={(e) => setLabel(e.target.value)} placeholder="Ce que c’est : expiration de l’option, renouvellement…" className={INPUT} />
+          <span className="sr-only">{t("Ce que cette date représente", "What this date stands for")}</span>
+          <input id="due-label" value={label} maxLength={80} onChange={(e) => setLabel(e.target.value)} placeholder={t("Ce que c’est : expiration de l’option, renouvellement…", "What it is: option expiry, renewal…")} className={INPUT} />
         </label>
       </div>
       <div className="mt-2.5 flex flex-wrap gap-2">
         <Button size="sm" variant="primary" type="submit" disabled={!date || !changed}>
-          {file.dueAt ? "Mettre à jour" : "Fixer l’échéance"}
+          {file.dueAt ? t("Mettre à jour", "Update") : t("Fixer l’échéance", "Set due date")}
         </Button>
         {!file.dueAt && !date && (
           <Button size="sm" onClick={() => setDate(today())}>
-            Aujourd’hui
+            {t("Aujourd’hui", "Today")}
           </Button>
         )}
         {file.dueAt && (
@@ -82,7 +84,7 @@ function DueEditor({ file }: { file: VaultFile }) {
               setLabel("");
             }}
           >
-            Retirer
+            {t("Retirer", "Remove")}
           </Button>
         )}
       </div>
@@ -97,16 +99,16 @@ function Comments({ file }: { file: VaultFile }) {
   return (
     <div>
       {comments.length === 0 ? (
-        <p className="text-[13px] text-neutral-500">Aucun commentaire. Laissez une note pour vous ou pour la suite.</p>
+        <p className="text-[13px] text-neutral-500">{t("Aucun commentaire. Laissez une note pour vous ou pour la suite.", "No comments. Leave a note for yourself or for later.")}</p>
       ) : (
-        <ul aria-label="Commentaires" className="space-y-2.5">
+        <ul aria-label={t("Commentaires", "Comments")} className="space-y-2.5">
           {comments.map((c) => (
             <li key={c.id} className="group rounded-[10px] border border-line bg-subtle px-3 py-2">
               <div className="flex items-center justify-between gap-2">
                 <p className="min-w-0 truncate text-[12px] text-neutral-500">
                   <span className="font-medium text-neutral-700">{c.author}</span> · {formatDate(c.at)}, {formatTime(c.at)}
                 </p>
-                <IconButton icon={Trash2} label="Supprimer ce commentaire" variant="ghost" size="sm" onClick={() => deleteComment(file.id, c.id)} />
+                <IconButton icon={Trash2} label={t("Supprimer ce commentaire", "Delete this comment")} variant="ghost" size="sm" onClick={() => deleteComment(file.id, c.id)} />
               </div>
               {/* Shown as written: line breaks kept, nothing interpreted. */}
               <p className="mt-0.5 whitespace-pre-wrap break-words text-[13px] leading-[19px] text-ink">{c.text}</p>
@@ -124,12 +126,12 @@ function Comments({ file }: { file: VaultFile }) {
         }}
       >
         <label className="block">
-          <span className="sr-only">Nouveau commentaire</span>
-          <textarea id="comment-text" value={text} onChange={(e) => setText(e.target.value)} rows={2} maxLength={2000} placeholder="Écrire un commentaire" className={`${INPUT} h-auto resize-none py-2 leading-5`} />
+          <span className="sr-only">{t("Nouveau commentaire", "New comment")}</span>
+          <textarea id="comment-text" value={text} onChange={(e) => setText(e.target.value)} rows={2} maxLength={2000} placeholder={t("Écrire un commentaire", "Write a comment")} className={`${INPUT} h-auto resize-none py-2 leading-5`} />
         </label>
         <div className="mt-2 flex justify-end">
           <Button size="sm" variant="primary" type="submit" disabled={!text.trim()}>
-            Publier
+            {t("Publier", "Post")}
           </Button>
         </div>
       </form>
@@ -168,31 +170,32 @@ export function InfoPanel() {
   const owner = USERS.find((u) => u.id === file.ownerId);
   const level = protectionOf(file);
   const name = fullName(file);
-  const history = v.activity.filter((a) => a.target === name).slice(0, 8);
+  // The journal keeps built-in names in French; a sample file shown under its English name is matched through the translated entry.
+  const history = v.activity.filter((a) => a.target === name || journalText(a).target === name).slice(0, 8);
   const versions = (file.versions?.length ?? 0) + 1;
 
   return (
-    <aside aria-label="Informations sur le fichier" data-info-panel className="flex w-full max-w-[400px] animate-fade flex-col border-l border-line bg-white max-xl:fixed max-xl:inset-y-0 max-xl:right-0 max-xl:z-[45] max-xl:shadow-modal xl:w-[360px] xl:shrink-0">
+    <aside aria-label={t("Informations sur le fichier", "File information")} data-info-panel className="flex w-full max-w-[400px] animate-fade flex-col border-l border-line bg-white max-xl:fixed max-xl:inset-y-0 max-xl:right-0 max-xl:z-[45] max-xl:shadow-modal xl:w-[360px] xl:shrink-0">
       <header className="flex shrink-0 items-start gap-3 px-5 pb-4 pt-5">
         <FileIcon kind={file.kind} size={40} />
         <div className="min-w-0 flex-1">
           <h2 className="break-words text-[15px] font-semibold leading-5 text-ink">{name}</h2>
           <p className="mt-0.5 text-[12.5px] text-neutral-500">
             {KIND_LABEL[file.kind]} · {formatSize(file.size)}
-            {file.sample ? " · Fichier d’exemple" : ""}
+            {file.sample ? t(" · Fichier d’exemple", " · Sample file") : ""}
           </p>
         </div>
-        <IconButton icon={X} label="Fermer les informations" variant="ghost" size="sm" onClick={closeInfo} />
+        <IconButton icon={X} label={t("Fermer les informations", "Close information")} variant="ghost" size="sm" onClick={closeInfo} />
       </header>
 
       <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto pb-6">
         <div className="flex flex-wrap gap-2 px-5 pb-4">
           <Button size="sm" icon={Eye} onClick={() => v.openPreview(file.id)}>
-            Ouvrir
+            {t("Ouvrir", "Open")}
           </Button>
           {!file.sample && level === "standard" && (
             <Button size="sm" icon={Download} onClick={() => void v.downloadFile(file.id)}>
-              Télécharger
+              {t("Télécharger", "Download")}
             </Button>
           )}
           <Button size="sm" icon={History} onClick={() => v.openDialog({ type: "versions", fileId: file.id })}>
@@ -200,9 +203,9 @@ export function InfoPanel() {
           </Button>
         </div>
 
-        <Section title="Détails">
+        <Section title={t("Détails", "Details")}>
           <dl>
-            <Fact label="Emplacement">
+            <Fact label={t("Emplacement", "Location")}>
               <button
                 type="button"
                 onClick={() => {
@@ -214,8 +217,8 @@ export function InfoPanel() {
                 {folder ? folder.name : "NDF Vault"}
               </button>
             </Fact>
-            {project && <Fact label="Projet">{project.code}</Fact>}
-            <Fact label="Statut">
+            {project && <Fact label={t("Projet", "Project")}>{project.code}</Fact>}
+            <Fact label={t("Statut", "Status")}>
               <StatusBadge status={file.status} />
             </Fact>
             <Fact label="Protection">
@@ -227,13 +230,13 @@ export function InfoPanel() {
                 </button>
               )}
             </Fact>
-            <Fact label="Ajouté le">{formatDate(file.createdAt)}</Fact>
-            <Fact label="Modifié le">
+            <Fact label={t("Ajouté le", "Added on")}>{formatDate(file.createdAt)}</Fact>
+            <Fact label={t("Modifié le", "Modified on")}>
               {formatDate(file.modifiedAt)}, {formatTime(file.modifiedAt)}
             </Fact>
-            {owner && <Fact label="Par">{owner.name}</Fact>}
+            {owner && <Fact label={t("Par", "By")}>{owner.name}</Fact>}
             {file.tags.length > 0 && (
-              <Fact label="Étiquettes">
+              <Fact label={t("Étiquettes", "Tags")}>
                 <span className="flex flex-wrap justify-end gap-1">
                   {file.tags.map((t) => (
                     <Chip key={t}>{t}</Chip>
@@ -242,7 +245,7 @@ export function InfoPanel() {
               </Fact>
             )}
             {file.sha256 && (
-              <Fact label="Empreinte">
+              <Fact label={t("Empreinte", "Fingerprint")}>
                 <span title={file.sha256} className="font-mono text-[12px] font-normal text-neutral-600">
                   {file.sha256.slice(0, 16)}…
                 </span>
@@ -252,22 +255,22 @@ export function InfoPanel() {
           {file.notes && <p className="mt-2 whitespace-pre-wrap break-words rounded-[10px] bg-subtle px-3 py-2 text-[13px] leading-[19px] text-neutral-700">{file.notes}</p>}
         </Section>
 
-        <Section title="Échéance">
+        <Section title={t("Échéance", "Due date")}>
           <DueEditor key={file.id} file={file} />
         </Section>
 
-        <Section title={`Commentaires${file.comments?.length ? ` (${file.comments.length})` : ""}`}>
+        <Section title={t(`Commentaires${file.comments?.length ? ` (${file.comments.length})` : ""}`, `Comments${file.comments?.length ? ` (${file.comments.length})` : ""}`)}>
           <Comments key={file.id} file={file} />
         </Section>
 
-        <Section title="Activité">
+        <Section title={t("Activité", "Activity")}>
           {history.length === 0 ? (
-            <p className="text-[13px] text-neutral-500">Rien pour l’instant sur ce fichier.</p>
+            <p className="text-[13px] text-neutral-500">{t("Rien pour l’instant sur ce fichier.", "Nothing on this file yet.")}</p>
           ) : (
-            <ul aria-label="Activité du fichier" className="space-y-2">
+            <ul aria-label={t("Activité du fichier", "File activity")} className="space-y-2">
               {history.map((a) => (
                 <li key={a.id} className="text-[13px] leading-[19px] text-neutral-600">
-                  <span className="font-medium text-ink">{a.userId === CURRENT_USER_ID ? v.profile.name : (USERS.find((u) => u.id === a.userId)?.name ?? "Quelqu’un")}</span> {a.verb.replace(/ :$/, "")}
+                  <span className="font-medium text-ink">{a.userId === CURRENT_USER_ID ? v.profile.name : (USERS.find((u) => u.id === a.userId)?.name ?? t("Quelqu’un", "Someone"))}</span> {journalText(a).verb.replace(/ ?:$/, "")}
                   <span className="block text-[12px] text-neutral-400">
                     {formatDate(a.at)}, {formatTime(a.at)}
                     {a.code ? ` · ${a.code}` : ""}

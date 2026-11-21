@@ -3,6 +3,7 @@
 import { FolderSearch, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useVault } from "@/lib/store";
+import { t } from "@/lib/i18n";
 import type { VaultFile } from "@/lib/types";
 import { startFileDrag } from "@/lib/dnd";
 import { formatDate, fullName, KIND_LABEL } from "@/lib/format";
@@ -51,7 +52,7 @@ export function FileGrid({ files, emptyTitle, emptyHint }: { files: VaultFile[];
   }
   return (
     <div>
-      <ul aria-label="Fichiers" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <ul aria-label={t("Fichiers", "Files")} className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {files.slice(0, shown).map((f) => (
           <FileContextMenu key={f.id} file={f} listIds={listIds}>
             <li
@@ -60,7 +61,7 @@ export function FileGrid({ files, emptyTitle, emptyHint }: { files: VaultFile[];
               onDragStart={(e) => startFileDrag(e, [f.id])}
               className="group relative overflow-hidden rounded-xl border border-line bg-white shadow-xs transition-colors duration-150 hover:border-neutral-300"
             >
-              <button type="button" onClick={() => v.openPreview(f.id, listIds)} title={fullName(f)} aria-label={`Ouvrir ${fullName(f)}`} className="block w-full text-left">
+              <button type="button" onClick={() => v.openPreview(f.id, listIds)} title={fullName(f)} aria-label={t(`Ouvrir ${fullName(f)}`, `Open ${fullName(f)}`)} className="block w-full text-left">
                 <span className="flex aspect-[4/3] items-center justify-center overflow-hidden border-b border-hair bg-subtle">
                   <Thumb file={f} />
                 </span>
@@ -83,7 +84,7 @@ export function FileGrid({ files, emptyTitle, emptyHint }: { files: VaultFile[];
       </ul>
       {files.length > shown && (
         <div className="mt-4 flex justify-center">
-          <Button onClick={() => setShown((n) => n + STEP)}>Afficher plus ({files.length - shown} restants)</Button>
+          <Button onClick={() => setShown((n) => n + STEP)}>{t(`Afficher plus (${files.length - shown} restants)`, `Show more (${files.length - shown} remaining)`)}</Button>
         </div>
       )}
     </div>

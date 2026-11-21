@@ -5,6 +5,7 @@ import { Check, Minus } from "lucide-react";
 import type { ButtonHTMLAttributes, ComponentType, ReactNode, Ref } from "react";
 import type { FileStatus, User } from "@/lib/types";
 import { STATUS_LABEL } from "@/lib/format";
+import { t } from "@/lib/i18n";
 
 type IconType = ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -263,6 +264,6 @@ export function EmptyState({ icon: Icon, title, hint }: { icon: IconType; title:
 
 export function SampleNotice() {
   return (
-    <Chip className="border-dashed text-neutral-500">Données d’exemple · vos fichiers téléversés s’y ajoutent</Chip>
+    <Chip className="border-dashed text-neutral-500">{t("Données d’exemple · vos fichiers téléversés s’y ajoutent", "Sample data · your uploaded files are added to it")}</Chip>
   );
 }

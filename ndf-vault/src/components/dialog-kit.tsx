@@ -5,6 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Eye, EyeOff, Info, X } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
+import { t } from "@/lib/i18n";
 import { IconButton } from "./ui";
 
 /* -------------------------------------------------------------- Modal shell */
@@ -37,7 +38,7 @@ export function Modal({ title, description, children, footer, onSubmit, width = 
                 {description && <p className="mt-1 text-[13px] text-neutral-500">{description}</p>}
               </div>
               <Dialog.Close asChild>
-                <IconButton icon={X} label="Fermer" variant="ghost" size="sm" className="-mr-1.5 -mt-1" />
+                <IconButton icon={X} label={t("Fermer", "Close")} variant="ghost" size="sm" className="-mr-1.5 -mt-1" />
               </Dialog.Close>
             </div>
             <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
@@ -115,7 +116,7 @@ export function PassphraseInput({ id, value, onChange, autoComplete, autoFocus, 
       <button
         type="button"
         onClick={() => setShown((s) => !s)}
-        aria-label={shown ? "Masquer la phrase secrète" : "Afficher la phrase secrète"}
+        aria-label={shown ? t("Masquer la phrase secrète", "Hide the passphrase") : t("Afficher la phrase secrète", "Show the passphrase")}
         aria-pressed={shown}
         className="absolute right-1 top-1 flex size-7 items-center justify-center rounded-md text-neutral-400 transition-colors duration-150 hover:bg-fill hover:text-ink"
       >

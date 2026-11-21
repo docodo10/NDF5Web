@@ -37,6 +37,7 @@ import { OfficeError, readDocx, readPptx, readXlsx, type DocxContent, type PptxC
 import { bakeWatermark, PROTECTION_LABEL, protectionOf } from "@/lib/protection";
 import { watermarkText } from "@/lib/stamp";
 import { formatDate, fullName, KIND_LABEL } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { Ndf5Mark, PageWatermark, PersonalWatermark } from "../brand/Brand";
 import { FileIcon } from "../files/FileTable";
 import { Button, IconButton } from "../ui";
@@ -108,17 +109,20 @@ function SamplePage({ file, n, folderName, watermark, personal }: { file: VaultF
       {personal && <PersonalWatermark text={personal} />}
       <div className="relative flex items-center justify-between">
         <Ndf5Mark className="h-[22px] w-auto text-ink" />
-        <span className="rounded-md border border-dashed border-neutral-300 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">Fichier d’exemple</span>
+        <span className="rounded-md border border-dashed border-neutral-300 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">{t("Fichier d’exemple", "Sample file")}</span>
       </div>
       <div className="relative mt-14">
         {n === 1 ? (
           <>
             <h2 className="text-[30px] font-semibold leading-9 tracking-[-0.02em] text-ink">{file.name}</h2>
             <p className="mt-3 text-[14px] text-neutral-500">
-              {KIND_LABEL[file.kind]} · {folderName} · Modifié le {formatDate(file.modifiedAt)}
+              {KIND_LABEL[file.kind]} · {folderName} · {t(`Modifié le ${formatDate(file.modifiedAt)}`, `Modified ${formatDate(file.modifiedAt)}`)}
             </p>
             <p className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-[13.5px] leading-[21px] text-neutral-600">
-              Cette page tient lieu de document : c’est un fichier d’exemple, sans contenu réel. Téléversez un PDF, une image, un fichier texte ou un document Office pour voir un vrai aperçu.
+              {t(
+                "Cette page tient lieu de document : c’est un fichier d’exemple, sans contenu réel. Téléversez un PDF, une image, un fichier texte ou un document Office pour voir un vrai aperçu.",
+                "This page stands in for a document: it is a sample file, with no real content. Upload a PDF, an image, a text file or an Office document to see a real preview.",
+              )}
             </p>
           </>
         ) : (
@@ -142,9 +146,9 @@ function SamplePage({ file, n, folderName, watermark, personal }: { file: VaultF
         )}
       </div>
       <div className="relative mt-8 flex items-center justify-between border-t border-neutral-200 pt-4 text-[11.5px] text-neutral-500">
-        <span>NDF5 Productions — Confidentiel</span>
+        <span>{t("NDF5 Productions — Confidentiel", "NDF5 Productions — Confidential")}</span>
         <span>
-          Page {n} sur {file.pages}
+          {t(`Page ${n} sur ${file.pages}`, `Page ${n} of ${file.pages}`)}
         </span>
       </div>
     </div>
@@ -291,8 +295,8 @@ function Fence({ host }: { host: HTMLElement | null }) {
         <span className="flex size-11 items-center justify-center rounded-2xl bg-ink text-white">
           <ScanLine className="size-5" strokeWidth={1.75} />
         </span>
-        <p className="mt-3 text-[15px] font-semibold text-ink">Lecture protégée</p>
-        <p className="mt-1 max-w-[320px] text-[13px] leading-[19px] text-neutral-600">Placez le pointeur ou le doigt sur le document : seule la bande où vous lisez est nette.</p>
+        <p className="mt-3 text-[15px] font-semibold text-ink">{t("Lecture protégée", "Protected reading")}</p>
+        <p className="mt-1 max-w-[320px] text-[13px] leading-[19px] text-neutral-600">{t("Placez le pointeur ou le doigt sur le document : seule la bande où vous lisez est nette.", "Place the pointer or your finger on the document: only the band where you are reading is sharp.")}</p>
       </div>
     </div>
   );
@@ -386,7 +390,7 @@ function Notice({ file, title, text, onDownload }: { file: VaultFile; title: str
       <p className="mt-1.5 max-w-[380px] text-[13.5px] leading-[21px] text-neutral-500">{text}</p>
       {onDownload && (
         <Button variant="primary" icon={Download} className="mt-5" onClick={onDownload}>
-          Télécharger l’original
+          {t("Télécharger l’original", "Download the original")}
         </Button>
       )}
     </div>
@@ -508,7 +512,7 @@ export function PreviewModal() {
     if (!wantedPage || wantedPage < 2 || !canvasEl) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     if (doc.kind === "pdf") timer = setTimeout(() => goToPage(Math.min(wantedPage, doc.pdf.numPages)), 120);
-    else if (doc.kind === "pptx") timer = setTimeout(() => canvasEl.querySelector(`[aria-label="Diapositive ${wantedPage}"]`)?.scrollIntoView({ block: "start" }), 120);
+    else if (doc.kind === "pptx") timer = setTimeout(() => canvasEl.querySelector(`[data-slide="${wantedPage}"]`)?.scrollIntoView({ block: "start" }), 120);
     return () => clearTimeout(timer);
   }, [doc, wantedPage, canvasEl, goToPage]);
 
@@ -577,12 +581,12 @@ export function PreviewModal() {
           {/* Title bar */}
           <div className="flex h-16 shrink-0 items-center gap-2 px-3 sm:px-4">
             <Button icon={ArrowLeft} onClick={v.closePreview}>
-              Retour
+              {t("Retour", "Back")}
             </Button>
             <span className="mx-2 hidden h-6 w-px bg-line sm:block" />
-            <IconButton icon={ArrowUp} label="Fichier précédent" disabled={!prevId} onClick={() => prevId && v.openPreview(prevId, preview.listIds, fullscreen)} />
-            <IconButton icon={ArrowDown} label="Fichier suivant" disabled={!nextId} onClick={() => nextId && v.openPreview(nextId, preview.listIds, fullscreen)} />
-            <nav aria-label="Emplacement" className="ml-3 flex min-w-0 flex-1 items-center gap-2.5 text-[14.5px]">
+            <IconButton icon={ArrowUp} label={t("Fichier précédent", "Previous file")} disabled={!prevId} onClick={() => prevId && v.openPreview(prevId, preview.listIds, fullscreen)} />
+            <IconButton icon={ArrowDown} label={t("Fichier suivant", "Next file")} disabled={!nextId} onClick={() => nextId && v.openPreview(nextId, preview.listIds, fullscreen)} />
+            <nav aria-label={t("Emplacement", "Location")} className="ml-3 flex min-w-0 flex-1 items-center gap-2.5 text-[14.5px]">
               <button
                 type="button"
                 onClick={() => {
@@ -597,44 +601,44 @@ export function PreviewModal() {
               <ChevronRight className="hidden size-4 shrink-0 text-neutral-400 md:block" strokeWidth={1.75} />
               <Dialog.Title className="truncate font-medium text-ink">{fullName(file)}</Dialog.Title>
             </nav>
-            <IconButton icon={fullscreen ? Minimize2 : Maximize2} label={fullscreen ? "Quitter le plein écran" : "Plein écran"} onClick={() => setFullscreen((f) => !f)} className="max-md:hidden" />
-            <IconButton icon={X} label="Fermer l’aperçu" onClick={v.closePreview} />
+            <IconButton icon={fullscreen ? Minimize2 : Maximize2} label={fullscreen ? t("Quitter le plein écran", "Exit full screen") : t("Plein écran", "Full screen")} onClick={() => setFullscreen((f) => !f)} className="max-md:hidden" />
+            <IconButton icon={X} label={t("Fermer l’aperçu", "Close preview")} onClick={v.closePreview} />
           </div>
 
           {/* Tool bar */}
           <div className="flex h-12 shrink-0 items-center gap-1 border-y border-line bg-subtle px-3 sm:px-4">
-            <IconButton icon={PanelLeft} label={panel ? "Masquer les vignettes" : "Afficher les vignettes"} variant="ghost" size="sm" active={showPanel} disabled={!paged} onClick={() => setPanel((p) => !p)} />
+            <IconButton icon={PanelLeft} label={panel ? t("Masquer les vignettes", "Hide thumbnails") : t("Afficher les vignettes", "Show thumbnails")} variant="ghost" size="sm" active={showPanel} disabled={!paged} onClick={() => setPanel((p) => !p)} />
             <Divider />
-            <IconButton icon={MoveHorizontal} label="Ajuster à la largeur" variant="ghost" size="sm" active={zoomable && fit === "width"} disabled={!zoomable} onClick={() => setFit("width")} />
-            <IconButton icon={Scan} label="Ajuster à la page" variant="ghost" size="sm" active={zoomable && fit === "page"} disabled={!zoomable} onClick={() => setFit("page")} />
+            <IconButton icon={MoveHorizontal} label={t("Ajuster à la largeur", "Fit to width")} variant="ghost" size="sm" active={zoomable && fit === "width"} disabled={!zoomable} onClick={() => setFit("width")} />
+            <IconButton icon={Scan} label={t("Ajuster à la page", "Fit to page")} variant="ghost" size="sm" active={zoomable && fit === "page"} disabled={!zoomable} onClick={() => setFit("page")} />
             <Divider />
-            <IconButton icon={CircleMinus} label="Zoom arrière" variant="ghost" size="sm" disabled={!zoomable || zoom <= ZOOM_MIN} onClick={() => step(-1)} />
+            <IconButton icon={CircleMinus} label={t("Zoom arrière", "Zoom out")} variant="ghost" size="sm" disabled={!zoomable || zoom <= ZOOM_MIN} onClick={() => step(-1)} />
             <span aria-live="polite" className="flex h-8 w-[68px] items-center justify-center rounded-lg bg-neutral-200/60 text-[13px] font-medium tabular-nums text-ink">
-              {zoomable ? `${Math.round(zoom * 100)} %` : "—"}
+              {zoomable ? t(`${Math.round(zoom * 100)} %`, `${Math.round(zoom * 100)}%`) : "—"}
             </span>
-            <IconButton icon={CirclePlus} label="Zoom avant" variant="ghost" size="sm" disabled={!zoomable || zoom >= ZOOM_MAX} onClick={() => step(1)} />
+            <IconButton icon={CirclePlus} label={t("Zoom avant", "Zoom in")} variant="ghost" size="sm" disabled={!zoomable || zoom >= ZOOM_MAX} onClick={() => step(1)} />
             {paged && (
               <>
                 <Divider />
                 <div className="hidden items-center gap-1 sm:flex">
-                  <IconButton icon={ChevronUp} label="Page précédente" variant="ghost" size="sm" disabled={page <= 1} onClick={() => goToPage(page - 1)} />
+                  <IconButton icon={ChevronUp} label={t("Page précédente", "Previous page")} variant="ghost" size="sm" disabled={page <= 1} onClick={() => goToPage(page - 1)} />
                   <span data-page-indicator className="min-w-[52px] text-center text-[13px] tabular-nums text-neutral-600">
                     <span className="font-medium text-ink">{page}</span> / {pageCount}
                   </span>
-                  <IconButton icon={ChevronDown} label="Page suivante" variant="ghost" size="sm" disabled={page >= pageCount} onClick={() => goToPage(page + 1)} />
+                  <IconButton icon={ChevronDown} label={t("Page suivante", "Next page")} variant="ghost" size="sm" disabled={page >= pageCount} onClick={() => goToPage(page + 1)} />
                 </div>
               </>
             )}
             <div className="ml-auto flex items-center gap-1">
-              {!file.sample && <IconButton icon={ScanLine} label={level === "high" ? "Lecture protégée (imposée par le niveau de protection)" : fence ? "Quitter la lecture protégée" : "Lecture protégée"} variant="ghost" size="sm" active={fence} disabled={level === "high"} onClick={() => setFenceChosen((f) => !f)} />}
-              {stampable && <IconButton icon={Stamp} label="Télécharger avec filigrane" variant="ghost" size="sm" onClick={() => void v.downloadFile(file.id, { stamped: true })} />}
+              {!file.sample && <IconButton icon={ScanLine} label={level === "high" ? t("Lecture protégée (imposée par le niveau de protection)", "Protected reading (required by the protection level)") : fence ? t("Quitter la lecture protégée", "Exit protected reading") : t("Lecture protégée", "Protected reading")} variant="ghost" size="sm" active={fence} disabled={level === "high"} onClick={() => setFenceChosen((f) => !f)} />}
+              {stampable && <IconButton icon={Stamp} label={t("Télécharger avec filigrane", "Download with watermark")} variant="ghost" size="sm" onClick={() => void v.downloadFile(file.id, { stamped: true })} />}
               {guarded ? (
                 <span data-protection-chip className="ml-1 inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-white px-2 text-[12px] font-medium text-neutral-700">
                   <Lock className="size-3.5" strokeWidth={2} />
                   <span className="max-sm:hidden">{PROTECTION_LABEL[level]}</span>
                 </span>
               ) : (
-                <IconButton icon={Download} label="Télécharger" variant="ghost" size="sm" disabled={doc.kind === "altered"} onClick={download} />
+                <IconButton icon={Download} label={t("Télécharger", "Download")} variant="ghost" size="sm" disabled={doc.kind === "altered"} onClick={download} />
               )}
             </div>
           </div>
@@ -642,13 +646,13 @@ export function PreviewModal() {
           {/* Body */}
           <div className="flex min-h-0 flex-1">
             {showPanel && (
-              <aside aria-label="Vignettes des pages" className="scroll-quiet w-[152px] shrink-0 overflow-y-auto border-r border-line bg-subtle sm:w-[272px]">
+              <aside aria-label={t("Vignettes des pages", "Page thumbnails")} className="scroll-quiet w-[152px] shrink-0 overflow-y-auto border-r border-line bg-subtle sm:w-[272px]">
                 <div className="sticky top-0 z-10 hidden items-center gap-3 bg-subtle px-5 pb-2 pt-4 sm:flex">
-                  <button type="button" aria-label="Vignettes plus petites" onClick={() => setThumbW((w) => Math.max(72, w - 12))} className="text-neutral-600 hover:text-ink">
+                  <button type="button" aria-label={t("Vignettes plus petites", "Smaller thumbnails")} onClick={() => setThumbW((w) => Math.max(72, w - 12))} className="text-neutral-600 hover:text-ink">
                     <Minus className="size-4" strokeWidth={1.75} />
                   </button>
-                  <input id="thumb-size" type="range" min={72} max={208} step={4} value={thumbW} onChange={(e) => setThumbW(Number(e.target.value))} aria-label="Taille des vignettes" className="vault-range min-w-0 flex-1" />
-                  <button type="button" aria-label="Vignettes plus grandes" onClick={() => setThumbW((w) => Math.min(208, w + 12))} className="text-neutral-600 hover:text-ink">
+                  <input id="thumb-size" type="range" min={72} max={208} step={4} value={thumbW} onChange={(e) => setThumbW(Number(e.target.value))} aria-label={t("Taille des vignettes", "Thumbnail size")} className="vault-range min-w-0 flex-1" />
+                  <button type="button" aria-label={t("Vignettes plus grandes", "Larger thumbnails")} onClick={() => setThumbW((w) => Math.min(208, w + 12))} className="text-neutral-600 hover:text-ink">
                     <Plus className="size-4" strokeWidth={1.75} />
                   </button>
                 </div>
@@ -657,7 +661,7 @@ export function PreviewModal() {
                     const on = n === page;
                     return (
                       <li key={n}>
-                        <button type="button" aria-label={`Aller à la page ${n}`} aria-current={on ? "page" : undefined} onClick={() => goToPage(n)} className="group block">
+                        <button type="button" aria-label={t(`Aller à la page ${n}`, `Go to page ${n}`)} aria-current={on ? "page" : undefined} onClick={() => goToPage(n)} className="group block">
                           <span className={clsx("block overflow-hidden rounded-[3px] bg-white transition-shadow duration-150", on ? "shadow-[0_0_0_2px_#0a0a0a]" : "shadow-[0_0_0_1px_#e4e4e4,0_2px_6px_-2px_rgb(10_10_10/0.1)] group-hover:shadow-[0_0_0_1px_#a3a3a3]")}>
                             {renderPage(n, thumbW)}
                           </span>
@@ -673,32 +677,35 @@ export function PreviewModal() {
             <div ref={setCanvasEl} data-viewer-canvas onScroll={onScroll} className="scroll-quiet min-w-0 flex-1 overflow-auto scroll-smooth bg-white">
               {doc.kind === "loading" && (
                 <div className="flex h-full items-center justify-center text-neutral-400">
-                  <LoaderCircle className="size-6 animate-spin" strokeWidth={1.75} aria-label="Chargement" />
+                  <LoaderCircle className="size-6 animate-spin" strokeWidth={1.75} aria-label={t("Chargement", "Loading")} />
                 </div>
               )}
               {doc.kind === "unsupported" && (
                 <Notice
                   file={file}
-                  title={file.kind === "docx" || file.kind === "xlsx" || file.kind === "pptx" ? "Aperçu impossible pour ce fichier" : `Pas d’aperçu pour ce format (.${file.ext})`}
-                  text="L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application."
+                  title={file.kind === "docx" || file.kind === "xlsx" || file.kind === "pptx" ? t("Aperçu impossible pour ce fichier", "This file cannot be previewed") : t(`Pas d’aperçu pour ce format (.${file.ext})`, `No preview for this format (.${file.ext})`)}
+                  text={t("L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application.", "The original is safely stored. Download it to open it in its application.")}
                   onDownload={guarded ? undefined : download}
                 />
               )}
-              {doc.kind === "tooLarge" && <Notice file={file} title="Fichier trop volumineux pour l’aperçu" text="L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application." onDownload={guarded ? undefined : download} />}
+              {doc.kind === "tooLarge" && <Notice file={file} title={t("Fichier trop volumineux pour l’aperçu", "File too large to preview")} text={t("L’original est bien enregistré. Téléchargez-le pour l’ouvrir dans son application.", "The original is safely stored. Download it to open it in its application.")} onDownload={guarded ? undefined : download} />}
               {doc.kind === "altered" && (
                 <div className="flex h-full flex-col items-center justify-center px-6 text-center">
                   <ShieldAlert className="size-10 text-red-500" strokeWidth={1.5} />
-                  <p className="mt-4 text-[16px] font-semibold text-ink">Fichier altéré</p>
+                  <p className="mt-4 text-[16px] font-semibold text-ink">{t("Fichier altéré", "Altered file")}</p>
                   <p className="mt-1.5 max-w-[400px] text-[13.5px] leading-[21px] text-neutral-500">
-                    Son contenu ne correspond plus à l’empreinte enregistrée au téléversement. Il n’est ni affiché ni téléchargeable. Supprimez-le et téléversez l’original de nouveau.
+                    {t(
+                      "Son contenu ne correspond plus à l’empreinte enregistrée au téléversement. Il n’est ni affiché ni téléchargeable. Supprimez-le et téléversez l’original de nouveau.",
+                      "Its content no longer matches the fingerprint recorded at upload. It is neither shown nor downloadable. Delete it and upload the original again.",
+                    )}
                   </p>
                 </div>
               )}
               {doc.kind === "missing" && (
                 <div className="flex h-full flex-col items-center justify-center px-6 text-center">
                   <FileQuestion className="size-10 text-neutral-300" strokeWidth={1.25} />
-                  <p className="mt-4 text-[16px] font-semibold text-ink">Original introuvable</p>
-                  <p className="mt-1.5 max-w-[380px] text-[13.5px] leading-[21px] text-neutral-500">Ce fichier a été téléversé depuis un autre navigateur, ou les données de ce site ont été effacées.</p>
+                  <p className="mt-4 text-[16px] font-semibold text-ink">{t("Original introuvable", "Original not found")}</p>
+                  <p className="mt-1.5 max-w-[380px] text-[13.5px] leading-[21px] text-neutral-500">{t("Ce fichier a été téléversé depuis un autre navigateur, ou les données de ce site ont été effacées.", "This file was uploaded from another browser, or this site’s data has been cleared.")}</p>
                 </div>
               )}
               {paged && (
@@ -752,7 +759,7 @@ export function PreviewModal() {
                     ) : (
                       <pre className="whitespace-pre-wrap break-words font-mono leading-[1.6] text-neutral-800">{doc.text}</pre>
                     )}
-                    {doc.truncated && <p className="mt-[1.5em] border-t border-neutral-200 pt-[1em] text-neutral-500">Aperçu limité au début du fichier. Téléchargez l’original pour tout voir.</p>}
+                    {doc.truncated && <p className="mt-[1.5em] border-t border-neutral-200 pt-[1em] text-neutral-500">{t("Aperçu limité au début du fichier. Téléchargez l’original pour tout voir.", "Preview limited to the beginning of the file. Download the original to see everything.")}</p>}
                     {personal && <PersonalWatermark text={personal} />}
                   </div>
                 </div>
@@ -760,7 +767,7 @@ export function PreviewModal() {
               {doc.kind === "docx" && (
                 <div className="mx-auto flex w-max min-w-full flex-col items-center px-3 py-6 sm:px-8">
                   <div style={{ width: Math.round(LETTER.w * zoom) }}>
-                    <SimplifiedNote>Aperçu simplifié : le texte, les titres et les tableaux. La mise en page, les images, les en-têtes et les notes de bas de page ne sont pas reproduits.</SimplifiedNote>
+                    <SimplifiedNote>{t("Aperçu simplifié : le texte, les titres et les tableaux. La mise en page, les images, les en-têtes et les notes de bas de page ne sont pas reproduits.", "Simplified preview: the text, headings and tables. Layout, images, headers and footnotes are not reproduced.")}</SimplifiedNote>
                     <div data-office="docx" className="relative border border-line bg-white shadow-page" style={{ fontSize: 13.5 * zoom, padding: `${4.4 * zoom}em ${4.8 * zoom}em` }}>
                       {v.watermark && <PageWatermark />}
                       <div className="relative">
@@ -774,7 +781,7 @@ export function PreviewModal() {
               {doc.kind === "xlsx" && (
                 <div className="mx-auto flex w-max min-w-full flex-col items-center px-3 py-6 sm:px-8">
                   <div style={{ minWidth: Math.round(LETTER.w * zoom) }}>
-                    <SimplifiedNote>Aperçu simplifié : les valeurs des cellules, feuille par feuille. Les formules affichent leur dernier résultat ; la mise en forme, les graphiques et les cellules fusionnées ne sont pas reproduits.</SimplifiedNote>
+                    <SimplifiedNote>{t("Aperçu simplifié : les valeurs des cellules, feuille par feuille. Les formules affichent leur dernier résultat ; la mise en forme, les graphiques et les cellules fusionnées ne sont pas reproduits.", "Simplified preview: the cell values, sheet by sheet. Formulas show their last result; formatting, charts and merged cells are not reproduced.")}</SimplifiedNote>
                     <div data-office="xlsx" className="relative border border-line bg-white shadow-page" style={{ fontSize: 12.5 * zoom, padding: `${2 * zoom}em` }}>
                       <div className="relative">
                         <SheetView key={file.id} content={doc.content} initial={preview.page ? preview.page - 1 : 0} />
@@ -787,7 +794,7 @@ export function PreviewModal() {
               {doc.kind === "pptx" && (
                 <div className="mx-auto flex w-max min-w-full flex-col items-center px-3 py-6 sm:px-8">
                   <div data-office="pptx" style={{ width: Math.round(SLIDE.w * zoom), fontSize: 15 * zoom }}>
-                    <SimplifiedNote>Aperçu simplifié : le texte de chaque diapositive et les notes du présentateur. Les images, les graphiques et la mise en page ne sont pas reproduits.</SimplifiedNote>
+                    <SimplifiedNote>{t("Aperçu simplifié : le texte de chaque diapositive et les notes du présentateur. Les images, les graphiques et la mise en page ne sont pas reproduits.", "Simplified preview: the text of each slide and the speaker notes. Images, charts and layout are not reproduced.")}</SimplifiedNote>
                     <SlidesView content={doc.content} watermark={v.watermark} personal={personal} />
                   </div>
                 </div>
@@ -797,8 +804,8 @@ export function PreviewModal() {
             {captured && (
               <div role="alert" data-capture-veil className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white px-6 text-center">
                 <ShieldAlert className="size-10 text-red-500" strokeWidth={1.5} />
-                <p className="mt-4 text-[16px] font-semibold text-ink">Capture d’écran détectée</p>
-                <p className="mt-1.5 max-w-[380px] text-[13.5px] leading-[21px] text-neutral-600">Ce document est protégé. La tentative est consignée dans le journal de sécurité, avec le code de cette consultation.</p>
+                <p className="mt-4 text-[16px] font-semibold text-ink">{t("Capture d’écran détectée", "Screenshot detected")}</p>
+                <p className="mt-1.5 max-w-[380px] text-[13.5px] leading-[21px] text-neutral-600">{t("Ce document est protégé. La tentative est consignée dans le journal de sécurité, avec le code de cette consultation.", "This document is protected. The attempt is recorded in the security log, with the viewing code of this session.")}</p>
               </div>
             )}
             </div>

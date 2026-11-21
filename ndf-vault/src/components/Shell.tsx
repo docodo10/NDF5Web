@@ -20,6 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
+import { t } from "@/lib/i18n";
 import type { Folder, Route } from "@/lib/types";
 import { CURRENT_USER_ID, USERS } from "@/lib/sample-data";
 import { storageUsage } from "@/lib/db";
@@ -34,16 +35,16 @@ import { MENU_CONTENT, MENU_ITEM } from "./files/menu-styles";
 
 // Navigation uses filled icons, as in the dashboard reference; actions elsewhere stay outlined.
 const NAV: { view: Route["view"]; label: string; icon: PhosphorIcon }[] = [
-  { view: "home", label: "Accueil", icon: HouseIcon },
-  { view: "files", label: "Tous les fichiers", icon: FilesIcon },
-  { view: "projects", label: "Tous les projets", icon: KanbanIcon },
-  { view: "private", label: "Fichiers privés", icon: LockSimpleIcon },
-  { view: "shared", label: "Partagés avec moi", icon: UsersIcon },
-  { view: "favorites", label: "Favoris", icon: StarIcon },
-  { view: "recent", label: "Fichiers récents", icon: ClockIcon },
-  { view: "archived", label: "Fichiers archivés", icon: ArchiveIcon },
-  { view: "activity", label: "Activité", icon: PulseIcon },
-  { view: "preferences", label: "Réglages", icon: GearSixIcon },
+  { view: "home", get label() { return t("Accueil", "Home"); }, icon: HouseIcon },
+  { view: "files", get label() { return t("Tous les fichiers", "All files"); }, icon: FilesIcon },
+  { view: "projects", get label() { return t("Tous les projets", "All projects"); }, icon: KanbanIcon },
+  { view: "private", get label() { return t("Fichiers privés", "Private files"); }, icon: LockSimpleIcon },
+  { view: "shared", get label() { return t("Partagés avec moi", "Shared with me"); }, icon: UsersIcon },
+  { view: "favorites", get label() { return t("Favoris", "Favorites"); }, icon: StarIcon },
+  { view: "recent", get label() { return t("Fichiers récents", "Recent files"); }, icon: ClockIcon },
+  { view: "archived", get label() { return t("Fichiers archivés", "Archived files"); }, icon: ArchiveIcon },
+  { view: "activity", get label() { return t("Activité", "Activity"); }, icon: PulseIcon },
+  { view: "preferences", get label() { return t("Réglages", "Settings"); }, icon: GearSixIcon },
 ];
 
 /* -------------------------------------------------------------- Folder tree */
@@ -68,7 +69,7 @@ function TreeNode({ folder, depth, childrenOf, expanded, toggle }: { folder: Fol
       >
         <button
           type="button"
-          aria-label={open ? `Replier ${folder.name}` : `Déplier ${folder.name}`}
+          aria-label={open ? t(`Replier ${folder.name}`, `Collapse ${folder.name}`) : t(`Déplier ${folder.name}`, `Expand ${folder.name}`)}
           aria-expanded={kids.length ? open : undefined}
           onClick={() => kids.length && toggle(folder.id)}
           className={clsx("flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 hover:text-ink", !kids.length && "invisible")}
@@ -121,7 +122,7 @@ function Notifications() {
       <Dropdown.Portal>
         <Dropdown.Content align="end" sideOffset={8} collisionPadding={12} aria-label="Notifications" className={clsx(MENU_CONTENT, "w-[340px] max-w-[calc(100vw-24px)]")}>
           <p className="px-2.5 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">Notifications</p>
-          {notices.length === 0 && <p className="px-2.5 pb-3 pt-1 text-[13px] text-neutral-500">Rien à signaler : aucune échéance proche, et le Vault est en ordre.</p>}
+          {notices.length === 0 && <p className="px-2.5 pb-3 pt-1 text-[13px] text-neutral-500">{t("Rien à signaler : aucune échéance proche, et le Vault est en ordre.", "Nothing to report: no due date coming up, and the Vault is in order.")}</p>}
           <div className="scroll-quiet max-h-[52vh] overflow-y-auto">
             {notices.map((n) => (
               <Dropdown.Item key={n.id} onSelect={() => run(n)} className={clsx(MENU_ITEM, "!h-auto !items-start gap-2.5 py-2")}>
@@ -135,7 +136,7 @@ function Notifications() {
           </div>
           <Dropdown.Separator className="my-1 h-px bg-hair" />
           <Dropdown.Item onSelect={() => navigate({ view: "activity" })} className={MENU_ITEM}>
-            <Activity className="size-4 text-neutral-500" strokeWidth={1.75} /> Voir toute l’activité
+            <Activity className="size-4 text-neutral-500" strokeWidth={1.75} /> {t("Voir toute l’activité", "See all activity")}
           </Dropdown.Item>
         </Dropdown.Content>
       </Dropdown.Portal>
@@ -162,11 +163,11 @@ function StorageMeter() {
   const share = Math.min(1, usage.usage / usage.quota);
   return (
     <div data-storage-meter className="mb-3">
-      <div className="h-1 overflow-hidden rounded-full bg-neutral-200" role="progressbar" aria-label="Espace utilisé" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(share * 100)}>
+      <div className="h-1 overflow-hidden rounded-full bg-neutral-200" role="progressbar" aria-label={t("Espace utilisé", "Space used")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(share * 100)}>
         <div className={clsx("h-full rounded-full", share > 0.9 ? "bg-red-500" : "bg-ink")} style={{ width: `${Math.max(share * 100, 1.5)}%` }} />
       </div>
       <p className="mt-1.5 truncate text-[11.5px] text-neutral-500">
-        {formatSize(usage.usage)} utilisés sur {formatSize(usage.quota)}
+        {t(`${formatSize(usage.usage)} utilisés sur ${formatSize(usage.quota)}`, `${formatSize(usage.usage)} of ${formatSize(usage.quota)} used`)}
       </p>
     </div>
   );
@@ -218,14 +219,14 @@ function Sidebar() {
   return (
     <div className="flex h-full w-[264px] flex-col border-r border-line bg-subtle">
       <div className="flex h-14 shrink-0 items-center justify-between pl-5 pr-3">
-        <button type="button" onClick={() => navigate({ view: "home" })} aria-label="NDF Vault — Accueil" className="rounded-md py-1">
+        <button type="button" onClick={() => navigate({ view: "home" })} aria-label={t("NDF Vault — Accueil", "NDF Vault — Home")} className="rounded-md py-1">
           <VaultLockup />
         </button>
-        <IconButton icon={PanelLeftClose} label="Réduire le menu" variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} />
+        <IconButton icon={PanelLeftClose} label={t("Réduire le menu", "Collapse the menu")} variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} />
       </div>
 
       <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto px-3 pb-4">
-        <nav aria-label="Navigation principale" data-tour="nav">
+        <nav aria-label={t("Navigation principale", "Main navigation")} data-tour="nav">
           <ul className="space-y-0.5">
             {NAV.map(({ view, label, icon: Icon }) => {
               const active = route.view === view || (view === "projects" && route.view === "project");
@@ -253,10 +254,10 @@ function Sidebar() {
 
         <div data-tour="folders">
           <div className="mb-1 flex h-7 items-center justify-between pl-2.5 pr-0.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">Explorateur</span>
-            <IconButton icon={Plus} label="Nouveau dossier" variant="ghost" size="sm" className="!size-6 !rounded-md" onClick={() => openDialog({ type: "newFolder", parentId: route.view === "folder" ? route.id : "root" })} />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">{t("Explorateur", "Explorer")}</span>
+            <IconButton icon={Plus} label={t("Nouveau dossier", "New folder")} variant="ghost" size="sm" className="!size-6 !rounded-md" onClick={() => openDialog({ type: "newFolder", parentId: route.view === "folder" ? route.id : "root" })} />
           </div>
-          <nav aria-label="Dossiers">
+          <nav aria-label={t("Dossiers", "Folders")}>
             <FolderTree />
           </nav>
         </div>
@@ -268,7 +269,7 @@ function Sidebar() {
           <Avatar user={me} size={30} />
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-[13px] font-medium text-ink">{me.name}</p>
-            <p className="truncate text-[11.5px] text-neutral-500">{!persistent ? "Mémoire seulement" : security.protected ? "Chiffré sur cet appareil" : "Stocké sur cet appareil"}</p>
+            <p className="truncate text-[11.5px] text-neutral-500">{!persistent ? t("Mémoire seulement", "Memory only") : security.protected ? t("Chiffré sur cet appareil", "Encrypted on this device") : t("Stocké sur cet appareil", "Stored on this device")}</p>
           </div>
           <Ndf5Logo className="h-[18px] w-auto shrink-0 text-neutral-300" />
         </div>
@@ -285,16 +286,16 @@ function Topbar() {
   const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-white px-4 sm:px-6 lg:px-8">
-      {!sidebarOpen && <IconButton icon={PanelLeftOpen} label="Ouvrir le menu" variant="ghost" onClick={() => setSidebarOpen(true)} className="-ml-2" />}
+      {!sidebarOpen && <IconButton icon={PanelLeftOpen} label={t("Ouvrir le menu", "Open the menu")} variant="ghost" onClick={() => setSidebarOpen(true)} className="-ml-2" />}
       <button
         type="button"
         data-tour="search"
         onClick={() => setPaletteOpen(true)}
-        aria-label="Rechercher dans le Vault"
+        aria-label={t("Rechercher dans le Vault", "Search the Vault")}
         className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg border border-line bg-white px-3 text-left text-[13px] text-neutral-400 shadow-xs transition-colors duration-150 hover:border-neutral-300 sm:max-w-[340px]"
       >
         <Search className="size-4 shrink-0" strokeWidth={1.75} />
-        <span className="flex-1 truncate">Rechercher fichiers, dossiers, projets…</span>
+        <span className="flex-1 truncate">{t("Rechercher fichiers, dossiers, projets…", "Search files, folders, projects…")}</span>
         <span className="hidden items-center gap-1 sm:flex">
           <Kbd>{mac ? "⌘" : "Ctrl"}</Kbd>
           <Kbd>K</Kbd>
@@ -303,19 +304,19 @@ function Topbar() {
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
         <span data-tour="lock">
           {security.protected ? (
-            <IconButton icon={LockKeyhole} label="Verrouiller le Vault" onClick={() => void lockNow()} />
+            <IconButton icon={LockKeyhole} label={t("Verrouiller le Vault", "Lock the Vault")} onClick={() => void lockNow()} />
           ) : (
-            <IconButton icon={ShieldAlert} label="Vault non protégé : ajouter une phrase secrète" disabled={!security.available} onClick={() => openDialog({ type: "protect" })} />
+            <IconButton icon={ShieldAlert} label={t("Vault non protégé : ajouter une phrase secrète", "Vault not protected: add a passphrase")} disabled={!security.available} onClick={() => openDialog({ type: "protect" })} />
           )}
         </span>
         <span data-tour="help">
-          <IconButton icon={CircleHelp} label="Visite guidée" onClick={startTour} />
+          <IconButton icon={CircleHelp} label={t("Visite guidée", "Guided tour")} onClick={startTour} />
         </span>
         <Notifications />
         <span className="hidden h-6 w-px bg-line sm:block" />
         <Dropdown.Root>
           <Dropdown.Trigger asChild>
-            <button type="button" className="flex items-center gap-2.5 rounded-lg py-1 pl-1 pr-1.5 transition-colors duration-150 hover:bg-fill" aria-label="Menu du compte">
+            <button type="button" className="flex items-center gap-2.5 rounded-lg py-1 pl-1 pr-1.5 transition-colors duration-150 hover:bg-fill" aria-label={t("Menu du compte", "Account menu")}>
               <Avatar user={me} size={32} />
               <span className="hidden text-left leading-tight sm:block">
                 <span className="block text-[13px] font-medium text-ink">{me.name}</span>
@@ -327,13 +328,13 @@ function Topbar() {
           <Dropdown.Portal>
             <Dropdown.Content align="end" sideOffset={6} className={MENU_CONTENT}>
               <Dropdown.Item className={MENU_ITEM} onSelect={() => navigate({ view: "preferences" })}>
-                <Settings className="size-4 text-neutral-500" strokeWidth={1.75} /> Réglages
+                <Settings className="size-4 text-neutral-500" strokeWidth={1.75} /> {t("Réglages", "Settings")}
               </Dropdown.Item>
               <Dropdown.Item className={MENU_ITEM} onSelect={() => navigate({ view: "activity" })}>
-                <Activity className="size-4 text-neutral-500" strokeWidth={1.75} /> Activité
+                <Activity className="size-4 text-neutral-500" strokeWidth={1.75} /> {t("Activité", "Activity")}
               </Dropdown.Item>
               <Dropdown.Item className={MENU_ITEM} onSelect={startTour}>
-                <CircleHelp className="size-4 text-neutral-500" strokeWidth={1.75} /> Visite guidée
+                <CircleHelp className="size-4 text-neutral-500" strokeWidth={1.75} /> {t("Visite guidée", "Guided tour")}
               </Dropdown.Item>
             </Dropdown.Content>
           </Dropdown.Portal>
@@ -405,7 +406,7 @@ export function Shell({ children }: { children: ReactNode }) {
       </aside>
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <button type="button" aria-label="Fermer le menu" className="absolute inset-0 animate-fade bg-neutral-900/20 backdrop-blur-[2px]" onClick={() => setSidebarOpen(false)} />
+          <button type="button" aria-label={t("Fermer le menu", "Close the menu")} className="absolute inset-0 animate-fade bg-neutral-900/20 backdrop-blur-[2px]" onClick={() => setSidebarOpen(false)} />
           <aside className="relative h-full w-[264px] animate-fade shadow-modal">
             <Sidebar />
           </aside>
@@ -429,8 +430,8 @@ export function Shell({ children }: { children: ReactNode }) {
             <span className="mb-4 flex size-12 items-center justify-center rounded-xl bg-ink text-white">
               <CloudUpload className="size-6" strokeWidth={1.75} />
             </span>
-            <p className="text-[16px] font-semibold text-ink">Déposez pour téléverser</p>
-            <p className="mt-1 text-[13px] text-neutral-500">PDF, DOCX, XLSX, PPTX, TXT, CSV et images</p>
+            <p className="text-[16px] font-semibold text-ink">{t("Déposez pour téléverser", "Drop to upload")}</p>
+            <p className="mt-1 text-[13px] text-neutral-500">{t("PDF, DOCX, XLSX, PPTX, TXT, CSV et images", "PDF, DOCX, XLSX, PPTX, TXT, CSV and images")}</p>
           </div>
         </div>
       )}

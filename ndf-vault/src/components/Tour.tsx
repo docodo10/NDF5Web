@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import { CloudArrowUpIcon, CompassIcon, FolderIcon, HouseIcon, LifebuoyIcon, LockKeyIcon, MagnifyingGlassIcon, RowsIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useVault } from "@/lib/store";
+import { t } from "@/lib/i18n";
 import { Ndf5Mark } from "./brand/Brand";
 import { Button } from "./ui";
 
@@ -24,54 +25,54 @@ const STEPS: Step[] = [
   {
     target: null,
     icon: CompassIcon,
-    title: "Bienvenue dans NDF Vault",
-    text: "Votre espace pour classer, consulter et protéger les documents de la saga. Voici l’essentiel en quelques étapes, en une minute.",
+    get title() { return t("Bienvenue dans NDF Vault", "Welcome to NDF Vault"); },
+    get text() { return t("Votre espace pour classer, consulter et protéger les documents de la saga. Voici l’essentiel en quelques étapes, en une minute.", "Your space to organize, view and protect the saga’s documents. Here are the essentials in a few steps, in one minute."); },
   },
   {
     target: "nav",
     icon: HouseIcon,
-    title: "Vos vues",
-    text: "Retrouvez vos fichiers d’un clic : tous, privés, partagés, favoris, récents ou archivés. Les projets et l’activité sont ici aussi.",
+    get title() { return t("Vos vues", "Your views"); },
+    get text() { return t("Retrouvez vos fichiers d’un clic : tous, privés, partagés, favoris, récents ou archivés. Les projets et l’activité sont ici aussi.", "Find your files in one click: all, private, shared, favorites, recent or archived. Projects and activity are here too."); },
     sidebar: true,
   },
   {
     target: "folders",
     icon: FolderIcon,
-    title: "L’index du Vault",
-    text: "Tout est rangé dans des dossiers numérotés de 00 à 10. Cliquez sur un dossier pour l’ouvrir, ou sur + pour en créer un.",
+    get title() { return t("L’index du Vault", "The Vault index"); },
+    get text() { return t("Tout est rangé dans des dossiers numérotés de 00 à 10. Cliquez sur un dossier pour l’ouvrir, ou sur + pour en créer un.", "Everything is filed in folders numbered 00 to 10. Click a folder to open it, or + to create one."); },
     sidebar: true,
     maxHeight: 330,
   },
   {
     target: "search",
     icon: MagnifyingGlassIcon,
-    title: "Recherche globale",
-    text: "Cherchez par nom, dossier, projet, type, étiquette ou date. Le raccourci Ctrl + K (⌘ K sur Mac) l’ouvre de partout.",
+    get title() { return t("Recherche globale", "Global search"); },
+    get text() { return t("Cherchez par nom, dossier, projet, type, étiquette ou date. Le raccourci Ctrl + K (⌘ K sur Mac) l’ouvre de partout.", "Search by name, folder, project, type, tag or date. The shortcut Ctrl + K (⌘ K on Mac) opens it from anywhere."); },
   },
   {
     target: "actions",
     icon: CloudArrowUpIcon,
-    title: "Ajoutez vos documents",
-    text: "Téléversez des PDF, fichiers Office, images ou textes. Vous pouvez aussi les glisser n’importe où dans la fenêtre. Ils restent dans ce navigateur.",
+    get title() { return t("Ajoutez vos documents", "Add your documents"); },
+    get text() { return t("Téléversez des PDF, fichiers Office, images ou textes. Vous pouvez aussi les glisser n’importe où dans la fenêtre. Ils restent dans ce navigateur.", "Upload PDFs, Office files, images or text files. You can also drag them anywhere in the window. They stay in this browser."); },
   },
   {
     target: "table",
     icon: RowsIcon,
-    title: "Vos fichiers",
-    text: "Cliquez sur un fichier pour l’ouvrir dans la visionneuse. Le menu ⋮ au bout de la ligne permet de renommer, déplacer, partager, télécharger ou archiver.",
+    get title() { return t("Vos fichiers", "Your files"); },
+    get text() { return t("Cliquez sur un fichier pour l’ouvrir dans la visionneuse. Le menu ⋮ au bout de la ligne permet de renommer, déplacer, partager, télécharger ou archiver.", "Click a file to open it in the viewer. The ⋮ menu at the end of the row lets you rename, move, share, download or archive."); },
     maxHeight: 250,
   },
   {
     target: "lock",
     icon: LockKeyIcon,
-    title: "Protégez le Vault",
-    text: "Ajoutez une phrase secrète : tout ce qui est stocké est alors chiffré, et le Vault se verrouille seul après une période d’inactivité.",
+    get title() { return t("Protégez le Vault", "Protect the Vault"); },
+    get text() { return t("Ajoutez une phrase secrète : tout ce qui est stocké est alors chiffré, et le Vault se verrouille seul après une période d’inactivité.", "Add a passphrase: everything stored is then encrypted, and the Vault locks itself after a period of inactivity."); },
   },
   {
     target: "help",
     icon: LifebuoyIcon,
-    title: "Besoin d’un rappel ?",
-    text: "Ce bouton relance la visite à tout moment. Bonne exploration !",
+    get title() { return t("Besoin d’un rappel ?", "Need a reminder?"); },
+    get text() { return t("Ce bouton relance la visite à tout moment. Bonne exploration !", "This button restarts the tour at any time. Happy exploring!"); },
   },
 ];
 
@@ -228,11 +229,11 @@ export function Tour() {
             </p>
             <div className="mt-6 flex flex-col gap-2">
               <Button variant="primary" className="!h-10 w-full !text-[14px]" onClick={next}>
-                Commencer la visite
+                {t("Commencer la visite", "Start the tour")}
                 <ArrowRight className="size-4" strokeWidth={2} />
               </Button>
               <Button variant="ghost" className="w-full" onClick={finish}>
-                Passer
+                {t("Passer", "Skip")}
               </Button>
             </div>
           </>
@@ -242,7 +243,7 @@ export function Tour() {
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-ink text-white">
                 <Icon weight="fill" className="size-[18px]" />
               </span>
-              <button type="button" onClick={finish} aria-label="Fermer la visite" className="-mr-1.5 -mt-1.5 flex size-8 items-center justify-center rounded-lg text-neutral-400 transition-colors duration-150 hover:bg-fill hover:text-ink">
+              <button type="button" onClick={finish} aria-label={t("Fermer la visite", "Close the tour")} className="-mr-1.5 -mt-1.5 flex size-8 items-center justify-center rounded-lg text-neutral-400 transition-colors duration-150 hover:bg-fill hover:text-ink">
                 <X className="size-4" strokeWidth={1.75} />
               </button>
             </div>
@@ -253,24 +254,24 @@ export function Tour() {
               {step.text}
             </p>
             <div className="mt-5 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5" aria-label={`Étape ${i} sur ${STEPS.length - 1}`}>
+              <div className="flex items-center gap-1.5" aria-label={t(`Étape ${i} sur ${STEPS.length - 1}`, `Step ${i} of ${STEPS.length - 1}`)}>
                 {STEPS.slice(1).map((_, k) => (
                   <span key={k} className={clsx("h-1.5 rounded-full transition-all duration-300", k + 1 === i ? "w-5 bg-ink" : k + 1 < i ? "w-1.5 bg-neutral-400" : "w-1.5 bg-neutral-200")} />
                 ))}
               </div>
               <div className="flex items-center gap-2">
                 {i > 1 && (
-                  <Button size="sm" variant="ghost" onClick={back} aria-label="Étape précédente" className="!px-2">
+                  <Button size="sm" variant="ghost" onClick={back} aria-label={t("Étape précédente", "Previous step")} className="!px-2">
                     <ArrowLeft className="size-4" strokeWidth={1.75} />
                   </Button>
                 )}
                 <Button size="sm" variant="primary" onClick={next} className="!px-3.5">
                   {last ? (
                     <>
-                      <Check className="size-4" strokeWidth={2} /> Terminer
+                      <Check className="size-4" strokeWidth={2} /> {t("Terminer", "Done")}
                     </>
                   ) : (
-                    "Compris"
+                    t("Compris", "Got it")
                   )}
                 </Button>
               </div>

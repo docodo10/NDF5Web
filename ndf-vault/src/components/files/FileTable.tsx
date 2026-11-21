@@ -36,6 +36,7 @@ import {
 import { ArticleIcon, FilePdfIcon, FileTextIcon, GridFourIcon, ImageIcon, PresentationChartIcon, TableIcon, type Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
+import { t } from "@/lib/i18n";
 import { PROTECTION_LABEL } from "@/lib/protection";
 import { startFileDrag } from "@/lib/dnd";
 import { DueChip } from "./DueChip";
@@ -88,32 +89,32 @@ function FileMenuItems({ file, listIds, kit: Menu }: { file: VaultFile; listIds:
   if (file.deleted) {
     return (
       <>
-        {item(Eye, "Aperçu", () => v.openPreview(file.id, listIds))}
+        {item(Eye, t("Aperçu", "Preview"), () => v.openPreview(file.id, listIds))}
         <Menu.Separator className={MENU_SEPARATOR} />
-        {item(RotateCcw, "Restaurer", () => v.restoreFiles([file.id]))}
-        {item(Trash2, "Supprimer définitivement", () => v.openDialog({ type: "purge", fileIds: [file.id] }), true)}
+        {item(RotateCcw, t("Restaurer", "Restore"), () => v.restoreFiles([file.id]))}
+        {item(Trash2, t("Supprimer définitivement", "Delete permanently"), () => v.openDialog({ type: "purge", fileIds: [file.id] }), true)}
       </>
     );
   }
   return (
     <>
-      {item(ExternalLink, "Ouvrir", () => v.openPreview(file.id, listIds, true))}
-      {item(Eye, "Aperçu", () => v.openPreview(file.id, listIds))}
-      {item(Info, "Informations", () => v.openInfo(file.id))}
-      {!file.archived && (file.pinned ? item(PinOff, "Désépingler", () => v.togglePinned(file.id)) : item(Pin, "Épingler à l’accueil", () => v.togglePinned(file.id)))}
+      {item(ExternalLink, t("Ouvrir", "Open"), () => v.openPreview(file.id, listIds, true))}
+      {item(Eye, t("Aperçu", "Preview"), () => v.openPreview(file.id, listIds))}
+      {item(Info, t("Informations", "Information"), () => v.openInfo(file.id))}
+      {!file.archived && (file.pinned ? item(PinOff, t("Désépingler", "Unpin"), () => v.togglePinned(file.id)) : item(Pin, t("Épingler à l’accueil", "Pin to Home"), () => v.togglePinned(file.id)))}
       <Menu.Separator className={MENU_SEPARATOR} />
-      {item(Pencil, "Renommer", () => v.openDialog({ type: "rename", fileId: file.id }))}
-      {item(SquarePen, "Modifier les détails", () => v.openDialog({ type: "details", fileId: file.id }))}
-      {item(FolderInput, "Déplacer", () => v.openDialog({ type: "move", fileIds: [file.id] }))}
-      {item(Copy, "Copier", () => v.copyFile(file.id))}
-      {item(Share2, "Partager", () => v.openDialog({ type: "share", fileId: file.id }))}
-      {item(Download, "Télécharger", () => void v.downloadFile(file.id))}
-      {!file.sample && !file.protection && (file.kind === "pdf" || file.kind === "image") && item(Stamp, "Télécharger avec filigrane", () => void v.downloadFile(file.id, { stamped: true }))}
+      {item(Pencil, t("Renommer", "Rename"), () => v.openDialog({ type: "rename", fileId: file.id }))}
+      {item(SquarePen, t("Modifier les détails", "Edit details"), () => v.openDialog({ type: "details", fileId: file.id }))}
+      {item(FolderInput, t("Déplacer", "Move"), () => v.openDialog({ type: "move", fileIds: [file.id] }))}
+      {item(Copy, t("Copier", "Copy"), () => v.copyFile(file.id))}
+      {item(Share2, t("Partager", "Share"), () => v.openDialog({ type: "share", fileId: file.id }))}
+      {item(Download, t("Télécharger", "Download"), () => void v.downloadFile(file.id))}
+      {!file.sample && !file.protection && (file.kind === "pdf" || file.kind === "image") && item(Stamp, t("Télécharger avec filigrane", "Download with watermark"), () => void v.downloadFile(file.id, { stamped: true }))}
       {!file.sample && item(ShieldCheck, "Protection", () => v.openDialog({ type: "protection", fileIds: [file.id] }))}
-      {item(History, "Historique des versions", () => v.openDialog({ type: "versions", fileId: file.id }))}
+      {item(History, t("Historique des versions", "Version history"), () => v.openDialog({ type: "versions", fileId: file.id }))}
       <Menu.Separator className={MENU_SEPARATOR} />
-      {file.archived ? item(RotateCcw, "Restaurer", () => v.restoreFiles([file.id])) : item(Archive, "Archiver", () => v.archiveFiles([file.id]))}
-      {item(Trash2, "Supprimer", () => v.openDialog({ type: "delete", fileIds: [file.id] }), true)}
+      {file.archived ? item(RotateCcw, t("Restaurer", "Restore"), () => v.restoreFiles([file.id])) : item(Archive, t("Archiver", "Archive"), () => v.archiveFiles([file.id]))}
+      {item(Trash2, t("Supprimer", "Delete"), () => v.openDialog({ type: "delete", fileIds: [file.id] }), true)}
     </>
   );
 }
@@ -123,9 +124,9 @@ export function RowMenu({ file, listIds, vertical }: { file: VaultFile; listIds:
     <Dropdown.Root>
       <Dropdown.Trigger asChild>
         {vertical ? (
-          <IconButton icon={EllipsisVertical} label={`Actions pour ${fullName(file)}`} variant="ghost" size="sm" className="data-[state=open]:bg-fill data-[state=open]:text-ink" />
+          <IconButton icon={EllipsisVertical} label={t(`Actions pour ${fullName(file)}`, `Actions for ${fullName(file)}`)} variant="ghost" size="sm" className="data-[state=open]:bg-fill data-[state=open]:text-ink" />
         ) : (
-          <IconButton icon={Ellipsis} label={`Actions pour ${fullName(file)}`} round size="sm" className="data-[state=open]:bg-fill" />
+          <IconButton icon={Ellipsis} label={t(`Actions pour ${fullName(file)}`, `Actions for ${fullName(file)}`)} round size="sm" className="data-[state=open]:bg-fill" />
         )}
       </Dropdown.Trigger>
       <Dropdown.Portal>
@@ -143,7 +144,7 @@ export function FileContextMenu({ file, listIds, children }: { file: VaultFile; 
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
-        <ContextMenu.Content collisionPadding={12} className={MENU_CONTENT} aria-label={`Actions pour ${fullName(file)}`} onClick={(e) => e.stopPropagation()}>
+        <ContextMenu.Content collisionPadding={12} className={MENU_CONTENT} aria-label={t(`Actions pour ${fullName(file)}`, `Actions for ${fullName(file)}`)} onClick={(e) => e.stopPropagation()}>
           <FileMenuItems file={file} listIds={listIds} kit={ContextMenu} />
         </ContextMenu.Content>
       </ContextMenu.Portal>
@@ -170,10 +171,17 @@ function Pagination({ page, pages, total, from, to, rows, rowOptions, setPage, s
     <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
       <div className="flex items-center gap-5 text-[13px] text-neutral-500">
         <p>
-          Affichage de <span className="font-medium text-ink">{total ? `${from}–${to}` : 0}</span> sur <span className="font-medium text-ink">{total}</span>
+          {t(
+            <>
+              Affichage de <span className="font-medium text-ink">{total ? `${from}–${to}` : 0}</span> sur <span className="font-medium text-ink">{total}</span>
+            </>,
+            <>
+              Showing <span className="font-medium text-ink">{total ? `${from}–${to}` : 0}</span> of <span className="font-medium text-ink">{total}</span>
+            </>,
+          )}
         </p>
         <label className="hidden items-center gap-2 sm:flex">
-          Lignes par page
+          {t("Lignes par page", "Rows per page")}
           <span className="relative">
             <select
               value={rows}
@@ -192,7 +200,7 @@ function Pagination({ page, pages, total, from, to, rows, rowOptions, setPage, s
       </div>
       <div className="flex items-center gap-1.5">
         <Button disabled={page <= 1} onClick={() => setPage(page - 1)}>
-          Précédent
+          {t("Précédent", "Previous")}
         </Button>
         <div className="hidden items-center gap-1 px-1 md:flex">
           {pageWindow(page, pages).map((p, i) =>
@@ -217,7 +225,7 @@ function Pagination({ page, pages, total, from, to, rows, rowOptions, setPage, s
           )}
         </div>
         <Button variant="primary" disabled={page >= pages} onClick={() => setPage(page + 1)}>
-          Suivant
+          {t("Suivant", "Next")}
         </Button>
       </div>
     </div>
@@ -235,30 +243,30 @@ function BulkBar({ ids, clear, trash }: { ids: string[]; clear: () => void; tras
   const btn = "inline-flex h-8 items-center gap-2 rounded-md px-2.5 text-[12.5px] font-medium text-white/90 transition-colors duration-150 hover:bg-white/10 hover:text-white";
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex justify-center px-4">
-      <div role="toolbar" aria-label="Actions groupées" className="pointer-events-auto flex max-w-full animate-rise items-center gap-1 overflow-x-auto rounded-xl bg-ink p-1.5 pl-4 shadow-modal">
-        <span className="mr-2 whitespace-nowrap text-[12.5px] font-medium text-white">{count(ids.length, "sélectionné")}</span>
+      <div role="toolbar" aria-label={t("Actions groupées", "Bulk actions")} className="pointer-events-auto flex max-w-full animate-rise items-center gap-1 overflow-x-auto rounded-xl bg-ink p-1.5 pl-4 shadow-modal">
+        <span className="mr-2 whitespace-nowrap text-[12.5px] font-medium text-white">{t(count(ids.length, "sélectionné"), `${ids.length} selected`)}</span>
         <span className="mr-1 h-5 w-px bg-white/15" />
         {trash ? (
           <>
             <button type="button" className={btn} onClick={act(() => v.restoreFiles(ids))}>
-              <RotateCcw className="size-4" strokeWidth={1.75} /> Restaurer
+              <RotateCcw className="size-4" strokeWidth={1.75} /> {t("Restaurer", "Restore")}
             </button>
             <button type="button" className={btn} onClick={() => v.openDialog({ type: "purge", fileIds: ids })}>
-              <Trash2 className="size-4" strokeWidth={1.75} /> Supprimer définitivement
+              <Trash2 className="size-4" strokeWidth={1.75} /> {t("Supprimer définitivement", "Delete permanently")}
             </button>
           </>
         ) : (
           <>
             <button type="button" className={btn} onClick={act(() => void v.exportZip(ids, "ndf-vault-selection"))}>
-              <FileArchive className="size-4" strokeWidth={1.75} /> Exporter (ZIP)
+              <FileArchive className="size-4" strokeWidth={1.75} /> {t("Exporter (ZIP)", "Export (ZIP)")}
             </button>
             <button type="button" className={btn} onClick={() => v.openDialog({ type: "move", fileIds: ids })}>
-              <FolderInput className="size-4" strokeWidth={1.75} /> Déplacer
+              <FolderInput className="size-4" strokeWidth={1.75} /> {t("Déplacer", "Move")}
             </button>
             <Dropdown.Root>
               <Dropdown.Trigger asChild>
                 <button type="button" className={btn}>
-                  Statut <ChevronDown className="size-3.5" strokeWidth={2} />
+                  {t("Statut", "Status")} <ChevronDown className="size-3.5" strokeWidth={2} />
                 </button>
               </Dropdown.Trigger>
               <Dropdown.Portal>
@@ -272,14 +280,14 @@ function BulkBar({ ids, clear, trash }: { ids: string[]; clear: () => void; tras
               </Dropdown.Portal>
             </Dropdown.Root>
             <button type="button" className={btn} onClick={act(() => v.archiveFiles(ids))}>
-              <Archive className="size-4" strokeWidth={1.75} /> Archiver
+              <Archive className="size-4" strokeWidth={1.75} /> {t("Archiver", "Archive")}
             </button>
             <button type="button" className={btn} onClick={() => v.openDialog({ type: "delete", fileIds: ids })}>
-              <Trash2 className="size-4" strokeWidth={1.75} /> Supprimer
+              <Trash2 className="size-4" strokeWidth={1.75} /> {t("Supprimer", "Delete")}
             </button>
           </>
         )}
-        <button type="button" aria-label="Effacer la sélection" className={clsx(btn, "ml-1 !px-2")} onClick={clear}>
+        <button type="button" aria-label={t("Effacer la sélection", "Clear selection")} className={clsx(btn, "ml-1 !px-2")} onClick={clear}>
           <X className="size-4" strokeWidth={1.75} />
         </button>
       </div>
@@ -298,20 +306,20 @@ interface Column {
 }
 
 const FULL_COLUMNS: Column[] = [
-  { key: "name", label: "Nom du fichier", className: "" },
+  { key: "name", get label() { return t("Nom du fichier", "File name"); }, className: "" },
   { key: "kind", label: "Type", className: "hidden w-[104px] @min-[1080px]:table-cell" },
-  { key: "project", label: "Projet", className: "hidden w-[84px] @min-[690px]:table-cell" },
-  { key: "owner", label: "Téléversé par", className: "hidden w-[170px] @min-[940px]:table-cell" },
-  { key: "modifiedAt", label: "Modifié le", className: "hidden w-[124px] @min-[690px]:table-cell" },
-  { key: "status", label: "Statut", className: "hidden w-[104px] @min-[560px]:table-cell" },
-  { key: "size", label: "Taille", className: "hidden w-[92px] @min-[800px]:table-cell" },
+  { key: "project", get label() { return t("Projet", "Project"); }, className: "hidden w-[84px] @min-[690px]:table-cell" },
+  { key: "owner", get label() { return t("Téléversé par", "Uploaded by"); }, className: "hidden w-[170px] @min-[940px]:table-cell" },
+  { key: "modifiedAt", get label() { return t("Modifié le", "Modified"); }, className: "hidden w-[124px] @min-[690px]:table-cell" },
+  { key: "status", get label() { return t("Statut", "Status"); }, className: "hidden w-[104px] @min-[560px]:table-cell" },
+  { key: "size", get label() { return t("Taille", "Size"); }, className: "hidden w-[92px] @min-[800px]:table-cell" },
 ];
 
 const COMPACT_COLUMNS: Column[] = [
-  { key: "name", label: "Nom du fichier", className: "" },
-  { key: "project", label: "Projet", className: "hidden w-[110px] @min-[690px]:table-cell" },
-  { key: "owner", label: "Téléversé par", className: "hidden w-[220px] @min-[940px]:table-cell" },
-  { key: "modifiedAt", label: "Modifié le", className: "hidden w-[140px] @min-[560px]:table-cell" },
+  { key: "name", get label() { return t("Nom du fichier", "File name"); }, className: "" },
+  { key: "project", get label() { return t("Projet", "Project"); }, className: "hidden w-[110px] @min-[690px]:table-cell" },
+  { key: "owner", get label() { return t("Téléversé par", "Uploaded by"); }, className: "hidden w-[220px] @min-[940px]:table-cell" },
+  { key: "modifiedAt", get label() { return t("Modifié le", "Modified"); }, className: "hidden w-[140px] @min-[560px]:table-cell" },
 ];
 
 export function FileTable({
@@ -320,8 +328,8 @@ export function FileTable({
   defaultRows,
   trash,
   footer = true,
-  emptyTitle = "Aucun fichier pour l’instant",
-  emptyHint = "Les fichiers de cette vue apparaîtront ici.",
+  emptyTitle = t("Aucun fichier pour l’instant", "No files yet"),
+  emptyHint = t("Les fichiers de cette vue apparaîtront ici.", "Files in this view will appear here."),
 }: {
   files: VaultFile[];
   variant?: "full" | "compact";
@@ -417,7 +425,7 @@ export function FileTable({
           <thead>
             <tr className="bg-subtle">
               <th scope="col" className="w-11 pl-4 pr-1 text-left">
-                <Checkbox checked={allOnPage} indeterminate={!allOnPage && someOnPage} onChange={togglePage} label="Sélectionner tous les fichiers de la page" />
+                <Checkbox checked={allOnPage} indeterminate={!allOnPage && someOnPage} onChange={togglePage} label={t("Sélectionner tous les fichiers de la page", "Select all files on the page")} />
               </th>
               {columns.map((c) => {
                 const on = sort.key === c.key;
@@ -454,7 +462,7 @@ export function FileTable({
                   className={clsx("group h-[60px] cursor-pointer border-t border-hair transition-colors duration-150", isSel ? "bg-subtle" : "hover:bg-subtle/70")}
                 >
                   <td className="w-11 pl-4 pr-1">
-                    <Checkbox checked={isSel} onChange={(on) => toggleOne(f.id, on)} label={`Sélectionner ${fullName(f)}`} />
+                    <Checkbox checked={isSel} onChange={(on) => toggleOne(f.id, on)} label={t(`Sélectionner ${fullName(f)}`, `Select ${fullName(f)}`)} />
                   </td>
                   <td className={clsx(td, "max-w-0")}>
                     <div className="flex items-center gap-3">
@@ -480,7 +488,7 @@ export function FileTable({
                           <DueChip dueAt={f.dueAt} label={f.dueLabel} className="@max-[559px]:hidden" />
                           <button
                             type="button"
-                            aria-label={f.favorite ? `Retirer ${f.name} des favoris` : `Ajouter ${f.name} aux favoris`}
+                            aria-label={f.favorite ? t(`Retirer ${f.name} des favoris`, `Remove ${f.name} from favorites`) : t(`Ajouter ${f.name} aux favoris`, `Add ${f.name} to favorites`)}
                             aria-pressed={f.favorite}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -538,11 +546,11 @@ export function FileTable({
                         <>
                           <span className="hidden @min-[1260px]:block">
                             <Button variant="soft" size="sm" icon={Download} onClick={() => void v.downloadFile(f.id)}>
-                              Télécharger
+                              {t("Télécharger", "Download")}
                             </Button>
                           </span>
                           <span className="@max-[559px]:hidden @min-[1260px]:hidden">
-                            <IconButton icon={Download} label={`Télécharger ${fullName(f)}`} variant="soft" size="sm" onClick={() => void v.downloadFile(f.id)} />
+                            <IconButton icon={Download} label={t(`Télécharger ${fullName(f)}`, `Download ${fullName(f)}`)} variant="soft" size="sm" onClick={() => void v.downloadFile(f.id)} />
                           </span>
                         </>
                       )}
