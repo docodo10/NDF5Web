@@ -1,5 +1,6 @@
 import { sha256Hex } from "./crypto";
 import { sanitizeName } from "./format";
+import { listZip, readZipEntry } from "./unzip";
 import { inspectOffice, OFFICE_LABEL, type OfficeFormat } from "./office";
 import { EXT_KIND } from "./sample-data";
 import type { FileKind } from "./types";
@@ -211,4 +212,47 @@ export async function saveToDisk(filename: string, blob: Blob): Promise<"saved" 
   } catch {
     return "failed";
   }
+}
+
+/* --------------------------------------------------------- Archive import */
+
+/** The most an imported archive may hold once unpacked. */
+export const MAX_ARCHIVE_BYTES = 300 * 1024 * 1024;
+
+export interface Unpacked {
+  picked: Picked[];
+  /** Entries left out: too large, unreadable, or past the limits. */
+  skipped: number;
+}
+
+/**
+ * Unpack a ZIP archive into files ready for the upload dialog, each with the
+ * folders it sat in. Nothing in the archive is trusted: sizes are capped
+ * while unpacking, paths cannot climb out of the destination, and every file
+ * then goes through the same checks as one chosen by hand.
+ * Throws ZipError when the file is not a readable archive.
+ */
+export async function pickedFromZip(archive: Blob): Promise<Unpacked> {
+  const items = (await listZip(archive)).filter((i) => !i.name.endsWith("/"));
+  const picked: Picked[] = [];
+  let skipped = 0;
+  let room = MAX_ARCHIVE_BYTES;
+  for (const item of items) {
+    const segments = item.name.split("/");
+    const name = segments[segments.length - 1];
+    // What archiving tools add for themselves is not content.
+    if (!name || isClutter(name) || segments[0] === "__MACOSX") continue;
+    if (picked.length >= MAX_FOLDER_FILES || item.size > MAX_UPLOAD_BYTES || item.size > room) {
+      skipped++;
+      continue;
+    }
+    try {
+      const bytes = await readZipEntry(archive, item, Math.min(MAX_UPLOAD_BYTES, room));
+      room -= bytes.length;
+      picked.push({ file: new File([bytes], name), path: folderSegments(item.name) });
+    } catch {
+      skipped++;
+    }
+  }
+  return { picked, skipped };
 }

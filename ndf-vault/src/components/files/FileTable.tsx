@@ -19,6 +19,7 @@ import {
   FolderInput,
   History,
   Inbox,
+  Info,
   Lock,
   Pencil,
   Pin,
@@ -37,6 +38,7 @@ import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from
 import { useVault } from "@/lib/store";
 import { PROTECTION_LABEL } from "@/lib/protection";
 import { startFileDrag } from "@/lib/dnd";
+import { DueChip } from "./DueChip";
 import type { FileKind, VaultFile } from "@/lib/types";
 import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
@@ -97,6 +99,7 @@ function FileMenuItems({ file, listIds, kit: Menu }: { file: VaultFile; listIds:
     <>
       {item(ExternalLink, "Ouvrir", () => v.openPreview(file.id, listIds, true))}
       {item(Eye, "Aperçu", () => v.openPreview(file.id, listIds))}
+      {item(Info, "Informations", () => v.openInfo(file.id))}
       {!file.archived && (file.pinned ? item(PinOff, "Désépingler", () => v.togglePinned(file.id)) : item(Pin, "Épingler à l’accueil", () => v.togglePinned(file.id)))}
       <Menu.Separator className={MENU_SEPARATOR} />
       {item(Pencil, "Renommer", () => v.openDialog({ type: "rename", fileId: file.id }))}
@@ -296,19 +299,19 @@ interface Column {
 
 const FULL_COLUMNS: Column[] = [
   { key: "name", label: "Nom du fichier", className: "" },
-  { key: "kind", label: "Type", className: "hidden w-[104px] min-[1420px]:table-cell" },
-  { key: "project", label: "Projet", className: "hidden w-[84px] md:table-cell" },
-  { key: "owner", label: "Téléversé par", className: "hidden w-[170px] xl:table-cell" },
-  { key: "modifiedAt", label: "Modifié le", className: "hidden w-[124px] md:table-cell" },
-  { key: "status", label: "Statut", className: "hidden w-[104px] sm:table-cell" },
-  { key: "size", label: "Taille", className: "hidden w-[92px] min-[1140px]:table-cell" },
+  { key: "kind", label: "Type", className: "hidden w-[104px] @min-[1080px]:table-cell" },
+  { key: "project", label: "Projet", className: "hidden w-[84px] @min-[690px]:table-cell" },
+  { key: "owner", label: "Téléversé par", className: "hidden w-[170px] @min-[940px]:table-cell" },
+  { key: "modifiedAt", label: "Modifié le", className: "hidden w-[124px] @min-[690px]:table-cell" },
+  { key: "status", label: "Statut", className: "hidden w-[104px] @min-[560px]:table-cell" },
+  { key: "size", label: "Taille", className: "hidden w-[92px] @min-[800px]:table-cell" },
 ];
 
 const COMPACT_COLUMNS: Column[] = [
   { key: "name", label: "Nom du fichier", className: "" },
-  { key: "project", label: "Projet", className: "hidden w-[110px] md:table-cell" },
-  { key: "owner", label: "Téléversé par", className: "hidden w-[220px] xl:table-cell" },
-  { key: "modifiedAt", label: "Modifié le", className: "hidden w-[140px] sm:table-cell" },
+  { key: "project", label: "Projet", className: "hidden w-[110px] @min-[690px]:table-cell" },
+  { key: "owner", label: "Téléversé par", className: "hidden w-[220px] @min-[940px]:table-cell" },
+  { key: "modifiedAt", label: "Modifié le", className: "hidden w-[140px] @min-[560px]:table-cell" },
 ];
 
 export function FileTable({
@@ -407,7 +410,8 @@ export function FileTable({
   const td = "px-3 align-middle";
 
   return (
-    <div>
+    // Columns follow the width the table really has, not the window's: the information panel can take a third of the screen.
+    <div className="@container">
       <div data-tour="table" className="overflow-hidden rounded-xl border border-line bg-white">
         <table className="w-full border-collapse">
           <thead>
@@ -431,7 +435,7 @@ export function FileTable({
                   </th>
                 );
               })}
-              <th scope="col" className={clsx(th, compact ? "w-12" : trash ? "w-[52px]" : "w-[52px] sm:w-[96px] min-[1600px]:w-[190px]", "pr-4 text-right")}>
+              <th scope="col" className={clsx(th, compact ? "w-12" : trash ? "w-[52px]" : "w-[52px] @min-[560px]:w-[96px] @min-[1260px]:w-[190px]", "pr-4 text-right")}>
                 <span className={compact ? "sr-only" : ""}>Actions</span>
               </th>
             </tr>
@@ -473,6 +477,7 @@ export function FileTable({
                               <Lock aria-label={PROTECTION_LABEL[f.protection]} className="size-3.5" strokeWidth={2} />
                             </span>
                           )}
+                          <DueChip dueAt={f.dueAt} label={f.dueLabel} className="@max-[559px]:hidden" />
                           <button
                             type="button"
                             aria-label={f.favorite ? `Retirer ${f.name} des favoris` : `Ajouter ${f.name} aux favoris`}
@@ -497,8 +502,8 @@ export function FileTable({
                             </>
                           ) : (
                             <>
-                              <span className="min-[1420px]:hidden">
-                                {f.ext.toUpperCase()} · <span className="min-[1140px]:hidden">{formatSize(f.size)} · </span>
+                              <span className="@min-[1080px]:hidden">
+                                {f.ext.toUpperCase()} · <span className="@min-[800px]:hidden">{formatSize(f.size)} · </span>
                               </span>
                               {folderName.get(f.folderId) ?? "—"}
                             </>
@@ -507,11 +512,11 @@ export function FileTable({
                       </div>
                     </div>
                   </td>
-                  {!compact && <td className={clsx(td, "hidden text-[13px] text-neutral-700 min-[1420px]:table-cell")}>{KIND_LABEL[f.kind]}</td>}
-                  <td className={clsx(td, "hidden text-[13px] md:table-cell")}>
+                  {!compact && <td className={clsx(td, "hidden text-[13px] text-neutral-700 @min-[1080px]:table-cell")}>{KIND_LABEL[f.kind]}</td>}
+                  <td className={clsx(td, "hidden text-[13px] @min-[690px]:table-cell")}>
                     {f.projectId ? <span className="font-medium text-neutral-700">{projectCode.get(f.projectId)}</span> : <span className="text-neutral-400">—</span>}
                   </td>
-                  <td className={clsx(td, "hidden xl:table-cell")}>
+                  <td className={clsx(td, "hidden @min-[940px]:table-cell")}>
                     <div className="flex items-center gap-2.5">
                       <Avatar user={owner} size={30} />
                       <div className="min-w-0 leading-tight">
@@ -520,23 +525,23 @@ export function FileTable({
                       </div>
                     </div>
                   </td>
-                  <td className={clsx(td, "whitespace-nowrap text-[13px] text-neutral-600", compact ? "hidden sm:table-cell" : "hidden md:table-cell")}>{formatDate(f.modifiedAt)}</td>
+                  <td className={clsx(td, "whitespace-nowrap text-[13px] text-neutral-600", compact ? "hidden @min-[560px]:table-cell" : "hidden @min-[690px]:table-cell")}>{formatDate(f.modifiedAt)}</td>
                   {!compact && (
-                    <td className={clsx(td, "hidden sm:table-cell")}>
+                    <td className={clsx(td, "hidden @min-[560px]:table-cell")}>
                       <StatusBadge status={f.status} />
                     </td>
                   )}
-                  {!compact && <td className={clsx(td, "hidden whitespace-nowrap text-[13px] tabular-nums text-neutral-600 min-[1140px]:table-cell")}>{formatSize(f.size)}</td>}
+                  {!compact && <td className={clsx(td, "hidden whitespace-nowrap text-[13px] tabular-nums text-neutral-600 @min-[800px]:table-cell")}>{formatSize(f.size)}</td>}
                   <td className="pl-2 pr-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
                       {!compact && !trash && (
                         <>
-                          <span className="hidden min-[1600px]:block">
+                          <span className="hidden @min-[1260px]:block">
                             <Button variant="soft" size="sm" icon={Download} onClick={() => void v.downloadFile(f.id)}>
                               Télécharger
                             </Button>
                           </span>
-                          <span className="max-sm:hidden min-[1600px]:hidden">
+                          <span className="@max-[559px]:hidden @min-[1260px]:hidden">
                             <IconButton icon={Download} label={`Télécharger ${fullName(f)}`} variant="soft" size="sm" onClick={() => void v.downloadFile(f.id)} />
                           </span>
                         </>

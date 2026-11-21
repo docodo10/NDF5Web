@@ -9,8 +9,11 @@ import * as db from "./db";
 import type { Meta, RecoverResult, UnlockResult } from "./db";
 import { cryptoAvailable, sha256Hex } from "./crypto";
 import { toCsv } from "./csv";
+import { diffText, type DiffResult } from "./diff";
+import { parseDay } from "./due";
 import { extractText } from "./extract";
-import { indexText, searchText, type DocText, type Hit, type IndexedText } from "./search";
+import { buildNotices, type Notice } from "./notices";
+import { cleanText, indexText, searchText, type DocText, type Hit, type IndexedText } from "./search";
 import { consultationCode, lowers, PROTECTION_LABEL, protectionOf, type Protection } from "./protection";
 import { hashToRoute, routeToHash } from "./routes";
 import { folderRules } from "./selectors";
@@ -55,6 +58,7 @@ export type DialogState =
   | { type: "exportVault" }
   | { type: "protection"; fileIds: string[] }
   | { type: "unlockDoc"; fileId: string; listIds?: string[]; fullscreen?: boolean; page?: number }
+  | { type: "compare"; fileId: string; versionId: string }
   | null;
 
 export interface Toast {
@@ -95,6 +99,9 @@ export interface SecurityState {
   wipeAfter: number;
 }
 
+/** What comparing an earlier version with the current one gave. */
+export type CompareResult = { status: "ok"; diff: DiffResult } | { status: "no-text" | "unreadable" };
+
 export type AuditState = "altered" | "missing" | "unverified";
 
 /** What a check of every stored original found. */
@@ -131,6 +138,18 @@ interface VaultContext {
   openDialog: (d: DialogState) => void;
   preview: PreviewState | null;
   openPreview: (fileId: string, listIds?: string[], fullscreen?: boolean, page?: number) => void;
+  /** The file whose information panel is open, if any. */
+  infoFileId: string | null;
+  openInfo: (fileId: string) => void;
+  closeInfo: () => void;
+  /** Set, change or clear (null) the date that matters for a file, and what it is. */
+  setDue: (id: string, dueAt: string | null, label?: string) => void;
+  addComment: (id: string, text: string) => void;
+  deleteComment: (id: string, commentId: string) => void;
+  /** What changed in the text between an earlier version and the current one. */
+  compareVersion: (fileId: string, versionId: string) => Promise<CompareResult>;
+  /** What deserves attention now: dates close or past, gaps in protection. */
+  notices: Notice[];
   /** Search inside the uploaded documents. Best matches first. */
   searchContent: (query: string) => ContentMatch[];
   /** How far the content index is: documents read, out of those that have text to read. */
@@ -353,6 +372,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   const [preview, setPreview] = useState<PreviewState | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [tourOpen, setTourOpen] = useState(false);
+  const [infoFileId, setInfoFileId] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const persisted = useMemo<db.Persisted>(
@@ -752,6 +772,48 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         log(on ? `a activé l’effacement après ${db.WIPE_AFTER} tentatives échouées` : "a désactivé l’effacement après tentatives échouées", "", null, "security");
       },
       closePreview: () => setPreview(null),
+      infoFileId,
+      openInfo: (fileId) => setInfoFileId(fileId),
+      closeInfo: () => setInfoFileId(null),
+      setDue: (id, dueAt, dueLabel) => {
+        const f = byId(id);
+        if (!f) return;
+        const day = parseDay(dueAt);
+        const label = day ? sanitizeName(dueLabel ?? "").slice(0, 80) : "";
+        patchMany([id], () => ({ dueAt: day ?? undefined, dueLabel: label || undefined }));
+        log(day ? "a fixé une échéance pour" : "a retiré l’échéance de", fullName(f), f.projectId);
+        notify(day ? `Échéance fixée au ${formatDate(day)}` : "Échéance retirée");
+      },
+      addComment: (id, text) => {
+        const f = byId(id);
+        const body = text.trim().slice(0, 2000);
+        if (!f || !body) return;
+        const entry = { id: uid("c"), at: nowIso(), author: profile.name, text: body };
+        patchMany([id], (x) => ({ comments: [...(x.comments ?? []), entry].slice(-200) }));
+        log("a commenté", fullName(f), f.projectId);
+      },
+      deleteComment: (id, commentId) => {
+        patchMany([id], (x) => ({ comments: (x.comments ?? []).filter((c) => c.id !== commentId) }));
+        notify("Commentaire supprimé");
+      },
+      compareVersion: async (fileId, versionId) => {
+        const f = byId(fileId);
+        const version = f?.versions?.find((ver) => ver.id === versionId);
+        if (!f || !version) return { status: "unreadable" };
+        const [older, current] = await Promise.all([readOriginal(f, versionId), readOriginal(f)]);
+        if (older.status !== "ok" || current.status !== "ok") return { status: "unreadable" };
+        // An earlier version is only compared if it is still what was uploaded.
+        if (version.sha256 && cryptoAvailable() && (await sha256Hex(older.blob)) !== version.sha256) return { status: "unreadable" };
+        try {
+          const text = async (blob: Blob) => cleanText(((await extractText(f.kind, blob))?.pages ?? []).join("\n\n"));
+          const [before, after] = await Promise.all([text(older.blob), text(current.blob)]);
+          if (!before && !after) return { status: "no-text" };
+          return { status: "ok", diff: diffText(before, after) };
+        } catch {
+          return { status: "unreadable" };
+        }
+      },
+      notices: buildNotices({ files, protected: meta.protected, canProtect: security.available, hasRecoveryCode: Boolean(meta.recovery), lastBackupAt, binDays: BIN_DAYS }),
       searchContent,
       indexStatus: { done: indexable.filter((f) => textIndex.current.get(f.id)?.sha256 === f.sha256).length, total: indexable.length },
       toast,
@@ -1279,7 +1341,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         notify("Vault réinitialisé : les données d’exemple sont de retour.");
       },
     };
-  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, privacy, defaultProtection, lastBackupAt, lastAuditAt, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload, searchContent, indexable, indexedCount, judge]);
+  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, privacy, defaultProtection, lastBackupAt, lastAuditAt, infoFileId, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload, searchContent, indexable, indexedCount, judge]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

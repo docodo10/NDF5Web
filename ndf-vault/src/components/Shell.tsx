@@ -24,10 +24,12 @@ import type { Folder, Route } from "@/lib/types";
 import { CURRENT_USER_ID, USERS } from "@/lib/sample-data";
 import { storageUsage } from "@/lib/db";
 import { folderPath, formatSize } from "@/lib/format";
+import type { Notice } from "@/lib/notices";
 import { pickedFromDrop, type Picked } from "@/lib/uploads";
 import { AppWatermark, Ndf5Logo, VaultLockup } from "./brand/Brand";
 import { Avatar, IconButton, Kbd } from "./ui";
 import { useFolderDrop } from "./files/drop";
+import { InfoPanel } from "./files/InfoPanel";
 import { MENU_CONTENT, MENU_ITEM } from "./files/menu-styles";
 
 // Navigation uses filled icons, as in the dashboard reference; actions elsewhere stay outlined.
@@ -93,6 +95,51 @@ function TreeNode({ folder, depth, childrenOf, expanded, toggle }: { folder: Fol
         </ul>
       )}
     </li>
+  );
+}
+
+/** The bell: dates that are close or past, and what is missing to protect the vault. */
+function Notifications() {
+  const { notices, navigate, openDialog, openInfo } = useVault();
+  const run = (n: Notice) => {
+    if (n.action.kind === "file") openInfo(n.action.fileId);
+    else if (n.action.kind === "dialog") openDialog({ type: n.action.dialog });
+    else navigate({ view: "archived" });
+  };
+  return (
+    <Dropdown.Root>
+      <span className="relative inline-flex max-sm:hidden">
+        <Dropdown.Trigger asChild>
+          <IconButton icon={Bell} label={notices.length ? `Notifications (${notices.length})` : "Notifications"} className="data-[state=open]:bg-fill" />
+        </Dropdown.Trigger>
+        {notices.length > 0 && (
+          <span data-notice-count aria-hidden className="pointer-events-none absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-ink px-1 text-[10.5px] font-semibold tabular-nums text-white ring-2 ring-white">
+            {notices.length}
+          </span>
+        )}
+      </span>
+      <Dropdown.Portal>
+        <Dropdown.Content align="end" sideOffset={8} collisionPadding={12} aria-label="Notifications" className={clsx(MENU_CONTENT, "w-[340px] max-w-[calc(100vw-24px)]")}>
+          <p className="px-2.5 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">Notifications</p>
+          {notices.length === 0 && <p className="px-2.5 pb-3 pt-1 text-[13px] text-neutral-500">Rien à signaler : aucune échéance proche, et le Vault est en ordre.</p>}
+          <div className="scroll-quiet max-h-[52vh] overflow-y-auto">
+            {notices.map((n) => (
+              <Dropdown.Item key={n.id} onSelect={() => run(n)} className={clsx(MENU_ITEM, "!h-auto !items-start gap-2.5 py-2")}>
+                <span aria-hidden className={clsx("mt-[7px] size-2 shrink-0 rounded-full", n.tone === "alert" ? "bg-red-500" : "bg-amber-400")} />
+                <span className="min-w-0">
+                  <span className="block break-words text-[13px] font-medium leading-[18px] text-ink">{n.title}</span>
+                  <span className="block text-[12px] leading-[17px] text-neutral-500">{n.detail}</span>
+                </span>
+              </Dropdown.Item>
+            ))}
+          </div>
+          <Dropdown.Separator className="my-1 h-px bg-hair" />
+          <Dropdown.Item onSelect={() => navigate({ view: "activity" })} className={MENU_ITEM}>
+            <Activity className="size-4 text-neutral-500" strokeWidth={1.75} /> Voir toute l’activité
+          </Dropdown.Item>
+        </Dropdown.Content>
+      </Dropdown.Portal>
+    </Dropdown.Root>
   );
 }
 
@@ -264,7 +311,7 @@ function Topbar() {
         <span data-tour="help">
           <IconButton icon={CircleHelp} label="Visite guidée" onClick={startTour} />
         </span>
-        <IconButton icon={Bell} label="Activité" onClick={() => navigate({ view: "activity" })} className="max-sm:hidden" />
+        <Notifications />
         <span className="hidden h-6 w-px bg-line sm:block" />
         <Dropdown.Root>
           <Dropdown.Trigger asChild>
@@ -372,6 +419,9 @@ export function Shell({ children }: { children: ReactNode }) {
         </main>
         {watermark && <AppWatermark />}
       </div>
+
+      {/* Beside the content on a wide screen, so that nothing is hidden under it; over it on a narrow one. */}
+      <InfoPanel />
 
       {dropping && (
         <div className="pointer-events-none fixed inset-0 z-[95] flex animate-fade items-center justify-center bg-white/80 p-6 backdrop-blur-sm">

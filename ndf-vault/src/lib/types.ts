@@ -39,6 +39,20 @@ export interface VaultFile {
   versions?: FileVersion[];
   /** Beyond the standard level: "view" blocks download and copy, "high" adds the protected reading view. */
   protection?: "view" | "high";
+  /** A date that matters for this document ("2026-12-01"): an option lapsing, a renewal, a signature expected. */
+  dueAt?: string;
+  /** What that date is, in a few words. */
+  dueLabel?: string;
+  /** Notes left on the file, oldest first. */
+  comments?: FileComment[];
+}
+
+export interface FileComment {
+  id: string;
+  at: string; // ISO
+  /** Who wrote it, as the profile read at the time. */
+  author: string;
+  text: string;
 }
 
 export interface FileVersion {

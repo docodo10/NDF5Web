@@ -1,7 +1,8 @@
 import { createEnvelope, decryptBytes, decryptJson, encryptBytes, encryptJson, envelopeKdf, openEnvelope, WrongPassphraseError, type Kdf, type KeyEnvelope } from "./crypto";
 import { DEFAULT_PROFILE, SCHEMA, migrate, type Persisted } from "./db";
 import { sanitizeName } from "./format";
-import type { ActivityItem, FileKind, FileStatus, FileVersion, Folder, Project, VaultFile } from "./types";
+import { parseDay } from "./due";
+import type { ActivityItem, FileComment, FileKind, FileStatus, FileVersion, Folder, Project, VaultFile } from "./types";
 import { STATUSES } from "./types";
 
 /**
@@ -163,6 +164,11 @@ const obj = (v: unknown): v is Record<string, unknown> => typeof v === "object" 
 const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const hex = (v: unknown) => (typeof v === "string" && /^[0-9a-f]{64}$/.test(v) ? v : undefined);
 
+function comment(v: unknown): FileComment | null {
+  if (!obj(v) || !id(v.id) || !str(v.at, 40) || !str(v.author, 120) || !str(v.text, 2000) || !v.text.trim()) return null;
+  return { id: v.id, at: v.at, author: sanitizeName(v.author) || "Quelqu’un", text: v.text };
+}
+
 function version(v: unknown): FileVersion | null {
   if (!obj(v) || !id(v.id) || !str(v.ext, 10) || !size(v.size) || !str(v.at, 40) || !str(v.ownerId, 64)) return null;
   return { id: v.id, ext: v.ext, size: v.size, at: v.at, ownerId: v.ownerId, sha256: hex(v.sha256) };
@@ -206,6 +212,9 @@ function file(v: unknown, folders: Set<string>, projects: Set<string>): VaultFil
     ...(str(v.versionAt, 40) && { versionAt: v.versionAt }),
     ...(Array.isArray(v.versions) && { versions: v.versions.map(version).filter((x): x is FileVersion => x !== null) }),
     ...((v.protection === "view" || v.protection === "high") && { protection: v.protection }),
+    ...(parseDay(v.dueAt) && { dueAt: parseDay(v.dueAt)! }),
+    ...(parseDay(v.dueAt) && str(v.dueLabel, 80) && sanitizeName(v.dueLabel) && { dueLabel: sanitizeName(v.dueLabel) }),
+    ...(Array.isArray(v.comments) && { comments: v.comments.map(comment).filter((c): c is FileComment => c !== null).slice(-200) }),
   };
 }
 

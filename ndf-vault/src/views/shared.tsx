@@ -2,7 +2,8 @@
 
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { Archive, ArchiveRestore, ChevronDown, ChevronRight, CloudUpload, Ellipsis, FileArchive, FileImage, FileSpreadsheet, FileText, FileType, FolderInput, FolderPlus, History, LayoutGrid, Pencil, Plus, Presentation, ShieldCheck, Trash2, Upload } from "lucide-react";
-import { Fragment, useMemo, type ComponentType, type ReactNode } from "react";
+import { Fragment, useMemo, useRef, type ComponentType, type ReactNode } from "react";
+import { pickedFromZip } from "@/lib/uploads";
 import { useVault } from "@/lib/store";
 import type { ActivityItem, Folder, Project } from "@/lib/types";
 import { folderRules } from "@/lib/selectors";
@@ -76,10 +77,47 @@ export function UploadButton({ folderId = null }: { folderId?: string | null }) 
   );
 }
 
+/**
+ * Import a ZIP archive: it is unpacked here, in the browser, and its files go
+ * through the upload dialog like any others, in the folders the archive had.
+ */
+function useZipImport(folderId: string | null) {
+  const { openDialog, notify } = useVault();
+  const input = useRef<HTMLInputElement>(null);
+  const element = (
+    <input
+      ref={input}
+      data-zip-input
+      type="file"
+      accept=".zip,application/zip"
+      className="sr-only"
+      tabIndex={-1}
+      aria-hidden
+      onChange={(e) => {
+        const archive = e.target.files?.[0];
+        e.target.value = "";
+        if (!archive) return;
+        void pickedFromZip(archive).then(
+          ({ picked, skipped }) => {
+            if (picked.length === 0) return notify(skipped ? "Rien n’a pu être extrait de cette archive : ses fichiers sont trop volumineux ou illisibles." : "Cette archive ne contient aucun fichier.");
+            if (skipped) notify(`${skipped} élément${skipped > 1 ? "s" : ""} de l’archive laissé${skipped > 1 ? "s" : ""} de côté : trop volumineux ou illisible${skipped > 1 ? "s" : ""}.`);
+            openDialog({ type: "upload", folderId, picked });
+          },
+          () => notify("Ce fichier n’est pas une archive ZIP lisible."),
+        );
+      }}
+    />
+  );
+  return { element, open: () => input.current?.click() };
+}
+
 /** Black "Ajouter" button with its menu: upload files, new folder. */
 export function AddFileMenu({ folderId = "root" }: { folderId?: string }) {
   const { openDialog } = useVault();
+  const zip = useZipImport(folderId === "root" ? null : folderId);
   return (
+    <>
+    {zip.element}
     <Dropdown.Root>
       <Dropdown.Trigger asChild>
         <Button variant="primary" icon={Plus}>
@@ -92,6 +130,9 @@ export function AddFileMenu({ folderId = "root" }: { folderId?: string }) {
           <Dropdown.Item className={MENU_ITEM} onSelect={() => openDialog({ type: "upload", folderId: folderId === "root" ? null : folderId })}>
             <CloudUpload className="size-4 text-neutral-500" strokeWidth={1.75} /> Téléverser des fichiers
           </Dropdown.Item>
+          <Dropdown.Item className={MENU_ITEM} onSelect={zip.open}>
+            <FileArchive className="size-4 text-neutral-500" strokeWidth={1.75} /> Importer une archive ZIP
+          </Dropdown.Item>
           <Dropdown.Separator className={MENU_SEPARATOR} />
           <Dropdown.Item className={MENU_ITEM} onSelect={() => openDialog({ type: "newFolder", parentId: folderId })}>
             <FolderPlus className="size-4 text-neutral-500" strokeWidth={1.75} /> Nouveau dossier
@@ -99,6 +140,7 @@ export function AddFileMenu({ folderId = "root" }: { folderId?: string }) {
         </Dropdown.Content>
       </Dropdown.Portal>
     </Dropdown.Root>
+    </>
   );
 }
 
@@ -107,7 +149,10 @@ export function FolderMenu({ folder, fileIds }: { folder: Folder; fileIds: strin
   const v = useVault();
   const rules = folderRules(folder, v.folders, v.files, v.projects);
   const icon = "size-4 text-neutral-500";
+  const zip = useZipImport(folder.id);
   return (
+    <>
+    {zip.element}
     <Dropdown.Root>
       <Dropdown.Trigger asChild>
         <IconButton icon={Ellipsis} label="Actions du dossier" className="data-[state=open]:bg-fill" />
@@ -124,6 +169,9 @@ export function FolderMenu({ folder, fileIds }: { folder: Folder; fileIds: strin
           <Dropdown.Item className={MENU_ITEM} onSelect={() => void v.exportZip(fileIds, folder.name)}>
             <FileArchive className={icon} strokeWidth={1.75} /> Exporter en ZIP
           </Dropdown.Item>
+          <Dropdown.Item className={MENU_ITEM} onSelect={zip.open}>
+            <FolderInput className={icon} strokeWidth={1.75} /> Importer une archive ZIP
+          </Dropdown.Item>
           <Dropdown.Separator className={MENU_SEPARATOR} />
           <Dropdown.Item className={`${MENU_ITEM} !text-red-600 data-[highlighted]:!bg-red-50`} onSelect={() => v.openDialog({ type: "deleteFolder", folderId: folder.id })}>
             <Trash2 className="size-4 text-red-500" strokeWidth={1.75} /> Supprimer
@@ -131,6 +179,7 @@ export function FolderMenu({ folder, fileIds }: { folder: Folder; fileIds: strin
         </Dropdown.Content>
       </Dropdown.Portal>
     </Dropdown.Root>
+    </>
   );
 }
 

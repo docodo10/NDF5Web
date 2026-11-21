@@ -6,7 +6,8 @@ import { Check, CloudUpload, FolderUp, Copy, Download, Lock, ShieldCheck, Trash2
 import { FolderIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { highest, lowers, PROTECTION_HINT, PROTECTION_LABEL, PROTECTION_LEVELS, protectionOf, type Protection } from "@/lib/protection";
-import { useVault } from "@/lib/store";
+import { foldUnchanged } from "@/lib/diff";
+import { useVault, type CompareResult } from "@/lib/store";
 import type { FileStatus, Folder, Project, VaultFile } from "@/lib/types";
 import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
@@ -366,6 +367,11 @@ function VersionsDialog({ file }: { file: VaultFile }) {
                 {user(ver.ownerId).name} · {formatDate(ver.at)}, {formatTime(ver.at)} · {formatSize(ver.size)}
               </p>
             </div>
+            {file.kind !== "image" && (
+              <Button size="sm" onClick={() => v.openDialog({ type: "compare", fileId: file.id, versionId: ver.id })}>
+                Comparer
+              </Button>
+            )}
             <IconButton icon={Download} label={`Télécharger la version ${total - 1 - k}`} variant="ghost" size="sm" onClick={() => void v.downloadVersion(file.id, ver.id)} />
             <Button size="sm" onClick={() => void v.restoreVersion(file.id, ver.id)}>
               Restaurer
@@ -689,6 +695,90 @@ function PurgeDialog({ fileIds }: { fileIds: string[] }) {
   );
 }
 
+/** What changed in the text between an earlier version of a document and the current one. */
+function CompareDialog({ fileId, versionId }: { fileId: string; versionId: string }) {
+  const { files, compareVersion, openDialog } = useVault();
+  const file = files.find((f) => f.id === fileId);
+  const version = file?.versions?.find((ver) => ver.id === versionId);
+  const [result, setResult] = useState<CompareResult | null>(null);
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    void compareVersion(fileId, versionId).then(setResult);
+    // Runs once, when the dialog opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const diff = result?.status === "ok" ? result.diff : null;
+  const unchanged = diff !== null && diff.added === 0 && diff.removed === 0 && diff.parts.every((p) => p.type === "same");
+  return (
+    <Modal
+      title="Comparer les versions"
+      description={file && version ? `${fullName(file)} — de la version du ${formatDate(version.at)} à la version actuelle` : undefined}
+      width={760}
+      footer={
+        <>
+          <Button onClick={() => file && openDialog({ type: "versions", fileId: file.id })}>Retour aux versions</Button>
+          <Button variant="primary" onClick={() => openDialog(null)}>
+            Fermer
+          </Button>
+        </>
+      }
+    >
+      {!result ? (
+        <p role="status" className="py-6 text-center text-[13.5px] text-neutral-500">
+          Lecture des deux versions…
+        </p>
+      ) : result.status === "no-text" ? (
+        <p className="py-6 text-center text-[13.5px] text-neutral-600">Ces versions ne contiennent pas de texte à comparer (un PDF numérisé, par exemple, n’est fait que d’images).</p>
+      ) : result.status === "unreadable" || !diff ? (
+        <p className="py-6 text-center text-[13.5px] text-neutral-600">L’une des deux versions ne peut pas être lue : elle est introuvable, altérée ou illisible.</p>
+      ) : (
+        <div data-compare>
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-neutral-600">
+            {unchanged ? (
+              <span className="font-medium text-ink">Le texte est identique dans les deux versions.</span>
+            ) : (
+              <>
+                <span data-added className="inline-flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm bg-emerald-300" /> {count(diff.added, "mot ajouté", "mots ajoutés")}
+                </span>
+                <span data-removed className="inline-flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm bg-red-300" /> {count(diff.removed, "mot retiré", "mots retirés")}
+                </span>
+              </>
+            )}
+          </p>
+          {diff.rewritten && <p className="mt-2 text-[12.5px] text-neutral-500">Les deux versions n’ont presque rien en commun : l’ancienne est affichée, puis la nouvelle.</p>}
+          {!diff.rewritten && diff.unit === "lines" && <p className="mt-2 text-[12.5px] text-neutral-500">Document long : la comparaison est faite ligne par ligne.</p>}
+          {!unchanged && (
+            <div className="scroll-quiet mt-3 max-h-[52vh] overflow-y-auto whitespace-pre-wrap break-words rounded-[10px] border border-line bg-white px-4 py-3.5 text-[13.5px] leading-[1.75] text-neutral-800">
+              {foldUnchanged(diff.parts).map((p, i) =>
+                p.type === "gap" ? (
+                  <span key={i} className="my-2 block select-none text-center text-[12px] text-neutral-400">
+                    ⋯ {p.hidden.toLocaleString("fr-CA")} caractères inchangés ⋯
+                  </span>
+                ) : p.type === "added" ? (
+                  <ins key={i} className="rounded-[3px] bg-emerald-100 px-0.5 text-emerald-900 no-underline">
+                    {p.text}
+                  </ins>
+                ) : p.type === "removed" ? (
+                  <del key={i} className="rounded-[3px] bg-red-100 px-0.5 text-red-800">
+                    {p.text}
+                  </del>
+                ) : (
+                  <span key={i}>{p.text}</span>
+                ),
+              )}
+            </div>
+          )}
+          <p className="mt-3 text-[12px] leading-[17px] text-neutral-500">La comparaison porte sur le texte seulement : la mise en page, les images et les tableaux déplacés n’y figurent pas.</p>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 /** Choose how far a document is protected. Lowering the level in a protected vault takes the passphrase. */
 function ProtectionDialog({ fileIds }: { fileIds: string[] }) {
   const { files, setProtection, security, openDialog } = useVault();
@@ -973,6 +1063,8 @@ export function Dialogs() {
       return <AuditDialog />;
     case "protection":
       return <ProtectionDialog fileIds={dialog.fileIds} />;
+    case "compare":
+      return <CompareDialog fileId={dialog.fileId} versionId={dialog.versionId} />;
     case "unlockDoc":
       return <UnlockDocDialog fileId={dialog.fileId} listIds={dialog.listIds} fullscreen={dialog.fullscreen} page={dialog.page} />;
     case "exportVault":

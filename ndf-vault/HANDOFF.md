@@ -40,7 +40,7 @@ L'utilisateur a fourni un plan (« NDF5 Vault — Virtual Data Room Plan », con
 
 ## 3. État actuel
 
-**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (200 tests unitaires) et `npm run test:e2e` (119 tests dans un vrai navigateur) passent.
+**Interface en français, vraies fonctions, protection par phrase secrète, tests automatisés, page hébergée.** `npx tsc --noEmit`, `npm run build`, `npm test` (225 tests unitaires) et `npm run test:e2e` (130 tests dans un vrai navigateur) passent.
 
 ### Sécurité (2026-11-14)
 
@@ -108,6 +108,18 @@ Demande de l'utilisateur : que l'application ressemble à Dropbox dans ses geste
 
 Pas fait, parce que cela demande le serveur : liens de partage, demandes de fichiers, commentaires entre personnes.
 
+### Travailler sur un document (2026-11-21)
+
+| Fonction | Où | Notes |
+|---|---|---|
+| Panneau d'informations | `components/files/InfoPanel.tsx`, store `infoFileId`, `openInfo`, `closeInfo` ; menu du fichier → « Informations » | Détails, échéance, commentaires et activité du fichier dans un volet à droite. **À côté du contenu** à partir de 1280 px (rendu dans `Shell`, le contenu se resserre) ; par-dessus en dessous. Échap le ferme, sauf si cette touche vient de fermer un dialogue ou la visionneuse (`defaultPrevented`). Il disparaît avec son fichier |
+| Commentaires | `VaultFile.comments`, store `addComment`, `deleteComment` | Notes datées et signées du nom du profil, gardées avec le fichier (200 au plus), affichées telles qu'écrites |
+| Échéances | `src/lib/due.ts`, `VaultFile.dueAt` / `dueLabel`, store `setDue`, `components/files/DueChip.tsx` | Une date qui compte pour un document (expiration d'une option, renouvellement). Pastille dans les tables et le panneau : rouge une fois passée, ambre à 30 jours ou moins. Section « Échéances » sur l'accueil (60 jours). Les jours sont comptés en dates de calendrier, pas en heures (changement d'heure sans effet) |
+| Notifications | `src/lib/notices.ts`, `Notifications` dans `Shell.tsx` | La cloche liste ce qui demande attention, calculé à partir de l'état et jamais stocké : échéances passées ou proches, Vault non protégé, pas de code de récupération, sauvegarde absente ou vieille de plus de 30 jours, fichiers sur le point de quitter la corbeille. Chaque ligne mène à ce qui la règle |
+| Comparer deux versions | `src/lib/diff.ts` (algorithme de Myers), store `compareVersion`, `CompareDialog` ; historique des versions → « Comparer » | Texte de l'ancienne version et de l'actuelle (même extraction que la recherche), comparé mot à mot ; ligne par ligne au-delà de 12 000 mots ; les longs passages inchangés sont repliés. Dit quand le texte est identique, quand les versions n'ont rien en commun, et quand il n'y a pas de texte à comparer. Pas proposé pour les images |
+| Importer une archive ZIP | `uploads.pickedFromZip`, `useZipImport` dans `views/shared.tsx` ; menus « Ajouter » et « ⋯ » d'un dossier | L'archive est dépaquetée dans le navigateur (lecteur ZIP défensif existant, 300 Mo dépaquetés au plus) et ses fichiers passent par le dialogue de téléversement habituel, donc par **les mêmes contrôles** ; ses dossiers sont recréés ; un chemin qui tente de sortir de la destination y est ramené ; `__MACOSX` et fichiers système écartés |
+| Colonnes selon la place réelle | `FileTable.tsx` (`@container`, variantes `@min-[…]`) | Les colonnes de la table suivent la largeur de la table, plus celle de la fenêtre : nécessaire depuis que le panneau d'informations peut en prendre un tiers |
+
 ### Fonctions réelles
 
 | Fonction | Où | Notes |
@@ -131,8 +143,8 @@ Pas fait, parce que cela demande le serveur : liens de partage, demandes de fich
 
 | Suite | Commande | Contenu |
 |---|---|---|
-| Unitaires (200) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `recovery` (code, récupération, remplacement, tentatives), `backup` (aller-retour, rien en clair, fichier altéré, enregistrements échangés, validation de l'état restauré), `uploads` (octets magiques, exécutables déguisés, faux fichiers Office, macros), `unzip` (bombe de décompression, somme de contrôle, archives tronquées), `xml` (DOCTYPE refusé, entrées hostiles en temps linéaire), `office` (Word, Excel, PowerPoint, limites), `search` (casse et accents, extraits, limites), `protection` (niveaux, codes, filigrane dessiné, effacement après tentatives), `familiar` (glisser-déposer, dossiers téléversés, corbeille), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
-| Navigateur (119) | `npm run test:e2e` | `tests/e2e/` : dérivation de clé, phrase proposée, redemande de la phrase et verrouillage après refus (`passphrase`), gestes familiers (`familiar` : glisser-déposer, clic droit, grille, dossier entier, doublons, corbeille, jauge), protection des documents (consultation seule, filigrane dans les pixels, lecture protégée, code de consultation, touche de capture, effacement, verrouillage d'urgence, bilan), visite guidée, fichiers, téléversement, aperçus Office, recherche dans le contenu, vérification d'intégrité, actions sensibles, journal des verrouillages, écran de confidentialité, versions, dossiers et projets, exports, sécurité (rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré…), code de récupération, sauvegarde et restauration (dont la restauration dans un second profil de navigateur, comme sur un autre appareil), téléphone |
+| Unitaires (225) | `npm test` | `tests/unit/` : `crypto` (dérivation, mauvaise phrase, altération, échange d'emplacements, force), `db` (protection, verrouillage, conversion interrompue, migration, compteur d'erreurs) avec `fake-indexeddb`, `recovery` (code, récupération, remplacement, tentatives), `backup` (aller-retour, rien en clair, fichier altéré, enregistrements échangés, validation de l'état restauré), `uploads` (octets magiques, exécutables déguisés, faux fichiers Office, macros), `unzip` (bombe de décompression, somme de contrôle, archives tronquées), `xml` (DOCTYPE refusé, entrées hostiles en temps linéaire), `office` (Word, Excel, PowerPoint, limites), `search` (casse et accents, extraits, limites), `protection` (niveaux, codes, filigrane dessiné, effacement après tentatives), `familiar` (glisser-déposer, dossiers téléversés, corbeille), `diff` (comparaison de textes), `due` (échéances, notifications, import d'archive), `format` (noms), `csv` (injection de formules), `zip` (chemins, CRC), `rules` (règles de dossiers, routes, texte du filigrane) |
+| Navigateur (130) | `npm run test:e2e` | `tests/e2e/` : panneau d'informations, commentaires, échéances, notifications, comparaison de versions et import ZIP (`workspace`), dérivation de clé, phrase proposée, redemande de la phrase et verrouillage après refus (`passphrase`), gestes familiers (`familiar` : glisser-déposer, clic droit, grille, dossier entier, doublons, corbeille, jauge), protection des documents (consultation seule, filigrane dans les pixels, lecture protégée, code de consultation, touche de capture, effacement, verrouillage d'urgence, bilan), visite guidée, fichiers, téléversement, aperçus Office, recherche dans le contenu, vérification d'intégrité, actions sensibles, journal des verrouillages, écran de confidentialité, versions, dossiers et projets, exports, sécurité (rien en clair sur disque, écran de verrouillage muet, délai, verrouillage automatique, original altéré…), code de récupération, sauvegarde et restauration (dont la restauration dans un second profil de navigateur, comme sur un autre appareil), téléphone |
 
 `npm run test:e2e` reconstruit d'abord `dist/` puis sert ce dossier (`scripts/serve-dist.mjs`, port 4173) : les tests s'exécutent sur **la page réellement publiée**, pas sur le serveur de développement. `tests/e2e/helpers.ts` contient les aides (`openVault`, `upload`, `protect` qui rend le code de récupération, `noteRecoveryCode`, `unlock`, `diskDump`, `tamperFirstOriginal`, `readZip`…). `tests/fixtures/office.ts` fabrique de vrais fichiers Word, Excel et PowerPoint compressés, pour les deux suites.
 
@@ -146,7 +158,7 @@ Pas fait, parce que cela demande le serveur : liens de partage, demandes de fich
 |---|---|
 | `src/lib/types.ts` | `VaultFile` (avec `sha256`, `versions`), `FileVersion`, `Folder`, `Project`, `Profile`, `ActivityItem`, `Route`, statuts |
 | `src/lib/sample-data.ts` | 42 fichiers d'exemple en français, index numéroté 00–10 (PB1/PB2 et FS1–FS5 sous 04 Production), projets PB1/PB2, 5 services, activité |
-| `src/lib/crypto.ts`, `db.ts`, `backup.ts`, `uploads.ts`, `unzip.ts`, `xml.ts`, `office.ts`, `search.ts`, `extract.ts`, `protection.ts`, `dnd.ts`, `pdf.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
+| `src/lib/crypto.ts`, `db.ts`, `backup.ts`, `uploads.ts`, `unzip.ts`, `xml.ts`, `office.ts`, `search.ts`, `extract.ts`, `diff.ts`, `due.ts`, `notices.ts`, `protection.ts`, `dnd.ts`, `pdf.ts`, `stamp.ts`, `csv.ts`, `zip.ts` | Voir les tableaux ci-dessus |
 | `src/lib/format.ts` | Dates et tailles à la française, `KIND_LABEL`, `STATUS_LABEL`, `count()`, `sanitizeName` |
 | `src/lib/selectors.ts` | `activeFiles`, tris, `fileCategory`, `folderRules` |
 | `src/lib/routes.ts` | `routeToHash`, `hashToRoute` |
@@ -155,7 +167,7 @@ Pas fait, parce que cela demande le serveur : liens de partage, demandes de fich
 | `src/components/ui.tsx`, `dialog-kit.tsx` | Boutons, onglets, badges… ; `Modal`, `Field`, `Note`, `Toggle`, `PassphraseInput` |
 | `src/components/security/` | `LockScreen` (déverrouiller, récupérer, effacer), `SecurityDialogs` (`ProtectDialog`, `PassphraseDialog`, `UnprotectDialog`, `RecoveryDialog`, `BackupDialog`, `RestoreDialog`, `AuditDialog`, `ExportVaultDialog`), `parts.tsx` (pièces sans état du Vault, utilisables quand il est verrouillé), `PrivacyVeil` |
 | `src/components/Shell.tsx` | Sidebar, topbar (verrou, aide), tiroir mobile, dépôt de fichiers sur toute la fenêtre |
-| `src/components/files/` | `FileTable` (complète, compacte, corbeille, actions groupées, menu partagé avec le clic droit), `FileGrid`, `view-mode`, `drop`, `Explorer` (filtres, recherche) |
+| `src/components/files/` | `FileTable` (complète, compacte, corbeille, actions groupées, menu partagé avec le clic droit), `FileGrid`, `InfoPanel`, `DueChip`, `view-mode`, `drop`, `Explorer` (filtres, recherche) |
 | `src/components/Dialogs.tsx` | Tous les dialogues de fichiers, dossiers et projets, `ToastHost` |
 | `src/components/viewer/` | `PreviewModal`, `OfficePreview` (le chargeur PDF est dans `src/lib/pdf.ts`) |
 | `src/components/CommandPalette.tsx`, `Tour.tsx` | Recherche globale ⌘K / Ctrl+K / « / » ; visite guidée |
@@ -230,6 +242,8 @@ Note de fidélité : on reprend le langage visuel (layout, densité, composants)
 - **Playwright est épinglé à 1.63.0**, la version du Chromium préinstallé. Ne pas lancer `playwright install`.
 - **Tests : locale UTF-8 obligatoire pour le navigateur.** Sans elle, un téléchargement au nom accentué s'appelle « download ». `playwright.config.ts` force `C.UTF-8` quand l'environnement n'en a pas.
 - **Pas d'expression régulière sur du contenu venu d'un fichier sans borne de longueur.** Un motif comme `[^=]+\s*=` ou `\[[^\]]*\]` prend un temps quadratique sur une entrée piégée et gèle la page. `xml.ts` lit les attributs en une passe ; `classifyFormat` tronque son entrée. Les tests `hostile input` le vérifient au chronomètre.
+- **Un écouteur ajouté pendant qu'un événement se propage peut encore le recevoir.** Échap ferme la visionneuse ; React remonte aussitôt l'écouteur du panneau d'informations sur `window`, qui reçoit le même appui. Radix marque l'événement `defaultPrevented` : c'est ce que le panneau vérifie.
+- **Un volet posé par-dessus le contenu cache les actions des lignes et la barre du haut.** Le panneau d'informations est dans le flux sur grand écran ; toute colonne de table doit alors utiliser les variantes de conteneur (`@min-[…]`), pas `md:` ou `xl:`.
 - **Le premier déverrouillage d'un ancien Vault est plus long** : il ré-enveloppe la clé avec scrypt. Dans les tests, une enveloppe PBKDF2 à faible coût (`createEnvelope(phrase, 1000)`) n'est pas mise à niveau, pour qu'ils restent rapides.
 - **Lire une entrée de dossier déposé tout de suite** : `webkitGetAsEntry()` doit être appelé dans le gestionnaire de dépôt, avant tout `await` ; le navigateur vide le dépôt dès que le gestionnaire rend la main (`pickedFromDrop`).
 - **Tests : l'arbre des dossiers et la jauge d'espace sont dans `<aside>`, pas dans la navigation principale.**
@@ -267,7 +281,8 @@ et restauration, aperçus (PDF, images, texte, Word, Excel, PowerPoint), recherc
 le contenu, vérification d'intégrité, protection des documents (consultation seule,
 lecture protégée, filigrane incrusté, code de consultation), gestes d'un gestionnaire
 de fichiers (glisser-déposer, clic droit, grille, dossier entier, corbeille de 30 jours),
-versions,
+panneau d'informations, commentaires, échéances et notifications, comparaison de
+versions, import d'archives ZIP, versions,
 dossiers, projets, exports, filigrane personnel, journal de sécurité, visite guidée,
 et deux suites de tests.
 Demande à l'utilisateur ses ajustements après son essai sur PC, puis la suite :

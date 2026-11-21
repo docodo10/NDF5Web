@@ -7,7 +7,9 @@ import { useVault } from "@/lib/store";
 import { activeFiles, byCreatedDesc, byModifiedDesc } from "@/lib/selectors";
 import { formatSize } from "@/lib/format";
 import { ExplorerToolbar, useFileFilters, type KindGroup } from "@/components/files/Explorer";
+import { DueChip } from "@/components/files/DueChip";
 import { FileIcon, FileTable } from "@/components/files/FileTable";
+import { dueOf } from "@/lib/due";
 import { PageHeader, SampleNotice, SegmentedTabs, TextTabs, type TabItem } from "@/components/ui";
 import { kindTabs, SectionTitle } from "./shared";
 
@@ -64,6 +66,16 @@ export function Home() {
   const filters = useFileFilters(scoped);
   const pinned = useMemo(() => active.filter((f) => f.pinned).sort(byModifiedDesc), [active]);
   const pinnedIds = pinned.map((f) => f.id);
+  // Dates that are past or within two months, the most pressing first.
+  const dated = useMemo(
+    () =>
+      active
+        .map((f) => ({ f, due: dueOf(f.dueAt) }))
+        .filter((x) => x.due !== null && x.due.days <= 60)
+        .sort((a, b) => a.due!.days - b.due!.days)
+        .slice(0, 6),
+    [active],
+  );
 
   return (
     <div className="space-y-8">
@@ -75,6 +87,26 @@ export function Home() {
         <ActionCard icon={KanbanIcon} label="Nouveau projet" hint="Un espace par production" onClick={() => v.openDialog({ type: "newProject" })} />
         <ActionCard icon={CompassIcon} label="Visite guidée" hint="Le tour en une minute" onClick={v.startTour} />
       </section>
+
+      {dated.length > 0 && (
+        <section className="space-y-3" aria-label="Échéances">
+          <SectionTitle>Échéances</SectionTitle>
+          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {dated.map(({ f }) => (
+              <li key={f.id}>
+                <button type="button" onClick={() => v.openInfo(f.id)} className="flex min-h-[60px] w-full items-center gap-3 rounded-[10px] border border-line bg-white px-3 py-2 text-left shadow-xs transition-colors duration-150 hover:border-neutral-300 hover:bg-subtle">
+                  <FileIcon kind={f.kind} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13.5px] font-medium text-ink">{f.name}</span>
+                    <span className="block truncate text-[12.5px] text-neutral-500">{f.dueLabel ?? "Échéance"}</span>
+                  </span>
+                  <DueChip dueAt={f.dueAt} label={f.dueLabel} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="space-y-4">
         <SectionTitle>Explorateur de fichiers</SectionTitle>

@@ -63,7 +63,7 @@ test.describe("right click", () => {
     await row(page, "Mandat").click({ button: "right" });
     const menu = page.getByRole("menu", { name: "Actions pour Mandat.txt" });
     await expect(menu).toBeVisible();
-    await expect(menu.getByRole("menuitem")).toHaveText(["Ouvrir", "Aperçu", "Épingler à l’accueil", "Renommer", "Modifier les détails", "Déplacer", "Copier", "Partager", "Télécharger", "Protection", "Historique des versions", "Archiver", "Supprimer"]);
+    await expect(menu.getByRole("menuitem")).toHaveText(["Ouvrir", "Aperçu", "Informations", "Épingler à l’accueil", "Renommer", "Modifier les détails", "Déplacer", "Copier", "Partager", "Télécharger", "Protection", "Historique des versions", "Archiver", "Supprimer"]);
     // The right click did not open the file.
     await expect(page.locator("[data-viewer-canvas]")).toHaveCount(0);
     await menu.getByRole("menuitem", { name: "Renommer" }).click();
