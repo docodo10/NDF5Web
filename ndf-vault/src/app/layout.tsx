@@ -11,7 +11,7 @@ const geist = localFont({
 
 export const metadata: Metadata = {
   title: "NDF Vault",
-  description: "The New Drago Family — gestion des documents et de la production",
+  description: "The New Drago Family — document and production management",
 };
 
 export const viewport: Viewport = {
@@ -21,7 +21,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={`${geist.variable} h-full`}>
+    <html lang="en" className={`${geist.variable} h-full`}>
       <body className="h-full">{children}</body>
     </html>
   );

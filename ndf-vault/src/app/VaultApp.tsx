@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { getLang, subscribeLang } from "@/lib/i18n";
+import { getLang, subscribeLang, t } from "@/lib/i18n";
 import { VaultProvider, useVault } from "@/lib/store";
 import { Shell } from "@/components/Shell";
 import { Dialogs, ToastHost } from "@/components/Dialogs";
@@ -61,7 +61,7 @@ export function VaultApp() {
   useSyncExternalStore(subscribeLang, getLang, getLang);
 
   const splash = (
-    <div className="flex h-full items-center justify-center bg-white" aria-busy="true" aria-label="Chargement de NDF Vault">
+    <div className="flex h-full items-center justify-center bg-white" aria-busy="true" aria-label={t("Chargement de NDF Vault", "Loading NDF Vault")}>
       <span className="opacity-40">
         <VaultLockup />
       </span>
