@@ -6,6 +6,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles } from "@/lib/selectors";
 import { count, descendantIds, folderLabel, folderPath } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { ExplorerToolbar, useFileFilters } from "@/components/files/Explorer";
 import { FileGrid } from "@/components/files/FileGrid";
 import { FileTable } from "@/components/files/FileTable";
@@ -46,9 +47,9 @@ export function FolderView({ id }: { id: string }) {
   if (!folder) {
     return (
       <div className="rounded-xl border border-line bg-white">
-        <EmptyState icon={FolderSearch} title="Dossier introuvable" hint="Ce dossier n’existe pas ou a été retiré." />
+        <EmptyState icon={FolderSearch} title={t("Dossier introuvable", "Folder not found")} hint={t("Ce dossier n’existe pas ou a été retiré.", "This folder does not exist or has been removed.")} />
         <div className="-mt-8 flex justify-center pb-12">
-          <Button onClick={() => v.navigate({ view: "files" })}>Voir tous les fichiers</Button>
+          <Button onClick={() => v.navigate({ view: "files" })}>{t("Voir tous les fichiers", "View all files")}</Button>
         </div>
       </div>
     );
@@ -61,20 +62,28 @@ export function FolderView({ id }: { id: string }) {
   };
 
   const depthItems: TabItem<Depth>[] = [
-    { id: "direct", label: "Ce dossier", count: direct.length },
-    { id: "nested", label: "Avec les sous-dossiers", count: nested.length },
+    { id: "direct", label: t("Ce dossier", "This folder"), count: direct.length },
+    { id: "nested", label: t("Avec les sous-dossiers", "With subfolders"), count: nested.length },
   ];
+  const emptyFolder = depth === "direct" && direct.length === 0;
+  const emptyTitle = emptyFolder ? t("Ce dossier est vide", "This folder is empty") : t("Aucun fichier ne correspond", "No files match");
+  const emptyHint = emptyFolder
+    ? t("Glissez des fichiers ou un dossier ici, ou utilisez Téléverser.", "Drag files or a folder here, or use Upload.")
+    : t("Effacez la recherche ou réinitialisez les filtres.", "Clear the search or reset the filters.");
 
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow={path.length > 1 ? <Breadcrumbs items={path.map((f) => ({ label: f.name, onClick: () => v.navigate({ view: "folder", id: f.id }) }))} /> : undefined}
         title={folderLabel(folder)}
-        description={`${count(nested.length, "fichier")} · ${count(subfolders.length, "sous-dossier")}${folder.access ? ` · Accès prévu : ${folder.access}` : ""}`}
+        description={t(
+          `${count(nested.length, "fichier")} · ${count(subfolders.length, "sous-dossier")}${folder.access ? ` · Accès prévu : ${folder.access}` : ""}`,
+          `${count(nested.length, "file")} · ${count(subfolders.length, "subfolder")}${folder.access ? ` · Planned access: ${folder.access}` : ""}`,
+        )}
         actions={
           <>
             <Button icon={FolderPlus} onClick={() => v.openDialog({ type: "newFolder", parentId: id })}>
-              Nouveau dossier
+              {t("Nouveau dossier", "New folder")}
             </Button>
             <UploadButton folderId={id} />
             <FolderMenu folder={folder} fileIds={nested.map((f) => f.id)} />
@@ -84,7 +93,7 @@ export function FolderView({ id }: { id: string }) {
 
       {subfolders.length > 0 && (
         <section className="space-y-3">
-          <SectionTitle>Dossiers</SectionTitle>
+          <SectionTitle>{t("Dossiers", "Folders")}</SectionTitle>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {subfolders.map((f) => {
               const n = countIn(f.id);
@@ -93,7 +102,7 @@ export function FolderView({ id }: { id: string }) {
                   <button
                     type="button"
                     onClick={() => v.navigate({ view: "folder", id: f.id })}
-                    title={f.access ? `Accès prévu : ${f.access}` : undefined}
+                    title={f.access ? t(`Accès prévu : ${f.access}`, `Planned access: ${f.access}`) : undefined}
                     className="flex h-[60px] w-full items-center gap-3 rounded-[10px] border border-line bg-white px-3 text-left shadow-xs transition-colors duration-150 hover:border-neutral-300 hover:bg-subtle"
                   >
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-fill text-neutral-700">
@@ -103,7 +112,7 @@ export function FolderView({ id }: { id: string }) {
                       <span className="block truncate text-[13.5px] font-medium text-ink">{f.name}</span>
                       <span className="block truncate text-[12.5px] text-neutral-500">
                         {f.code ? `${f.code} · ` : ""}
-                        {count(n, "fichier")}
+                        {t(count(n, "fichier"), count(n, "file"))}
                         {f.access ? ` · ${f.access}` : ""}
                       </span>
                     </span>
@@ -116,21 +125,9 @@ export function FolderView({ id }: { id: string }) {
       )}
 
       <section className="space-y-4">
-        <SectionTitle>Fichiers</SectionTitle>
-        <ExplorerToolbar left={subfolders.length > 0 ? <TextTabs<Depth> label="Profondeur" items={depthItems} value={depth} onChange={setDepth} /> : undefined} filters={filters} view={view} onView={setView} />
-        {view === "grid" ? (
-          <FileGrid
-            files={filters.filtered}
-            emptyTitle={depth === "direct" && direct.length === 0 ? "Ce dossier est vide" : "Aucun fichier ne correspond"}
-            emptyHint={depth === "direct" && direct.length === 0 ? "Glissez des fichiers ou un dossier ici, ou utilisez Téléverser." : "Effacez la recherche ou réinitialisez les filtres."}
-          />
-        ) : (
-          <FileTable
-            files={filters.filtered}
-            emptyTitle={depth === "direct" && direct.length === 0 ? "Ce dossier est vide" : "Aucun fichier ne correspond"}
-            emptyHint={depth === "direct" && direct.length === 0 ? "Glissez des fichiers ou un dossier ici, ou utilisez Téléverser." : "Effacez la recherche ou réinitialisez les filtres."}
-          />
-        )}
+        <SectionTitle>{t("Fichiers", "Files")}</SectionTitle>
+        <ExplorerToolbar left={subfolders.length > 0 ? <TextTabs<Depth> label={t("Profondeur", "Depth")} items={depthItems} value={depth} onChange={setDepth} /> : undefined} filters={filters} view={view} onView={setView} />
+        {view === "grid" ? <FileGrid files={filters.filtered} emptyTitle={emptyTitle} emptyHint={emptyHint} /> : <FileTable files={filters.filtered} emptyTitle={emptyTitle} emptyHint={emptyHint} />}
       </section>
     </div>
   );

@@ -3,6 +3,7 @@
 import { EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useVault } from "@/lib/store";
+import { t } from "@/lib/i18n";
 
 /**
  * The privacy screen: when the setting is on, the vault is covered as soon as
@@ -43,8 +44,8 @@ export function PrivacyVeil() {
       <span className="flex size-12 items-center justify-center rounded-2xl bg-ink text-white">
         <EyeOff className="size-5" strokeWidth={1.75} />
       </span>
-      <span className="mt-4 text-[17px] font-semibold tracking-[-0.01em] text-ink">Contenu masqué</span>
-      <span className="mt-1 max-w-[320px] text-[13.5px] leading-[21px] text-neutral-600">La fenêtre n’est plus active. Cliquez pour reprendre.</span>
+      <span className="mt-4 text-[17px] font-semibold tracking-[-0.01em] text-ink">{t("Contenu masqué", "Content hidden")}</span>
+      <span className="mt-1 max-w-[320px] text-[13.5px] leading-[21px] text-neutral-600">{t("La fenêtre n’est plus active. Cliquez pour reprendre.", "The window is no longer active. Click to resume.")}</span>
     </button>
   );
 }

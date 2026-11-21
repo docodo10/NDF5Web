@@ -13,6 +13,7 @@ import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
 import { count, descendantIds, folderLabel, formatDate, formatSize, formatTime, fullName, STATUS_LABEL } from "@/lib/format";
 import { folderRules } from "@/lib/selectors";
+import { t } from "@/lib/i18n";
 import { ACCEPT_ATTR, inspectUpload, pickedFromDrop, pickedFromInput, type Picked, type UploadCheck } from "@/lib/uploads";
 import { Avatar, Button, Chip, IconButton } from "./ui";
 import { Field, INPUT, Modal, Note, PassphraseInput, Toggle } from "./dialog-kit";
@@ -48,18 +49,18 @@ function RenameDialog({ file }: { file: VaultFile }) {
   };
   return (
     <Modal
-      title="Renommer le fichier"
+      title={t("Renommer le fichier", "Rename file")}
       onSubmit={save}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={!name.trim() || name.trim() === file.name}>
-            Renommer
+            {t("Renommer", "Rename")}
           </Button>
         </>
       }
     >
-      <Field label="Nom du fichier">
+      <Field label={t("Nom du fichier", "File name")}>
         <div className="flex items-center gap-2">
           <input data-autofocus id="file-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} onFocus={(e) => e.target.select()} />
           <span className="shrink-0 text-[13px] text-neutral-500">.{file.ext}</span>
@@ -87,10 +88,10 @@ function Fingerprint({ file }: { file: VaultFile }) {
   return (
     <div className="mt-3 rounded-[10px] border border-line px-3 py-2.5">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[12.5px] font-medium text-neutral-700">Empreinte SHA-256</p>
+        <p className="text-[12.5px] font-medium text-neutral-700">{t("Empreinte SHA-256", "SHA-256 fingerprint")}</p>
         <button type="button" onClick={copy} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-neutral-500 hover:text-ink">
           {copied ? <Check className="size-3.5" strokeWidth={2} /> : <Copy className="size-3.5" strokeWidth={1.75} />}
-          {copied ? "Copiée" : "Copier"}
+          {copied ? t("Copiée", "Copied") : t("Copier", "Copy")}
         </button>
       </div>
       <p className="mt-1 select-all break-all font-mono text-[11.5px] leading-[17px] text-neutral-600">{file.sha256}</p>
@@ -98,7 +99,11 @@ function Fingerprint({ file }: { file: VaultFile }) {
         <p role="status" className={clsx("flex items-center gap-1.5 text-[12.5px]", state === "ok" ? "text-emerald-700" : state === "bad" ? "text-red-600" : "text-neutral-500")}>
           {state === "ok" && <ShieldCheck className="size-4" strokeWidth={1.75} />}
           {state === "bad" && <TriangleAlert className="size-4" strokeWidth={1.75} />}
-          {state === "ok" ? "Intégrité vérifiée : l’original est intact." : state === "bad" ? "L’original ne correspond plus à cette empreinte." : "Calculée au téléversement."}
+          {state === "ok"
+            ? t("Intégrité vérifiée : l’original est intact.", "Integrity verified: the original is intact.")
+            : state === "bad"
+              ? t("L’original ne correspond plus à cette empreinte.", "The original no longer matches this fingerprint.")
+              : t("Calculée au téléversement.", "Computed at upload.")}
         </p>
         <Button
           size="sm"
@@ -108,7 +113,7 @@ function Fingerprint({ file }: { file: VaultFile }) {
             setState((await readOriginal(file)).status === "ok" ? "ok" : "bad");
           }}
         >
-          {state === "busy" ? "Vérification…" : "Vérifier"}
+          {state === "busy" ? t("Vérification…", "Verifying…") : t("Vérifier", "Verify")}
         </Button>
       </div>
     </div>
@@ -137,20 +142,20 @@ function DetailsDialog({ file }: { file: VaultFile }) {
   };
   return (
     <Modal
-      title="Modifier les détails"
+      title={t("Modifier les détails", "Edit details")}
       description={fullName(file)}
       onSubmit={save}
       width={480}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit">
-            Enregistrer
+            {t("Enregistrer", "Save")}
           </Button>
         </>
       }
     >
-      <Field label="Statut">
+      <Field label={t("Statut", "Status")}>
         <div className="flex flex-wrap gap-1.5">
           {STATUSES.map((s) => (
             <button
@@ -168,9 +173,9 @@ function DetailsDialog({ file }: { file: VaultFile }) {
           ))}
         </div>
       </Field>
-      <Field label="Projet">
+      <Field label={t("Projet", "Project")}>
         <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className={INPUT}>
-          <option value="">Sans projet</option>
+          <option value="">{t("Sans projet", "No project")}</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>
               {p.code} — {p.name}
@@ -178,15 +183,15 @@ function DetailsDialog({ file }: { file: VaultFile }) {
           ))}
         </select>
       </Field>
-      <Field label="Étiquettes" hint="Séparez les étiquettes par des virgules.">
-        <input value={tags} onChange={(e) => setTags(e.target.value)} className={INPUT} placeholder="scénario, FS1" />
+      <Field label={t("Étiquettes", "Tags")} hint={t("Séparez les étiquettes par des virgules.", "Separate tags with commas.")}>
+        <input value={tags} onChange={(e) => setTags(e.target.value)} className={INPUT} placeholder={t("scénario, FS1", "screenplay, FS1")} />
       </Field>
       <Field label="Notes">
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={2000} className={clsx(INPUT, "h-auto resize-none py-2 leading-5")} placeholder="Ajoutez une note pour vos collaborateurs" />
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={2000} className={clsx(INPUT, "h-auto resize-none py-2 leading-5")} placeholder={t("Ajoutez une note pour vos collaborateurs", "Add a note for your collaborators")} />
       </Field>
       <div className="mt-1 divide-y divide-hair border-t border-hair pt-1">
-        <Toggle on={favorite} onChange={setFavorite} label="Favori" />
-        <Toggle on={pinned} onChange={setPinned} label="Épingler à l’accueil" />
+        <Toggle on={favorite} onChange={setFavorite} label={t("Favori", "Favorite")} />
+        <Toggle on={pinned} onChange={setPinned} label={t("Épingler à l’accueil", "Pin to Home")} />
       </div>
       {!file.sample && <Fingerprint file={file} />}
     </Modal>
@@ -197,7 +202,7 @@ function FolderPicker({ value, onChange, exclude, disabled }: { value: string; o
   const { folders } = useVault();
   const flat = useFlatFolders(folders);
   return (
-    <ul className="scroll-quiet max-h-[280px] overflow-y-auto rounded-[10px] border border-line p-1" role="listbox" aria-label="Dossier de destination">
+    <ul className="scroll-quiet max-h-[280px] overflow-y-auto rounded-[10px] border border-line p-1" role="listbox" aria-label={t("Dossier de destination", "Destination folder")}>
       {flat.map(({ folder, depth }) => {
         const on = value === folder.id;
         return (
@@ -228,8 +233,8 @@ function MoveDialog({ fileIds }: { fileIds: string[] }) {
   const [dest, setDest] = useState("");
   return (
     <Modal
-      title={fileIds.length === 1 && first ? "Déplacer le fichier" : `Déplacer ${count(fileIds.length, "fichier")}`}
-      description={fileIds.length === 1 && first ? fullName(first) : "Choisissez le dossier de destination."}
+      title={fileIds.length === 1 && first ? t("Déplacer le fichier", "Move file") : t(`Déplacer ${count(fileIds.length, "fichier")}`, `Move ${count(fileIds.length, "file")}`)}
+      description={fileIds.length === 1 && first ? fullName(first) : t("Choisissez le dossier de destination.", "Choose the destination folder.")}
       onSubmit={() => {
         if (!dest) return;
         moveFiles(fileIds, dest);
@@ -237,9 +242,9 @@ function MoveDialog({ fileIds }: { fileIds: string[] }) {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={!dest}>
-            Déplacer ici
+            {t("Déplacer ici", "Move here")}
           </Button>
         </>
       }
@@ -271,7 +276,7 @@ function ShareDialog({ file }: { file: VaultFile }) {
   );
   return (
     <Modal
-      title="Partager"
+      title={t("Partager", "Share")}
       description={fullName(file)}
       onSubmit={() => {
         if (visibility !== file.visibility) updateFile(file.id, { visibility });
@@ -279,19 +284,24 @@ function ShareDialog({ file }: { file: VaultFile }) {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit">
-            Enregistrer l’accès
+            {t("Enregistrer l’accès", "Save access")}
           </Button>
         </>
       }
     >
       <div className="space-y-2">
-        {option("private", Lock, "Privé", "Vous seul pouvez ouvrir ce fichier.")}
-        {option("team", Users, "Espace de travail", "Toutes les personnes de l’espace NDF Vault.")}
+        {option("private", Lock, t("Privé", "Private"), t("Vous seul pouvez ouvrir ce fichier.", "Only you can open this file."))}
+        {option("team", Users, t("Espace de travail", "Workspace"), t("Toutes les personnes de l’espace NDF Vault.", "Everyone in the NDF Vault workspace."))}
       </div>
       <div className="mt-4">
-        <Note>Inviter des personnes précises et créer des liens de partage demande des comptes invités. Cela arrivera avec la connexion des invités.</Note>
+        <Note>
+          {t(
+            "Inviter des personnes précises et créer des liens de partage demande des comptes invités. Cela arrivera avec la connexion des invités.",
+            "Inviting specific people and creating share links requires guest accounts. This will come with guest sign-in.",
+          )}
+        </Note>
       </div>
     </Modal>
   );
@@ -313,8 +323,8 @@ function VersionsDialog({ file }: { file: VaultFile }) {
     setError(null);
     const check = await inspectUpload(chosen);
     if (check.error) setError(check.error);
-    else if (check.ext !== file.ext) setError(`La nouvelle version doit être au même format (.${file.ext}).`);
-    else if (check.sha256 && check.sha256 === file.sha256) setError("Ce fichier est identique à la version actuelle.");
+    else if (check.ext !== file.ext) setError(t(`La nouvelle version doit être au même format (.${file.ext}).`, `The new version must be in the same format (.${file.ext}).`));
+    else if (check.sha256 && check.sha256 === file.sha256) setError(t("Ce fichier est identique à la version actuelle.", "This file is identical to the current version."));
     else await v.addVersion(file.id, check);
     setBusy(false);
   };
@@ -322,15 +332,15 @@ function VersionsDialog({ file }: { file: VaultFile }) {
   const row = "flex items-center gap-3 border-t border-hair px-3 py-2.5 first:border-t-0";
   return (
     <Modal
-      title="Historique des versions"
+      title={t("Historique des versions", "Version history")}
       description={fullName(file)}
       width={520}
       footer={
         <>
-          <Button onClick={() => v.openDialog(null)}>Fermer</Button>
+          <Button onClick={() => v.openDialog(null)}>{t("Fermer", "Close")}</Button>
           {!file.sample && (
             <Button variant="primary" icon={CloudUpload} disabled={busy || !v.persistent} onClick={() => input.current?.click()}>
-              {busy ? "Analyse…" : "Nouvelle version"}
+              {busy ? t("Analyse…", "Analyzing…") : t("Nouvelle version", "New version")}
             </Button>
           )}
         </>
@@ -356,7 +366,7 @@ function VersionsDialog({ file }: { file: VaultFile }) {
               {user(file.ownerId).name} · {formatDate(file.versionAt ?? file.modifiedAt)}, {formatTime(file.versionAt ?? file.modifiedAt)} · {formatSize(file.size)}
             </p>
           </div>
-          <Chip className="!border-emerald-300 !text-emerald-700">Actuelle</Chip>
+          <Chip className="!border-emerald-300 !text-emerald-700">{t("Actuelle", "Current")}</Chip>
         </li>
         {older.map((ver, k) => (
           <li key={ver.id} className={row}>
@@ -369,14 +379,14 @@ function VersionsDialog({ file }: { file: VaultFile }) {
             </div>
             {file.kind !== "image" && (
               <Button size="sm" onClick={() => v.openDialog({ type: "compare", fileId: file.id, versionId: ver.id })}>
-                Comparer
+                {t("Comparer", "Compare")}
               </Button>
             )}
-            <IconButton icon={Download} label={`Télécharger la version ${total - 1 - k}`} variant="ghost" size="sm" onClick={() => void v.downloadVersion(file.id, ver.id)} />
+            <IconButton icon={Download} label={t(`Télécharger la version ${total - 1 - k}`, `Download version ${total - 1 - k}`)} variant="ghost" size="sm" onClick={() => void v.downloadVersion(file.id, ver.id)} />
             <Button size="sm" onClick={() => void v.restoreVersion(file.id, ver.id)}>
-              Restaurer
+              {t("Restaurer", "Restore")}
             </Button>
-            <IconButton icon={Trash2} label={`Supprimer la version ${total - 1 - k}`} variant="ghost" size="sm" onClick={() => v.deleteVersion(file.id, ver.id)} />
+            <IconButton icon={Trash2} label={t(`Supprimer la version ${total - 1 - k}`, `Delete version ${total - 1 - k}`)} variant="ghost" size="sm" onClick={() => v.deleteVersion(file.id, ver.id)} />
           </li>
         ))}
       </ul>
@@ -385,8 +395,14 @@ function VersionsDialog({ file }: { file: VaultFile }) {
       </p>
       <Note>
         {file.sample
-          ? "Fichier d’exemple : il n’a pas d’original, donc pas de versions. Téléversez un vrai fichier pour en garder l’historique."
-          : "Une nouvelle version remplace l’actuelle, qui reste ici : vous pouvez la télécharger ou la restaurer à tout moment."}
+          ? t(
+              "Fichier d’exemple : il n’a pas d’original, donc pas de versions. Téléversez un vrai fichier pour en garder l’historique.",
+              "Sample file: it has no original, so no versions. Upload a real file to keep its history.",
+            )
+          : t(
+              "Une nouvelle version remplace l’actuelle, qui reste ici : vous pouvez la télécharger ou la restaurer à tout moment.",
+              "A new version replaces the current one, which stays here: you can download or restore it at any time.",
+            )}
       </Note>
     </Modal>
   );
@@ -395,25 +411,32 @@ function VersionsDialog({ file }: { file: VaultFile }) {
 function DeleteDialog({ fileIds }: { fileIds: string[] }) {
   const { files, deleteFiles, openDialog } = useVault();
   const first = files.find((f) => f.id === fileIds[0]);
-  const what = fileIds.length === 1 && first ? `« ${fullName(first)} »` : count(fileIds.length, "fichier");
+  const what = fileIds.length === 1 && first ? t(`« ${fullName(first)} »`, `“${fullName(first)}”`) : t(count(fileIds.length, "fichier"), count(fileIds.length, "file"));
   return (
     <Modal
-      title={fileIds.length === 1 ? "Supprimer le fichier ?" : "Supprimer les fichiers ?"}
+      title={fileIds.length === 1 ? t("Supprimer le fichier ?", "Delete file?") : t("Supprimer les fichiers ?", "Delete files?")}
       onSubmit={() => {
         deleteFiles(fileIds);
         openDialog(null);
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" className="!bg-red-600 hover:!bg-red-700">
-            Supprimer
+            {t("Supprimer", "Delete")}
           </Button>
         </>
       }
     >
       <p className="text-[13.5px] leading-[21px] text-neutral-600">
-        {what} {fileIds.length === 1 ? "ira" : "iront"} dans <span className="font-medium text-ink">Fichiers archivés → Supprimés</span>, où une restauration reste possible.
+        {t(
+          <>
+            {what} {fileIds.length === 1 ? "ira" : "iront"} dans <span className="font-medium text-ink">Fichiers archivés → Supprimés</span>, où une restauration reste possible.
+          </>,
+          <>
+            {what} will go to <span className="font-medium text-ink">Archived files → Deleted</span>, where {fileIds.length === 1 ? "it" : "they"} can still be restored.
+          </>,
+        )}
       </p>
     </Modal>
   );
@@ -426,7 +449,7 @@ function NewFolderDialog({ parentId }: { parentId: string }) {
   const [parent, setParent] = useState(folders.some((f) => f.id === parentId) ? parentId : "root");
   return (
     <Modal
-      title="Nouveau dossier"
+      title={t("Nouveau dossier", "New folder")}
       onSubmit={() => {
         if (!name.trim()) return;
         const id = addFolder(name, parent);
@@ -435,17 +458,17 @@ function NewFolderDialog({ parentId }: { parentId: string }) {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={!name.trim()}>
-            Créer le dossier
+            {t("Créer le dossier", "Create folder")}
           </Button>
         </>
       }
     >
-      <Field label="Nom du dossier">
-        <input data-autofocus id="new-folder-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} placeholder="ex. Repérage des lieux" />
+      <Field label={t("Nom du dossier", "Folder name")}>
+        <input data-autofocus id="new-folder-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} placeholder={t("ex. Repérage des lieux", "e.g. Location scouting")} />
       </Field>
-      <Field label="Dans">
+      <Field label={t("Dans", "In")}>
         <select value={parent} onChange={(e) => setParent(e.target.value)} className={INPUT}>
           {flat.map(({ folder, depth }) => (
             <option key={folder.id} value={folder.id}>
@@ -466,8 +489,8 @@ function NewProjectDialog() {
   const [period, setPeriod] = useState("");
   return (
     <Modal
-      title="Nouveau projet"
-      description="Crée un espace de projet et son dossier dans 04 Production."
+      title={t("Nouveau projet", "New project")}
+      description={t("Crée un espace de projet et son dossier dans 04 Production.", "Creates a project space and its folder in 04 Production.")}
       onSubmit={() => {
         if (!name.trim()) return;
         const id = addProject({ name, code, period });
@@ -476,22 +499,22 @@ function NewProjectDialog() {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={!name.trim()}>
-            Créer le projet
+            {t("Créer le projet", "Create project")}
           </Button>
         </>
       }
     >
-      <Field label="Nom du projet">
-        <input data-autofocus id="new-project-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} placeholder="ex. Production Blitz Three" />
+      <Field label={t("Nom du projet", "Project name")}>
+        <input data-autofocus id="new-project-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} placeholder={t("ex. Production Blitz Three", "e.g. Production Blitz Three")} />
       </Field>
       <div className="grid grid-cols-[120px_1fr] gap-3">
         <Field label="Code">
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 5))} className={INPUT} placeholder="PB3" />
         </Field>
-        <Field label="Période">
-          <input value={period} onChange={(e) => setPeriod(e.target.value)} className={INPUT} placeholder="Période de production prévue" />
+        <Field label={t("Période", "Period")}>
+          <input value={period} onChange={(e) => setPeriod(e.target.value)} className={INPUT} placeholder={t("Période de production prévue", "Planned production period")} />
         </Field>
       </div>
     </Modal>
@@ -545,15 +568,21 @@ function UploadDialog({ folderId, initial, picked }: { folderId: string | null; 
 
   return (
     <Modal
-      title="Téléverser des fichiers"
-      description="PDF, DOCX, XLSX, PPTX, TXT, CSV et images — 100 Mo maximum par fichier."
+      title={t("Téléverser des fichiers", "Upload files")}
+      description={t("PDF, DOCX, XLSX, PPTX, TXT, CSV et images — 100 Mo maximum par fichier.", "PDF, DOCX, XLSX, PPTX, TXT, CSV and images — 100 MB maximum per file.")}
       onSubmit={submit}
       width={540}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={!valid.length || busy || pending > 0 || !persistent}>
-            {pending > 0 ? "Analyse…" : busy ? "Téléversement…" : valid.length ? `Téléverser ${count(valid.length, "fichier")}` : "Téléverser"}
+            {pending > 0
+              ? t("Analyse…", "Analyzing…")
+              : busy
+                ? t("Téléversement…", "Uploading…")
+                : valid.length
+                  ? t(`Téléverser ${count(valid.length, "fichier")}`, `Upload ${count(valid.length, "file")}`)
+                  : t("Téléverser", "Upload")}
           </Button>
         </>
       }
@@ -578,8 +607,8 @@ function UploadDialog({ folderId, initial, picked }: { folderId: string | null; 
         <span className="mb-3 flex size-10 items-center justify-center rounded-[10px] border border-line bg-white text-neutral-500 shadow-xs">
           <CloudUpload className="size-[18px]" strokeWidth={1.75} />
         </span>
-        <p className="text-[13.5px] font-medium text-ink">Glissez vos fichiers ou un dossier ici</p>
-        <p className="mt-1 text-[12.5px] text-neutral-500">ou choisissez-les sur votre ordinateur — un dossier garde ses sous-dossiers</p>
+        <p className="text-[13.5px] font-medium text-ink">{t("Glissez vos fichiers ou un dossier ici", "Drag your files or a folder here")}</p>
+        <p className="mt-1 text-[12.5px] text-neutral-500">{t("ou choisissez-les sur votre ordinateur — un dossier garde ses sous-dossiers", "or choose them on your computer — a folder keeps its subfolders")}</p>
         <input
           ref={input}
           id="upload-input"
@@ -606,16 +635,16 @@ function UploadDialog({ folderId, initial, picked }: { folderId: string | null; 
           }}
         />
         <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <Button onClick={() => input.current?.click()}>Parcourir</Button>
+          <Button onClick={() => input.current?.click()}>{t("Parcourir", "Browse")}</Button>
           <Button icon={FolderUp} onClick={() => folderInput.current?.click()}>
-            Choisir un dossier
+            {t("Choisir un dossier", "Choose a folder")}
           </Button>
         </div>
       </div>
 
-      {pending > 0 && <p className="mt-3 text-[12.5px] text-neutral-500">Vérification du contenu de {count(pending, "fichier")}…</p>}
+      {pending > 0 && <p className="mt-3 text-[12.5px] text-neutral-500">{t(`Vérification du contenu de ${count(pending, "fichier")}…`, `Checking the contents of ${count(pending, "file")}…`)}</p>}
       {items.length > 0 && (
-        <ul aria-label="Fichiers choisis" className="scroll-quiet mt-3 max-h-[168px] overflow-y-auto rounded-[10px] border border-line">
+        <ul aria-label={t("Fichiers choisis", "Chosen files")} className="scroll-quiet mt-3 max-h-[168px] overflow-y-auto rounded-[10px] border border-line">
           {items.map((it, i) => (
             <li key={`${it.file.name}-${i}`} className="flex min-h-[44px] items-center gap-3 border-t border-hair px-3 py-1.5 first:border-t-0">
               <div className="min-w-0 flex-1 leading-tight">
@@ -625,17 +654,17 @@ function UploadDialog({ folderId, initial, picked }: { folderId: string | null; 
                 </p>
                 <p className={clsx("truncate text-[12px]", it.error ? "text-red-600" : "text-neutral-500")}>
                   {it.error ?? formatSize(it.file.size)}
-                  {!it.error && twinOf(it, i) && <span className="text-amber-700"> · Identique à « {twinOf(it, i)} »</span>}
+                  {!it.error && twinOf(it, i) && <span className="text-amber-700">{t(` · Identique à « ${twinOf(it, i)} »`, ` · Identical to “${twinOf(it, i)}”`)}</span>}
                 </p>
               </div>
-              <IconButton icon={X} label={`Retirer ${it.file.name}`} variant="ghost" size="sm" onClick={() => setItems((prev) => prev.filter((_, k) => k !== i))} />
+              <IconButton icon={X} label={t(`Retirer ${it.file.name}`, `Remove ${it.file.name}`)} variant="ghost" size="sm" onClick={() => setItems((prev) => prev.filter((_, k) => k !== i))} />
             </li>
           ))}
         </ul>
       )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <Field label="Dossier de destination">
+        <Field label={t("Dossier de destination", "Destination folder")}>
           <select id="upload-folder" value={dest} onChange={(e) => setDest(e.target.value)} className={INPUT}>
             {flat.map(({ folder, depth }) => (
               <option key={folder.id} value={folder.id}>
@@ -645,9 +674,9 @@ function UploadDialog({ folderId, initial, picked }: { folderId: string | null; 
             ))}
           </select>
         </Field>
-        <Field label="Projet">
+        <Field label={t("Projet", "Project")}>
           <select id="upload-project" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={INPUT}>
-            <option value="">Sans projet</option>
+            <option value="">{t("Sans projet", "No project")}</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.code} — {p.name}
@@ -660,8 +689,14 @@ function UploadDialog({ folderId, initial, picked }: { folderId: string | null; 
       <div className="mt-4">
         <Note>
           {persistent
-            ? "Les fichiers restent dans ce navigateur, sur cet appareil. Rien n’est envoyé sur un serveur et personne d’autre ne les voit."
-            : "Ce navigateur refuse le stockage local (fenêtre privée ou données de site bloquées) : le téléversement est désactivé."}
+            ? t(
+                "Les fichiers restent dans ce navigateur, sur cet appareil. Rien n’est envoyé sur un serveur et personne d’autre ne les voit.",
+                "Files stay in this browser, on this device. Nothing is sent to a server and no one else sees them.",
+              )
+            : t(
+                "Ce navigateur refuse le stockage local (fenêtre privée ou données de site bloquées) : le téléversement est désactivé.",
+                "This browser refuses local storage (private window or blocked site data): upload is disabled.",
+              )}
         </Note>
       </div>
     </Modal>
@@ -671,25 +706,32 @@ function UploadDialog({ folderId, initial, picked }: { folderId: string | null; 
 function PurgeDialog({ fileIds }: { fileIds: string[] }) {
   const { files, purgeFiles, openDialog } = useVault();
   const first = files.find((f) => f.id === fileIds[0]);
-  const what = fileIds.length === 1 && first ? `« ${fullName(first)} »` : count(fileIds.length, "fichier");
+  const what = fileIds.length === 1 && first ? t(`« ${fullName(first)} »`, `“${fullName(first)}”`) : t(count(fileIds.length, "fichier"), count(fileIds.length, "file"));
   return (
     <Modal
-      title="Supprimer définitivement ?"
+      title={t("Supprimer définitivement ?", "Delete permanently?")}
       onSubmit={() => {
         purgeFiles(fileIds);
         openDialog(null);
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" className="!bg-red-600 hover:!bg-red-700">
-            Supprimer définitivement
+            {t("Supprimer définitivement", "Delete permanently")}
           </Button>
         </>
       }
     >
       <p className="text-[13.5px] leading-[21px] text-neutral-600">
-        {what} et {fileIds.length === 1 ? "son original seront effacés" : "leurs originaux seront effacés"} de ce navigateur. Cette action est irréversible.
+        {t(
+          <>
+            {what} et {fileIds.length === 1 ? "son original seront effacés" : "leurs originaux seront effacés"} de ce navigateur. Cette action est irréversible.
+          </>,
+          <>
+            {what} and {fileIds.length === 1 ? "its original" : "their originals"} will be erased from this browser. This action cannot be undone.
+          </>,
+        )}
       </p>
     </Modal>
   );
@@ -713,50 +755,65 @@ function CompareDialog({ fileId, versionId }: { fileId: string; versionId: strin
   const unchanged = diff !== null && diff.added === 0 && diff.removed === 0 && diff.parts.every((p) => p.type === "same");
   return (
     <Modal
-      title="Comparer les versions"
-      description={file && version ? `${fullName(file)} — de la version du ${formatDate(version.at)} à la version actuelle` : undefined}
+      title={t("Comparer les versions", "Compare versions")}
+      description={
+        file && version
+          ? t(`${fullName(file)} — de la version du ${formatDate(version.at)} à la version actuelle`, `${fullName(file)} — from the version of ${formatDate(version.at)} to the current version`)
+          : undefined
+      }
       width={760}
       footer={
         <>
-          <Button onClick={() => file && openDialog({ type: "versions", fileId: file.id })}>Retour aux versions</Button>
+          <Button onClick={() => file && openDialog({ type: "versions", fileId: file.id })}>{t("Retour aux versions", "Back to versions")}</Button>
           <Button variant="primary" onClick={() => openDialog(null)}>
-            Fermer
+            {t("Fermer", "Close")}
           </Button>
         </>
       }
     >
       {!result ? (
         <p role="status" className="py-6 text-center text-[13.5px] text-neutral-500">
-          Lecture des deux versions…
+          {t("Lecture des deux versions…", "Reading both versions…")}
         </p>
       ) : result.status === "no-text" ? (
-        <p className="py-6 text-center text-[13.5px] text-neutral-600">Ces versions ne contiennent pas de texte à comparer (un PDF numérisé, par exemple, n’est fait que d’images).</p>
+        <p className="py-6 text-center text-[13.5px] text-neutral-600">
+          {t(
+            "Ces versions ne contiennent pas de texte à comparer (un PDF numérisé, par exemple, n’est fait que d’images).",
+            "These versions contain no text to compare (a scanned PDF, for example, is made only of images).",
+          )}
+        </p>
       ) : result.status === "unreadable" || !diff ? (
-        <p className="py-6 text-center text-[13.5px] text-neutral-600">L’une des deux versions ne peut pas être lue : elle est introuvable, altérée ou illisible.</p>
+        <p className="py-6 text-center text-[13.5px] text-neutral-600">
+          {t("L’une des deux versions ne peut pas être lue : elle est introuvable, altérée ou illisible.", "One of the two versions cannot be read: it is missing, corrupted or unreadable.")}
+        </p>
       ) : (
         <div data-compare>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-neutral-600">
             {unchanged ? (
-              <span className="font-medium text-ink">Le texte est identique dans les deux versions.</span>
+              <span className="font-medium text-ink">{t("Le texte est identique dans les deux versions.", "The text is identical in both versions.")}</span>
             ) : (
               <>
                 <span data-added className="inline-flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-sm bg-emerald-300" /> {count(diff.added, "mot ajouté", "mots ajoutés")}
+                  <span className="size-2.5 rounded-sm bg-emerald-300" /> {t(count(diff.added, "mot ajouté", "mots ajoutés"), count(diff.added, "word added", "words added"))}
                 </span>
                 <span data-removed className="inline-flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-sm bg-red-300" /> {count(diff.removed, "mot retiré", "mots retirés")}
+                  <span className="size-2.5 rounded-sm bg-red-300" /> {t(count(diff.removed, "mot retiré", "mots retirés"), count(diff.removed, "word removed", "words removed"))}
                 </span>
               </>
             )}
           </p>
-          {diff.rewritten && <p className="mt-2 text-[12.5px] text-neutral-500">Les deux versions n’ont presque rien en commun : l’ancienne est affichée, puis la nouvelle.</p>}
-          {!diff.rewritten && diff.unit === "lines" && <p className="mt-2 text-[12.5px] text-neutral-500">Document long : la comparaison est faite ligne par ligne.</p>}
+          {diff.rewritten && (
+            <p className="mt-2 text-[12.5px] text-neutral-500">
+              {t("Les deux versions n’ont presque rien en commun : l’ancienne est affichée, puis la nouvelle.", "The two versions have almost nothing in common: the old one is shown, then the new one.")}
+            </p>
+          )}
+          {!diff.rewritten && diff.unit === "lines" && <p className="mt-2 text-[12.5px] text-neutral-500">{t("Document long : la comparaison est faite ligne par ligne.", "Long document: the comparison is made line by line.")}</p>}
           {!unchanged && (
             <div className="scroll-quiet mt-3 max-h-[52vh] overflow-y-auto whitespace-pre-wrap break-words rounded-[10px] border border-line bg-white px-4 py-3.5 text-[13.5px] leading-[1.75] text-neutral-800">
               {foldUnchanged(diff.parts).map((p, i) =>
                 p.type === "gap" ? (
                   <span key={i} className="my-2 block select-none text-center text-[12px] text-neutral-400">
-                    ⋯ {p.hidden.toLocaleString("fr-CA")} caractères inchangés ⋯
+                    {t(`⋯ ${p.hidden.toLocaleString("fr-CA")} caractères inchangés ⋯`, `⋯ ${p.hidden.toLocaleString("en-US")} unchanged characters ⋯`)}
                   </span>
                 ) : p.type === "added" ? (
                   <ins key={i} className="rounded-[3px] bg-emerald-100 px-0.5 text-emerald-900 no-underline">
@@ -772,7 +829,12 @@ function CompareDialog({ fileId, versionId }: { fileId: string; versionId: strin
               )}
             </div>
           )}
-          <p className="mt-3 text-[12px] leading-[17px] text-neutral-500">La comparaison porte sur le texte seulement : la mise en page, les images et les tableaux déplacés n’y figurent pas.</p>
+          <p className="mt-3 text-[12px] leading-[17px] text-neutral-500">
+            {t(
+              "La comparaison porte sur le texte seulement : la mise en page, les images et les tableaux déplacés n’y figurent pas.",
+              "The comparison covers the text only: layout, images and moved tables are not included.",
+            )}
+          </p>
         </div>
       )}
     </Modal>
@@ -792,7 +854,7 @@ function ProtectionDialog({ fileIds }: { fileIds: string[] }) {
   const ready = !busy && level !== current && (!needsPassphrase || passphrase.length > 0);
   return (
     <Modal
-      title="Protection du document"
+      title={t("Protection du document", "Document protection")}
       description={targets.length === 1 ? fullName(targets[0]) : `${targets.length} documents`}
       width={500}
       onSubmit={async () => {
@@ -805,14 +867,14 @@ function ProtectionDialog({ fileIds }: { fileIds: string[] }) {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={!ready}>
-            Appliquer
+            {t("Appliquer", "Apply")}
           </Button>
         </>
       }
     >
-      <div role="radiogroup" aria-label="Niveau de protection" className="space-y-2">
+      <div role="radiogroup" aria-label={t("Niveau de protection", "Protection level")} className="space-y-2">
         {PROTECTION_LEVELS.map((l) => (
           <label key={l} className={clsx("flex cursor-pointer items-start gap-3 rounded-[10px] border px-3 py-2.5 transition-colors duration-150", level === l ? "border-ink bg-subtle" : "border-line hover:border-neutral-300")}>
             <input type="radio" name="protection-level" value={l} checked={level === l} onChange={() => setLevel(l)} className="mt-1 size-4 shrink-0 accent-black" />
@@ -825,16 +887,21 @@ function ProtectionDialog({ fileIds }: { fileIds: string[] }) {
       </div>
       {needsPassphrase && (
         <div className="mt-4">
-          <Field label="Phrase secrète" hint="Demandée pour retirer une protection.">
+          <Field label={t("Phrase secrète", "Passphrase")} hint={t("Demandée pour retirer une protection.", "Required to remove a protection.")}>
             <PassphraseInput id="protection-passphrase" value={passphrase} onChange={setPassphrase} autoComplete="current-password" />
             <p role="alert" className="mt-1.5 min-h-[18px] text-[12px] text-red-600">
-              {wrong ? "Phrase secrète incorrecte." : ""}
+              {wrong ? t("Phrase secrète incorrecte.", "Incorrect passphrase.") : ""}
             </p>
           </Field>
         </div>
       )}
       <div className="mt-4">
-        <Note>Ces protections freinent la copie et permettent de remonter à son origine. Elles ne peuvent pas empêcher quelqu’un de photographier un écran : c’est le filigrane et son code de consultation qui désignent alors la personne.</Note>
+        <Note>
+          {t(
+            "Ces protections freinent la copie et permettent de remonter à son origine. Elles ne peuvent pas empêcher quelqu’un de photographier un écran : c’est le filigrane et son code de consultation qui désignent alors la personne.",
+            "These protections slow down copying and make it possible to trace a copy back to its source. They cannot stop someone from photographing a screen: the watermark and its viewing code are then what identify the person.",
+          )}
+        </Note>
       </div>
     </Modal>
   );
@@ -847,7 +914,7 @@ function ResetDialog() {
   const [wrong, setWrong] = useState(false);
   return (
     <Modal
-      title="Réinitialiser le Vault ?"
+      title={t("Réinitialiser le Vault ?", "Reset the Vault?")}
       onSubmit={async () => {
         if (busy || (security.protected && !current)) return;
         setBusy(true);
@@ -862,22 +929,25 @@ function ResetDialog() {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={busy || (security.protected && !current)} className="!bg-red-600 hover:!bg-red-700 disabled:!bg-neutral-400">
-            Tout réinitialiser
+            {t("Tout réinitialiser", "Reset everything")}
           </Button>
         </>
       }
     >
       <p className="text-[13.5px] leading-[21px] text-neutral-600">
-        Tous les fichiers téléversés, dossiers et projets créés dans ce navigateur seront effacés, et les données d’exemple reviendront. Cette action est irréversible.
+        {t(
+          "Tous les fichiers téléversés, dossiers et projets créés dans ce navigateur seront effacés, et les données d’exemple reviendront. Cette action est irréversible.",
+          "All uploaded files, folders and projects created in this browser will be erased, and the sample data will come back. This action cannot be undone.",
+        )}
       </p>
       {security.protected && (
         <div className="mt-4">
-          <Field label="Phrase secrète">
+          <Field label={t("Phrase secrète", "Passphrase")}>
             <PassphraseInput id="reset-passphrase" value={current} onChange={setCurrent} autoComplete="current-password" autoFocus />
             <p role="alert" className="mt-1.5 min-h-[18px] text-[12px] text-red-600">
-              {wrong ? "Phrase secrète incorrecte." : ""}
+              {wrong ? t("Phrase secrète incorrecte.", "Incorrect passphrase.") : ""}
             </p>
           </Field>
         </div>
@@ -891,7 +961,7 @@ function RenameFolderDialog({ folder }: { folder: Folder }) {
   const [name, setName] = useState(folder.name);
   return (
     <Modal
-      title="Renommer le dossier"
+      title={t("Renommer le dossier", "Rename folder")}
       onSubmit={() => {
         if (!name.trim()) return;
         renameFolder(folder.id, name);
@@ -899,14 +969,14 @@ function RenameFolderDialog({ folder }: { folder: Folder }) {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={!name.trim() || name.trim() === folder.name}>
-            Renommer
+            {t("Renommer", "Rename")}
           </Button>
         </>
       }
     >
-      <Field label="Nom du dossier">
+      <Field label={t("Nom du dossier", "Folder name")}>
         <input data-autofocus id="folder-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} onFocus={(e) => e.target.select()} />
       </Field>
     </Modal>
@@ -924,16 +994,16 @@ function MoveFolderDialog({ folder }: { folder: Folder }) {
   }, [folders, folder]);
   return (
     <Modal
-      title="Déplacer le dossier"
+      title={t("Déplacer le dossier", "Move folder")}
       description={folderLabel(folder)}
       onSubmit={() => {
         if (dest && moveFolder(folder.id, dest)) openDialog(null);
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={!dest}>
-            Déplacer ici
+            {t("Déplacer ici", "Move here")}
           </Button>
         </>
       }
@@ -948,7 +1018,7 @@ function DeleteFolderDialog({ folder }: { folder: Folder }) {
   const blocked = folderRules(folder, folders, files, projects).deleteBlocked;
   return (
     <Modal
-      title={blocked ? "Ce dossier ne peut pas être supprimé" : "Supprimer le dossier ?"}
+      title={blocked ? t("Ce dossier ne peut pas être supprimé", "This folder cannot be deleted") : t("Supprimer le dossier ?", "Delete folder?")}
       onSubmit={() => {
         if (blocked) return openDialog(null);
         const parent = folder.parentId ?? "root";
@@ -957,18 +1027,18 @@ function DeleteFolderDialog({ folder }: { folder: Folder }) {
       }}
       footer={
         blocked ? (
-          <Button onClick={() => openDialog(null)}>Fermer</Button>
+          <Button onClick={() => openDialog(null)}>{t("Fermer", "Close")}</Button>
         ) : (
           <>
-            <Button onClick={() => openDialog(null)}>Annuler</Button>
+            <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
             <Button variant="primary" type="submit" className="!bg-red-600 hover:!bg-red-700">
-              Supprimer
+              {t("Supprimer", "Delete")}
             </Button>
           </>
         )
       }
     >
-      <p className="text-[13.5px] leading-[21px] text-neutral-600">{blocked ?? `Le dossier « ${folder.name} » est vide et sera supprimé.`}</p>
+      <p className="text-[13.5px] leading-[21px] text-neutral-600">{blocked ?? t(`Le dossier « ${folder.name} » est vide et sera supprimé.`, `The folder “${folder.name}” is empty and will be deleted.`)}</p>
     </Modal>
   );
 }
@@ -981,7 +1051,7 @@ function EditProjectDialog({ project }: { project: Project }) {
   const [summary, setSummary] = useState(project.summary);
   return (
     <Modal
-      title="Modifier le projet"
+      title={t("Modifier le projet", "Edit project")}
       width={480}
       onSubmit={() => {
         if (!name.trim()) return;
@@ -990,25 +1060,25 @@ function EditProjectDialog({ project }: { project: Project }) {
       }}
       footer={
         <>
-          <Button onClick={() => openDialog(null)}>Annuler</Button>
+          <Button onClick={() => openDialog(null)}>{t("Annuler", "Cancel")}</Button>
           <Button variant="primary" type="submit" disabled={!name.trim()}>
-            Enregistrer
+            {t("Enregistrer", "Save")}
           </Button>
         </>
       }
     >
-      <Field label="Nom du projet">
+      <Field label={t("Nom du projet", "Project name")}>
         <input data-autofocus id="project-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={INPUT} />
       </Field>
       <div className="grid grid-cols-[120px_1fr] gap-3">
         <Field label="Code">
           <input id="project-code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 5))} className={INPUT} />
         </Field>
-        <Field label="Période">
+        <Field label={t("Période", "Period")}>
           <input id="project-period" value={period} onChange={(e) => setPeriod(e.target.value)} maxLength={120} className={INPUT} />
         </Field>
       </div>
-      <Field label="Résumé">
+      <Field label={t("Résumé", "Summary")}>
         <textarea id="project-summary" value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} maxLength={300} className={clsx(INPUT, "h-auto resize-none py-2 leading-5")} />
       </Field>
     </Modal>
@@ -1095,10 +1165,10 @@ export function ToastHost() {
               dismissToast();
             }}
           >
-            Annuler
+            {t("Annuler", "Undo")}
           </Button>
         )}
-        <IconButton icon={X} label="Fermer" variant="ghost" size="sm" onClick={dismissToast} />
+        <IconButton icon={X} label={t("Fermer", "Close")} variant="ghost" size="sm" onClick={dismissToast} />
       </div>
     </div>
   );

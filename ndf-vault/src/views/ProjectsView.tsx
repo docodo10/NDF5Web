@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles, byModifiedDesc } from "@/lib/selectors";
 import { count, formatDate } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { Button, Chip, EmptyState, PageHeader, SampleNotice, TextTabs, type TabItem } from "@/components/ui";
 
 export function ProjectsView() {
@@ -16,30 +17,30 @@ export function ProjectsView() {
   const shown = archivedCount === 0 ? "active" : tab;
   const projects = v.projects.filter((p) => p.archived === (shown === "archived"));
   const tabs: TabItem<"active" | "archived">[] = [
-    { id: "active", label: "Actifs", count: v.projects.length - archivedCount },
-    { id: "archived", label: "Archivés", count: archivedCount },
+    { id: "active", label: t("Actifs", "Active"), count: v.projects.length - archivedCount },
+    { id: "archived", label: t("Archivés", "Archived"), count: archivedCount },
   ];
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Tous les projets"
-        description="Un espace de travail distinct pour chaque grande production NDF."
+        title={t("Tous les projets", "All projects")}
+        description={t("Un espace de travail distinct pour chaque grande production NDF.", "A separate workspace for each major NDF production.")}
         actions={
           <>
             <SampleNotice />
             <Button variant="primary" icon={Plus} onClick={() => v.openDialog({ type: "newProject" })}>
-              Nouveau projet
+              {t("Nouveau projet", "New project")}
             </Button>
           </>
         }
       />
 
-      {archivedCount > 0 && <TextTabs label="Projets actifs ou archivés" items={tabs} value={shown} onChange={setTab} />}
+      {archivedCount > 0 && <TextTabs label={t("Projets actifs ou archivés", "Active or archived projects")} items={tabs} value={shown} onChange={setTab} />}
 
       {projects.length === 0 ? (
         <div className="rounded-xl border border-line bg-white">
-          <EmptyState icon={FolderKanban} title="Aucun projet actif" hint="Créez un projet pour donner à une production son propre espace." />
+          <EmptyState icon={FolderKanban} title={t("Aucun projet actif", "No active projects")} hint={t("Créez un projet pour donner à une production son propre espace.", "Create a project to give a production its own workspace.")} />
         </div>
       ) : (
         <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

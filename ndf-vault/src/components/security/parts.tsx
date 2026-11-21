@@ -5,6 +5,7 @@ import { Check, Copy, Download, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { generatePassphrase, MIN_PASSPHRASE_LENGTH, passphraseStrength, suggestedBits } from "@/lib/crypto";
 import { formatMoment } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { saveToDisk } from "@/lib/uploads";
 import { Field, PassphraseInput } from "../dialog-kit";
 import { Button } from "../ui";
@@ -45,7 +46,7 @@ export function StrengthMeter({ passphrase }: { passphrase: string }) {
 }
 
 /** A new passphrase, typed twice. Valid once it is long enough, not weak, and both entries match. */
-export function NewPassphrase({ value, onChange, confirm, onConfirm, idPrefix, autoFocus, label = "Nouvelle phrase secrète" }: { value: string; onChange: (v: string) => void; confirm: string; onConfirm: (v: string) => void; idPrefix: string; autoFocus?: boolean; label?: string }) {
+export function NewPassphrase({ value, onChange, confirm, onConfirm, idPrefix, autoFocus, label = t("Nouvelle phrase secrète", "New passphrase") }: { value: string; onChange: (v: string) => void; confirm: string; onConfirm: (v: string) => void; idPrefix: string; autoFocus?: boolean; label?: string }) {
   const mismatch = confirm.length > 0 && confirm !== value;
   const [suggested, setSuggested] = useState("");
   const [copied, setCopied] = useState(false);
@@ -59,32 +60,32 @@ export function NewPassphrase({ value, onChange, confirm, onConfirm, idPrefix, a
   };
   return (
     <>
-      <Field label={label} hint={`Au moins ${MIN_PASSPHRASE_LENGTH} caractères. Plusieurs mots sans lien entre eux font une bonne phrase.`}>
+      <Field label={label} hint={t(`Au moins ${MIN_PASSPHRASE_LENGTH} caractères. Plusieurs mots sans lien entre eux font une bonne phrase.`, `At least ${MIN_PASSPHRASE_LENGTH} characters. Several unrelated words make a good passphrase.`)}>
         <PassphraseInput id={`${idPrefix}-new`} value={value} onChange={onChange} autoComplete="new-password" autoFocus={autoFocus} />
         <StrengthMeter passphrase={value} />
         {suggested && suggested === value ? (
           <div data-suggested className="mt-1 rounded-[10px] border border-line bg-subtle px-3 py-2.5">
             <p className="select-all break-words font-mono text-[14px] font-semibold tracking-[0.01em] text-ink">{suggested}</p>
-            <p className="mt-1 text-[12px] leading-[17px] text-neutral-500">Tirée au hasard, environ {suggestedBits()} bits : hors de portée d’une recherche par essais. Notez-la, puis retapez-la ci-dessous.</p>
+            <p className="mt-1 text-[12px] leading-[17px] text-neutral-500">{t(`Tirée au hasard, environ ${suggestedBits()} bits : hors de portée d’une recherche par essais. Notez-la, puis retapez-la ci-dessous.`, `Picked at random, about ${suggestedBits()} bits: out of reach of a trial-and-error search. Write it down, then retype it below.`)}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <Button size="sm" icon={copied ? Check : Copy} onClick={async () => setCopied(await copySecret(suggested))}>
-                {copied ? "Copiée · effacée du presse-papiers dans 1 min" : "Copier"}
+                {copied ? t("Copiée · effacée du presse-papiers dans 1 min", "Copied · cleared from the clipboard in 1 min") : t("Copier", "Copy")}
               </Button>
               <Button size="sm" icon={Sparkles} onClick={suggest}>
-                Une autre
+                {t("Une autre", "Another one")}
               </Button>
             </div>
           </div>
         ) : (
           <button type="button" id={`${idPrefix}-suggest`} onClick={suggest} className="mt-0.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-neutral-600 underline-offset-2 hover:text-ink hover:underline">
-            <Sparkles className="size-3.5" strokeWidth={1.75} /> Proposer une phrase forte
+            <Sparkles className="size-3.5" strokeWidth={1.75} /> {t("Proposer une phrase forte", "Suggest a strong passphrase")}
           </button>
         )}
       </Field>
-      <Field label="Confirmez-la">
+      <Field label={t("Confirmez-la", "Confirm it")}>
         <PassphraseInput id={`${idPrefix}-confirm`} value={confirm} onChange={onConfirm} autoComplete="new-password" />
         <p role="alert" className="mt-1.5 min-h-[18px] text-[12px] text-red-600">
-          {mismatch ? "Les deux saisies ne correspondent pas." : ""}
+          {mismatch ? t("Les deux saisies ne correspondent pas.", "The two entries do not match.") : ""}
         </p>
       </Field>
     </>
@@ -102,21 +103,24 @@ export function RecoveryCodeCard({ code }: { code: string }) {
   // The code stays selectable on screen when the clipboard is refused.
   const copy = async () => setCopied(await copySecret(code));
   const save = () => {
-    const text = `NDF Vault — code de récupération\r\n\r\n${code}\r\n\r\nCréé le ${formatMoment(new Date())}.\r\nCe code permet de choisir une nouvelle phrase secrète si la vôtre est oubliée.\r\nGardez-le hors de l’appareil qui contient le Vault.\r\n`;
-    void saveToDisk("code-de-recuperation-ndf-vault.txt", new Blob([text], { type: "text/plain" }));
+    const text = t(
+      `NDF Vault — code de récupération\r\n\r\n${code}\r\n\r\nCréé le ${formatMoment(new Date())}.\r\nCe code permet de choisir une nouvelle phrase secrète si la vôtre est oubliée.\r\nGardez-le hors de l’appareil qui contient le Vault.\r\n`,
+      `NDF Vault — recovery code\r\n\r\n${code}\r\n\r\nCreated on ${formatMoment(new Date())}.\r\nThis code lets you choose a new passphrase if you forget yours.\r\nKeep it off the device that holds the Vault.\r\n`,
+    );
+    void saveToDisk(t("code-de-recuperation-ndf-vault.txt", "ndf-vault-recovery-code.txt"), new Blob([text], { type: "text/plain" }));
   };
   return (
     <div className="rounded-xl border border-line bg-subtle px-4 py-3.5">
-      <p className="text-[11.5px] font-semibold uppercase tracking-[0.1em] text-neutral-500">Code de récupération</p>
+      <p className="text-[11.5px] font-semibold uppercase tracking-[0.1em] text-neutral-500">{t("Code de récupération", "Recovery code")}</p>
       <p data-recovery-code className="mt-2 select-all break-words font-mono text-[17px] font-semibold leading-7 tracking-[0.02em] text-ink">
         {code}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button size="sm" icon={copied ? Check : Copy} onClick={copy}>
-          {copied ? "Copié · effacé du presse-papiers dans 1 min" : "Copier"}
+          {copied ? t("Copié · effacé du presse-papiers dans 1 min", "Copied · cleared from the clipboard in 1 min") : t("Copier", "Copy")}
         </Button>
         <Button size="sm" icon={Download} onClick={save}>
-          Enregistrer (.txt)
+          {t("Enregistrer (.txt)", "Save (.txt)")}
         </Button>
       </div>
     </div>
@@ -129,7 +133,10 @@ export function NotedCheckbox({ checked, onChange }: { checked: boolean; onChang
     <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-[10px] border border-line px-3 py-2.5">
       <input id="recovery-noted" type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-black" />
       <span className="text-[12.5px] leading-[18px] text-neutral-700">
-        J’ai noté ce code dans un endroit sûr, <span className="font-medium text-ink">hors de cet appareil</span>. Il ne sera plus affiché.
+        {t(
+          <>J’ai noté ce code dans un endroit sûr, <span className="font-medium text-ink">hors de cet appareil</span>. Il ne sera plus affiché.</>,
+          <>I have written this code down in a safe place, <span className="font-medium text-ink">off this device</span>. It will not be shown again.</>,
+        )}
       </span>
     </label>
   );

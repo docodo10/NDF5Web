@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { EyeOff, Info } from "lucide-react";
 import { useState } from "react";
+import { t } from "@/lib/i18n";
 import { columnName, MAX_SHEET_COLS, MAX_SHEET_ROWS, type DocBlock, type DocxContent, type PptxContent, type XlsxContent } from "@/lib/office";
 import { PageWatermark, PersonalWatermark } from "../brand/Brand";
 
@@ -43,7 +44,7 @@ function Block({ block }: { block: DocBlock }) {
     return (
       <div role="separator" className="flex items-center gap-[0.8em] py-[0.8em] text-[0.78em] font-medium uppercase tracking-[0.12em] text-neutral-400">
         <span className="h-0 flex-1 border-t border-dashed border-neutral-300" />
-        Saut de page
+        {t("Saut de page", "Page break")}
         <span className="h-0 flex-1 border-t border-dashed border-neutral-300" />
       </div>
     );
@@ -87,13 +88,13 @@ function Block({ block }: { block: DocBlock }) {
 }
 
 export function DocxView({ content }: { content: DocxContent }) {
-  if (content.blocks.length === 0) return <p className="text-neutral-500">Ce document ne contient pas de texte.</p>;
+  if (content.blocks.length === 0) return <p className="text-neutral-500">{t("Ce document ne contient pas de texte.", "This document contains no text.")}</p>;
   return (
     <div className="space-y-[0.8em] leading-[1.65] text-neutral-800">
       {content.blocks.map((b, i) => (
         <Block key={i} block={b} />
       ))}
-      {content.truncated && <p className="border-t border-neutral-200 pt-[1em] text-neutral-500">Aperçu limité au début du document. Téléchargez l’original pour tout lire.</p>}
+      {content.truncated && <p className="border-t border-neutral-200 pt-[1em] text-neutral-500">{t("Aperçu limité au début du document. Téléchargez l’original pour tout lire.", "Preview limited to the beginning of the document. Download the original to read everything.")}</p>}
     </div>
   );
 }
@@ -105,12 +106,12 @@ const NUMERIC = /^-?[\d\s  ]+(,\d+)?( %)?$/;
 export function SheetView({ content, initial = 0 }: { content: XlsxContent; initial?: number }) {
   const [active, setActive] = useState(initial);
   const sheet = content.sheets[Math.min(active, content.sheets.length - 1)];
-  if (!sheet) return <p className="text-neutral-500">Ce classeur ne contient aucune feuille.</p>;
+  if (!sheet) return <p className="text-neutral-500">{t("Ce classeur ne contient aucune feuille.", "This workbook contains no sheets.")}</p>;
   const width = sheet.rows[0]?.length ?? 0;
   return (
     <div className="text-neutral-800">
       {content.sheets.length > 1 && (
-        <div role="tablist" aria-label="Feuilles du classeur" className="mb-[1em] flex flex-wrap gap-[0.4em]">
+        <div role="tablist" aria-label={t("Feuilles du classeur", "Workbook sheets")} className="mb-[1em] flex flex-wrap gap-[0.4em]">
           {content.sheets.map((s, i) => (
             <button
               key={i}
@@ -121,18 +122,18 @@ export function SheetView({ content, initial = 0 }: { content: XlsxContent; init
               className={clsx("inline-flex items-center gap-[0.5em] rounded-[0.6em] border px-[0.8em] py-[0.35em] font-medium transition-colors duration-150", i === active ? "border-ink bg-ink text-white" : "border-line bg-white text-neutral-600 hover:border-neutral-300 hover:text-ink")}
             >
               {s.name}
-              {s.hidden && <EyeOff aria-label="Feuille masquée" className="size-[1.05em] opacity-70" strokeWidth={1.75} />}
+              {s.hidden && <EyeOff aria-label={t("Feuille masquée", "Hidden sheet")} className="size-[1.05em] opacity-70" strokeWidth={1.75} />}
             </button>
           ))}
         </div>
       )}
       {sheet.hidden && (
         <p className="mb-[0.9em]">
-          <Hidden>Feuille masquée dans Excel</Hidden>
+          <Hidden>{t("Feuille masquée dans Excel", "Sheet hidden in Excel")}</Hidden>
         </p>
       )}
       {sheet.rows.length === 0 ? (
-        <p className="text-neutral-500">Cette feuille est vide.</p>
+        <p className="text-neutral-500">{t("Cette feuille est vide.", "This sheet is empty.")}</p>
       ) : (
         <table role="tabpanel" aria-label={sheet.name} className="border-collapse text-left">
           <thead>
@@ -163,10 +164,13 @@ export function SheetView({ content, initial = 0 }: { content: XlsxContent; init
       )}
       {sheet.truncated && (
         <p className="mt-[1em] text-neutral-500">
-          Aperçu limité aux {MAX_SHEET_ROWS} premières lignes et aux {MAX_SHEET_COLS} premières colonnes. Téléchargez l’original pour tout voir.
+          {t(
+            `Aperçu limité aux ${MAX_SHEET_ROWS} premières lignes et aux ${MAX_SHEET_COLS} premières colonnes. Téléchargez l’original pour tout voir.`,
+            `Preview limited to the first ${MAX_SHEET_ROWS} rows and the first ${MAX_SHEET_COLS} columns. Download the original to see everything.`,
+          )}
         </p>
       )}
-      {content.truncated && <p className="mt-[1em] text-neutral-500">Ce classeur contient d’autres feuilles qui ne sont pas affichées ici.</p>}
+      {content.truncated && <p className="mt-[1em] text-neutral-500">{t("Ce classeur contient d’autres feuilles qui ne sont pas affichées ici.", "This workbook contains other sheets that are not shown here.")}</p>}
     </div>
   );
 }
@@ -174,11 +178,11 @@ export function SheetView({ content, initial = 0 }: { content: XlsxContent; init
 /* --------------------------------------------------------------- PowerPoint */
 
 export function SlidesView({ content, watermark, personal }: { content: PptxContent; watermark: boolean; personal: string | null }) {
-  if (content.slides.length === 0) return <p className="text-neutral-500">Cette présentation ne contient aucune diapositive.</p>;
+  if (content.slides.length === 0) return <p className="text-neutral-500">{t("Cette présentation ne contient aucune diapositive.", "This presentation contains no slides.")}</p>;
   return (
     <ol className="space-y-[1.8em]">
       {content.slides.map((slide, i) => (
-        <li key={i} aria-label={`Diapositive ${i + 1}`} className="border border-line shadow-page">
+        <li key={i} data-slide={i + 1} aria-label={t(`Diapositive ${i + 1}`, `Slide ${i + 1}`)} className="border border-line shadow-page">
           <div className="relative flex aspect-video flex-col overflow-hidden bg-white px-[3.4em] py-[2.8em] text-left">
             {watermark && <PageWatermark />}
             {personal && <PersonalWatermark text={personal} />}
@@ -186,9 +190,9 @@ export function SlidesView({ content, watermark, personal }: { content: PptxCont
               <span className="tabular-nums">
                 {i + 1} / {content.slides.length}
               </span>
-              {slide.hidden && <Hidden>Diapositive masquée</Hidden>}
+              {slide.hidden && <Hidden>{t("Diapositive masquée", "Hidden slide")}</Hidden>}
             </div>
-            <h3 className={clsx("relative mt-[0.7em] text-[1.9em] font-semibold leading-[1.2] tracking-[-0.02em]", slide.title ? "text-ink" : "text-neutral-300")}>{slide.title ?? "Sans titre"}</h3>
+            <h3 className={clsx("relative mt-[0.7em] text-[1.9em] font-semibold leading-[1.2] tracking-[-0.02em]", slide.title ? "text-ink" : "text-neutral-300")}>{slide.title ?? t("Sans titre", "Untitled")}</h3>
             <ul className="relative mt-[1.1em] min-h-0 flex-1 space-y-[0.45em] overflow-hidden text-[1.05em] leading-[1.5] text-neutral-700">
               {slide.lines.map((line, n) => (
                 <li key={n} className="flex gap-[0.7em] break-words" style={{ paddingLeft: `${line.level * 1.4}em` }}>
@@ -202,13 +206,13 @@ export function SlidesView({ content, watermark, personal }: { content: PptxCont
           </div>
           {slide.notes && (
             <div className="border-t border-line bg-subtle px-[1.6em] py-[1.1em] text-left">
-              <p className="text-[0.78em] font-semibold uppercase tracking-[0.1em] text-neutral-500">Notes du présentateur</p>
+              <p className="text-[0.78em] font-semibold uppercase tracking-[0.1em] text-neutral-500">{t("Notes du présentateur", "Speaker notes")}</p>
               <p className="mt-[0.4em] whitespace-pre-wrap break-words leading-[1.55] text-neutral-700">{slide.notes}</p>
             </div>
           )}
         </li>
       ))}
-      {content.truncated && <li className="text-neutral-500">Aperçu limité aux premières diapositives. Téléchargez l’original pour tout voir.</li>}
+      {content.truncated && <li className="text-neutral-500">{t("Aperçu limité aux premières diapositives. Téléchargez l’original pour tout voir.", "Preview limited to the first slides. Download the original to see everything.")}</li>}
     </ol>
   );
 }

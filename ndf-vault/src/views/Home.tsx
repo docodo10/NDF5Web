@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useVault } from "@/lib/store";
 import { activeFiles, byCreatedDesc, byModifiedDesc } from "@/lib/selectors";
 import { formatSize } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { ExplorerToolbar, useFileFilters, type KindGroup } from "@/components/files/Explorer";
 import { DueChip } from "@/components/files/DueChip";
 import { FileIcon, FileTable } from "@/components/files/FileTable";
@@ -15,11 +16,12 @@ import { kindTabs, SectionTitle } from "./shared";
 
 type Scope = "recent" | "modified" | "shared" | "all";
 
-const SCOPES: TabItem<Scope>[] = [
-  { id: "recent", label: "Ajouts récents" },
-  { id: "modified", label: "Modifiés récemment" },
-  { id: "shared", label: "Partagés avec moi" },
-  { id: "all", label: "Tous les fichiers" },
+// A function, so that the labels follow the language at the time they are drawn.
+const scopes = (): TabItem<Scope>[] => [
+  { id: "recent", label: t("Ajouts récents", "Recently added") },
+  { id: "modified", label: t("Modifiés récemment", "Recently modified") },
+  { id: "shared", label: t("Partagés avec moi", "Shared with me") },
+  { id: "all", label: t("Tous les fichiers", "All files") },
 ];
 
 const RECENT_COUNT = 14;
@@ -79,18 +81,22 @@ export function Home() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Bienvenue dans NDF Vault" description="The New Drago Family — gestion des documents et de la production" actions={<SampleNotice />} />
+      <PageHeader
+        title={t("Bienvenue dans NDF Vault", "Welcome to NDF Vault")}
+        description={t("The New Drago Family — gestion des documents et de la production", "The New Drago Family — document and production management")}
+        actions={<SampleNotice />}
+      />
 
-      <section aria-label="Actions rapides" data-tour="actions" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <ActionCard icon={CloudArrowUpIcon} label="Téléverser" hint="PDF, Office, images" onClick={() => v.openDialog({ type: "upload", folderId: null })} />
-        <ActionCard icon={FolderIcon} label="Nouveau dossier" hint="Dans l’index du Vault" onClick={() => v.openDialog({ type: "newFolder", parentId: "root" })} />
-        <ActionCard icon={KanbanIcon} label="Nouveau projet" hint="Un espace par production" onClick={() => v.openDialog({ type: "newProject" })} />
-        <ActionCard icon={CompassIcon} label="Visite guidée" hint="Le tour en une minute" onClick={v.startTour} />
+      <section aria-label={t("Actions rapides", "Quick actions")} data-tour="actions" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <ActionCard icon={CloudArrowUpIcon} label={t("Téléverser", "Upload")} hint="PDF, Office, images" onClick={() => v.openDialog({ type: "upload", folderId: null })} />
+        <ActionCard icon={FolderIcon} label={t("Nouveau dossier", "New folder")} hint={t("Dans l’index du Vault", "In the Vault index")} onClick={() => v.openDialog({ type: "newFolder", parentId: "root" })} />
+        <ActionCard icon={KanbanIcon} label={t("Nouveau projet", "New project")} hint={t("Un espace par production", "One workspace per production")} onClick={() => v.openDialog({ type: "newProject" })} />
+        <ActionCard icon={CompassIcon} label={t("Visite guidée", "Guided tour")} hint={t("Le tour en une minute", "The tour in one minute")} onClick={v.startTour} />
       </section>
 
       {dated.length > 0 && (
-        <section className="space-y-3" aria-label="Échéances">
-          <SectionTitle>Échéances</SectionTitle>
+        <section className="space-y-3" aria-label={t("Échéances", "Due dates")}>
+          <SectionTitle>{t("Échéances", "Due dates")}</SectionTitle>
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {dated.map(({ f }) => (
               <li key={f.id}>
@@ -98,7 +104,7 @@ export function Home() {
                   <FileIcon kind={f.kind} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13.5px] font-medium text-ink">{f.name}</span>
-                    <span className="block truncate text-[12.5px] text-neutral-500">{f.dueLabel ?? "Échéance"}</span>
+                    <span className="block truncate text-[12.5px] text-neutral-500">{f.dueLabel ?? t("Échéance", "Due date")}</span>
                   </span>
                   <DueChip dueAt={f.dueAt} label={f.dueLabel} />
                 </button>
@@ -109,15 +115,15 @@ export function Home() {
       )}
 
       <section className="space-y-4">
-        <SectionTitle>Explorateur de fichiers</SectionTitle>
+        <SectionTitle>{t("Explorateur de fichiers", "File explorer")}</SectionTitle>
 
         <ExplorerToolbar
-          left={<SegmentedTabs<KindGroup> label="Type de fichier" items={kindTabs(false)} value={filters.state.kind} onChange={(kind) => filters.setState((s) => ({ ...s, kind }))} />}
+          left={<SegmentedTabs<KindGroup> label={t("Type de fichier", "File type")} items={kindTabs(false)} value={filters.state.kind} onChange={(kind) => filters.setState((s) => ({ ...s, kind }))} />}
           filters={filters}
         />
 
         {pinned.length > 0 ? (
-          <ul aria-label="Fichiers épinglés" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ul aria-label={t("Fichiers épinglés", "Pinned files")} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {pinned.map((f) => (
               <li key={f.id} className="group relative flex h-[60px] items-center gap-3 rounded-[10px] border border-line bg-white pl-3 pr-2 shadow-xs transition-colors duration-150 hover:border-neutral-300">
                 <FileIcon kind={f.kind} />
@@ -135,8 +141,8 @@ export function Home() {
                 </div>
                 <button
                   type="button"
-                  aria-label={`Désépingler ${f.name}`}
-                  title="Désépingler"
+                  aria-label={t(`Désépingler ${f.name}`, `Unpin ${f.name}`)}
+                  title={t("Désépingler", "Unpin")}
                   onClick={() => v.togglePinned(f.id)}
                   className="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors duration-150 hover:bg-fill hover:text-ink"
                 >
@@ -148,13 +154,25 @@ export function Home() {
           </ul>
         ) : (
           <p className="rounded-[10px] border border-dashed border-line bg-subtle px-4 py-3.5 text-[13px] text-neutral-500">
-            Aucun fichier épinglé. Choisissez <span className="font-medium text-neutral-700">Épingler à l’accueil</span> dans le menu d’un fichier pour le garder ici.
+            {t(
+              <>
+                Aucun fichier épinglé. Choisissez <span className="font-medium text-neutral-700">Épingler à l’accueil</span> dans le menu d’un fichier pour le garder ici.
+              </>,
+              <>
+                No pinned files. Choose <span className="font-medium text-neutral-700">Pin to Home</span> in a file’s menu to keep it here.
+              </>,
+            )}
           </p>
         )}
 
-        <TextTabs<Scope> label="Portée" items={SCOPES} value={scope} onChange={setScope} />
+        <TextTabs<Scope> label={t("Portée", "Scope")} items={scopes()} value={scope} onChange={setScope} />
 
-        <FileTable variant="compact" files={filters.filtered} emptyTitle="Aucun fichier ne correspond" emptyHint="Essayez un autre type, effacez la recherche ou réinitialisez les filtres." />
+        <FileTable
+          variant="compact"
+          files={filters.filtered}
+          emptyTitle={t("Aucun fichier ne correspond", "No files match")}
+          emptyHint={t("Essayez un autre type, effacez la recherche ou réinitialisez les filtres.", "Try another type, clear the search or reset the filters.")}
+        />
       </section>
     </div>
   );

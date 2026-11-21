@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { ActivityItem, FileStatus, FileVersion, Folder, Profile, Project, Route, VaultFile } from "./types";
 import { ACTIVITY, CURRENT_USER_ID, FILES, FOLDERS, PROJECTS, USERS } from "./sample-data";
 import { count, descendantIds, folderPath, formatDate, formatMoment, formatTime, fullName, sanitizeName, STATUS_LABEL } from "./format";
@@ -14,7 +14,10 @@ import { parseDay } from "./due";
 import { extractText } from "./extract";
 import { buildNotices, type Notice } from "./notices";
 import { cleanText, indexText, searchText, type DocText, type Hit, type IndexedText } from "./search";
-import { consultationCode, lowers, PROTECTION_LABEL, protectionOf, type Protection } from "./protection";
+import { localizeFiles, localizeFolders, localizeProjects } from "./builtin";
+import { getLang, subscribeLang, t } from "./i18n";
+import { journalText } from "./journal";
+import { consultationCode, lowers, PROTECTION_LABEL, PROTECTION_LABEL_FR, protectionOf, type Protection } from "./protection";
 import { hashToRoute, routeToHash } from "./routes";
 import { folderRules } from "./selectors";
 import { stampImage, stampPdf, watermarkText } from "./stamp";
@@ -352,9 +355,15 @@ export function VaultProvider({ children, fallback, lockScreen }: { children: Re
 function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock: () => void; reload: (notice: string) => void; children: ReactNode }) {
   const init = boot.initial;
   const persistent = boot.persistent;
-  const [files, setFiles] = useState<VaultFile[]>(init?.files ?? FILES);
-  const [folders, setFolders] = useState<Folder[]>(init?.folders ?? FOLDERS);
-  const [projects, setProjects] = useState<Project[]>(init?.projects ?? PROJECTS);
+  // What is stored, under the names it was given. The built-in index, projects and sample files are stored once, in French.
+  const [storedFiles, setFiles] = useState<VaultFile[]>(init?.files ?? FILES);
+  const [storedFolders, setFolders] = useState<Folder[]>(init?.folders ?? FOLDERS);
+  const [storedProjects, setProjects] = useState<Project[]>(init?.projects ?? PROJECTS);
+  // What is shown: the same, with the built-in names in the language of the interface.
+  const lang = useSyncExternalStore(subscribeLang, getLang, getLang);
+  const files = useMemo(() => localizeFiles(storedFiles), [storedFiles, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+  const folders = useMemo(() => localizeFolders(storedFolders), [storedFolders, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+  const projects = useMemo(() => localizeProjects(storedProjects), [storedProjects, lang]); // eslint-disable-line react-hooks/exhaustive-deps
   const [activity, setActivity] = useState<ActivityItem[]>(init?.activity ?? ACTIVITY);
   const [watermark, setWatermark] = useState(init?.watermark ?? true);
   const [personalMark, setPersonalMark] = useState(init?.personalMark ?? true);
@@ -376,8 +385,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const persisted = useMemo<db.Persisted>(
-    () => ({ schema: db.SCHEMA, files, folders, projects, activity: activity.slice(0, 500), watermark, personalMark, profile, ...(privacy && { privacy: true }), ...(defaultProtection !== "standard" && { defaultProtection }), ...(lastBackupAt && { lastBackupAt }), ...(lastAuditAt && { lastAuditAt }) }),
-    [files, folders, projects, activity, watermark, personalMark, profile, privacy, defaultProtection, lastBackupAt, lastAuditAt],
+    () => ({ schema: db.SCHEMA, files: storedFiles, folders: storedFolders, projects: storedProjects, activity: activity.slice(0, 500), watermark, personalMark, profile, ...(privacy && { privacy: true }), ...(defaultProtection !== "standard" && { defaultProtection }), ...(lastBackupAt && { lastBackupAt }), ...(lastAuditAt && { lastAuditAt }) }),
+    [storedFiles, storedFolders, storedProjects, activity, watermark, personalMark, profile, privacy, defaultProtection, lastBackupAt, lastAuditAt],
   );
   const latest = useRef(persisted);
   latest.current = persisted;
@@ -526,10 +535,10 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       const n = boot.unlocked.failedBefore;
       log("a déverrouillé le Vault", n > 0 ? `après ${count(n, "tentative")} ${n > 1 ? "échouées" : "échouée"}` : "", null, "security");
       if (boot.unlocked.recovered) log("a choisi une nouvelle phrase secrète avec le code de récupération", "", null, "security");
-      if (n > 0) notify(`${count(n, "tentative")} de déverrouillage ${n > 1 ? "échouées" : "échouée"} depuis votre dernière ouverture.`);
+      if (n > 0) notify(t(`${count(n, "tentative")} de déverrouillage ${n > 1 ? "échouées" : "échouée"} depuis votre dernière ouverture.`, `${count(n, "failed unlock attempt")} since you last opened the Vault.`));
     }
     if (boot.notice) notify(boot.notice);
-    if (boot.unreadable) notify("Les données enregistrées sont illisibles : le Vault repart des données d’exemple.");
+    if (boot.unreadable) notify(t("Les données enregistrées sont illisibles : le Vault repart des données d’exemple.", "The saved data is unreadable: the Vault is starting over from the sample data."));
     if (!tourSeen()) setTourOpen(true);
   }, [boot, log, notify]);
 
@@ -669,9 +678,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       const first = byId(ids[0]);
       return ids.length === 1 && first ? fullName(first) : count(ids.length, "fichier");
     };
+    // The same, for a message in English. `label` stays French: it is also what the journal stores.
+    const labelEn = (ids: string[]) => {
+      const first = byId(ids[0]);
+      return ids.length === 1 && first ? fullName(first) : count(ids.length, "file");
+    };
     const s = (ids: string[]) => (ids.length > 1 ? "s" : "");
     const unreadable = (status: OriginalResult["status"]) =>
-      status === "missing" ? "Original introuvable dans ce navigateur." : status === "locked" ? "Le Vault est verrouillé." : "Ce fichier a été altéré : il ne peut pas être ouvert ni téléchargé.";
+      status === "missing" ? t("Original introuvable dans ce navigateur.", "Original not found in this browser.") : status === "locked" ? t("Le Vault est verrouillé.", "The Vault is locked.") : t("Ce fichier a été altéré : il ne peut pas être ouvert ni téléchargé.", "This file has been altered: it cannot be opened or downloaded.");
     const pathOf = (f: VaultFile) => zipPath([...folderPath(folders, f.folderId).filter((d) => d.parentId !== null).map((d) => (d.index ? `${d.index} ${d.name}` : d.name)), fullName(f)]);
     const security: SecurityState = { available: persistent && cryptoAvailable(), protected: meta.protected, autoLockMinutes: meta.autoLockMinutes, recoveryAt: meta.recovery ? (meta.recoveryAt ?? "") : null, wipeAfter: meta.wipeAfter ?? 0 };
 
@@ -693,10 +707,10 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
     };
     const saveZip = async (entries: ZipEntry[], archiveName: string, skipped: number, fileCount: number) => {
       const result = await saveToDisk(`${sanitizeName(archiveName) || "ndf-vault"}.zip`, await buildZip(entries));
-      if (result === "failed") return notify("L’export n’est pas disponible dans cette vue.");
+      if (result === "failed") return notify(t("L’export n’est pas disponible dans cette vue.", "Export is not available in this view."));
       if (result === "declined") return;
       log("a exporté en ZIP", count(fileCount, "fichier"));
-      notify(`${count(fileCount, "fichier")} exporté${fileCount > 1 ? "s" : ""}${skipped ? ` · ${count(skipped, "fichier")} protégé${skipped > 1 ? "s" : ""} ou illisible${skipped > 1 ? "s" : ""} laissé${skipped > 1 ? "s" : ""} de côté` : ""}`);
+      notify(t(`${count(fileCount, "fichier")} exporté${fileCount > 1 ? "s" : ""}${skipped ? ` · ${count(skipped, "fichier")} protégé${skipped > 1 ? "s" : ""} ou illisible${skipped > 1 ? "s" : ""} laissé${skipped > 1 ? "s" : ""} de côté` : ""}`, `${count(fileCount, "file")} exported${skipped ? ` · ${count(skipped, "protected or unreadable file")} left out` : ""}`));
     };
 
     return {
@@ -717,7 +731,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       profile,
       setProfile: (p) => {
         setProfileState({ name: sanitizeName(p.name) || db.DEFAULT_PROFILE.name, company: sanitizeName(p.company), email: p.email.trim().slice(0, 120) });
-        notify("Profil enregistré");
+        notify(t("Profil enregistré", "Profile saved"));
       },
       paletteOpen,
       setPaletteOpen,
@@ -744,7 +758,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       defaultProtection,
       setDefaultProtection: (level) => {
         setDefaultProtection(level);
-        notify(`Nouveaux fichiers : ${PROTECTION_LABEL[level].toLowerCase()}`);
+        notify(t(`Nouveaux fichiers : ${PROTECTION_LABEL[level].toLowerCase()}`, `New files: ${PROTECTION_LABEL[level].toLowerCase()}`));
       },
       setProtection: async (ids, level, passphrase) => {
         const targets = files.filter((f) => ids.includes(f.id) && !f.sample);
@@ -759,8 +773,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
             return level === "standard" ? rest : { ...rest, protection: level };
           }),
         );
-        log(`a réglé la protection sur « ${PROTECTION_LABEL[level]} » pour`, label(targets.map((f) => f.id)), null, "security");
-        notify(`Protection : ${PROTECTION_LABEL[level].toLowerCase()}`);
+        log(`a réglé la protection sur « ${PROTECTION_LABEL_FR[level]} » pour`, label(targets.map((f) => f.id)), null, "security");
+        notify(t(`Protection : ${PROTECTION_LABEL[level].toLowerCase()}`, `Protection: ${PROTECTION_LABEL[level].toLowerCase()}`));
         return "ok";
       },
       lastBackupAt,
@@ -782,7 +796,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const label = day ? sanitizeName(dueLabel ?? "").slice(0, 80) : "";
         patchMany([id], () => ({ dueAt: day ?? undefined, dueLabel: label || undefined }));
         log(day ? "a fixé une échéance pour" : "a retiré l’échéance de", fullName(f), f.projectId);
-        notify(day ? `Échéance fixée au ${formatDate(day)}` : "Échéance retirée");
+        notify(day ? t(`Échéance fixée au ${formatDate(day)}`, `Due date set to ${formatDate(day)}`) : t("Échéance retirée", "Due date removed"));
       },
       addComment: (id, text) => {
         const f = byId(id);
@@ -794,7 +808,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
       },
       deleteComment: (id, commentId) => {
         patchMany([id], (x) => ({ comments: (x.comments ?? []).filter((c) => c.id !== commentId) }));
-        notify("Commentaire supprimé");
+        notify(t("Commentaire supprimé", "Comment deleted"));
       },
       compareVersion: async (fileId, versionId) => {
         const f = byId(fileId);
@@ -834,7 +848,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         judge(true);
         setMeta(await db.readMeta());
         log("a activé la protection par phrase secrète", "", null, "security");
-        notify("Vault protégé : tout ce qui est stocké est maintenant chiffré.");
+        notify(t("Vault protégé : tout ce qui est stocké est maintenant chiffré.", "Vault protected: everything stored is now encrypted."));
         return true;
       },
       disableProtection: async (passphrase) => {
@@ -843,14 +857,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         if (!judge(await db.disableProtection(passphrase))) return false;
         setMeta(await db.readMeta());
         log("a désactivé la protection par phrase secrète", "", null, "security");
-        notify("Protection désactivée : le Vault n’est plus chiffré.");
+        notify(t("Protection désactivée : le Vault n’est plus chiffré.", "Protection turned off: the Vault is no longer encrypted."));
         return true;
       },
       changePassphrase: async (current, next) => {
         if (!judge(await db.changePassphrase(current, next))) return false;
         setMeta(await db.readMeta());
         log("a changé la phrase secrète", "", null, "security");
-        notify("Phrase secrète changée");
+        notify(t("Phrase secrète changée", "Passphrase changed"));
         return true;
       },
       setAutoLock: (minutes) => {
@@ -872,7 +886,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         };
         for (const f of targets) {
           await check(f.id, f.sha256, fullName(f));
-          for (const ver of f.versions ?? []) await check(ver.id, ver.sha256, `${fullName(f)} — version du ${formatDate(ver.at)}`);
+          for (const ver of f.versions ?? []) await check(ver.id, ver.sha256, t(`${fullName(f)} — version du ${formatDate(ver.at)}`, `${fullName(f)} — version from ${formatDate(ver.at)}`));
         }
         const bad = problems.filter((p) => p.state !== "unverified").length;
         setLastAuditAt(new Date().toISOString());
@@ -908,15 +922,15 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
           backup = await sealBackup(passphrase, latest.current, blobs);
         } catch {
           // Typically memory: every original is encrypted before the file can be handed over.
-          notify("La sauvegarde n’a pas pu être créée : le Vault est peut-être trop volumineux pour cet appareil.");
+          notify(t("La sauvegarde n’a pas pu être créée : le Vault est peut-être trop volumineux pour cet appareil.", "The backup could not be created: the Vault may be too large for this device."));
           return false;
         }
         const result = await saveToDisk(`ndf-vault-${nowIso().slice(0, 10)}.${BACKUP_EXTENSION}`, backup);
-        if (result === "failed") notify("La sauvegarde n’est pas disponible dans cette vue.");
+        if (result === "failed") notify(t("La sauvegarde n’est pas disponible dans cette vue.", "Backup is not available in this view."));
         if (result !== "saved") return false;
         setLastBackupAt(new Date().toISOString());
         log("a créé une sauvegarde chiffrée", count(blobs.length, "original", "originaux"), null, "security");
-        notify(`Sauvegarde créée : ${count(blobs.length, "original", "originaux")}${skipped ? ` · ${count(skipped, "original illisible ignoré", "originaux illisibles ignorés")}` : ""}`);
+        notify(t(`Sauvegarde créée : ${count(blobs.length, "original", "originaux")}${skipped ? ` · ${count(skipped, "original illisible ignoré", "originaux illisibles ignorés")}` : ""}`, `Backup created: ${count(blobs.length, "original")}${skipped ? ` · ${count(skipped, "unreadable original")} skipped` : ""}`));
         return true;
       },
       restoreBackup: async (file, passphrase) => {
@@ -949,7 +963,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const when = formatMoment(opened.createdAt);
         const entry: ActivityItem = { id: uid("a"), at: nowIso(), userId: CURRENT_USER_ID, verb: "a restauré la sauvegarde du", target: when, projectId: null, kind: "security" };
         await db.saveState({ ...opened.state, activity: [entry, ...opened.state.activity].slice(0, 500) });
-        reload(complete ? `Sauvegarde du ${when} restaurée.` : "Restauration incomplète : l’espace a manqué sur cet appareil, certains originaux sont absents.");
+        reload(complete ? t(`Sauvegarde du ${when} restaurée.`, `Backup of ${when} restored.`) : t("Restauration incomplète : l’espace a manqué sur cet appareil, certains originaux sont absents.", "Restore incomplete: this device ran out of space, some originals are missing."));
         return complete ? "ok" : "incomplete";
       },
       readOriginal,
@@ -958,13 +972,13 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const f = byId(id);
         if (!f) return;
         patchMany([id], (x) => ({ favorite: !x.favorite }));
-        notify(f.favorite ? "Retiré des favoris" : "Ajouté aux favoris");
+        notify(f.favorite ? t("Retiré des favoris", "Removed from favorites") : t("Ajouté aux favoris", "Added to favorites"));
       },
       togglePinned: (id) => {
         const f = byId(id);
         if (!f) return;
         patchMany([id], (x) => ({ pinned: !x.pinned }));
-        notify(f.pinned ? "Désépinglé" : "Épinglé à l’accueil");
+        notify(f.pinned ? t("Désépinglé", "Unpinned") : t("Épinglé à l’accueil", "Pinned to Home"));
       },
       renameFile: (id, name) => {
         const f = byId(id);
@@ -972,7 +986,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         if (!f || !clean) return;
         patchMany([id], () => ({ name: clean, modifiedAt: nowIso() }));
         log("a renommé", `${clean}.${f.ext}`, f.projectId);
-        notify("Fichier renommé");
+        notify(t("Fichier renommé", "File renamed"));
       },
       updateFile: (id, patch) => {
         const f = byId(id);
@@ -982,24 +996,24 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         if (safe.tags !== undefined) safe.tags = safe.tags.map((t) => sanitizeName(t).slice(0, 40)).filter(Boolean).slice(0, 20);
         patchMany([id], () => ({ ...safe, modifiedAt: nowIso() }));
         log("a modifié les détails de", fullName(f), f.projectId);
-        notify("Détails enregistrés");
+        notify(t("Détails enregistrés", "Details saved"));
       },
       moveFiles: (ids, folderId) => {
         const before = new Map(files.filter((f) => ids.includes(f.id)).map((f) => [f.id, f.folderId]));
         patchMany(ids, () => ({ folderId }));
         log("a déplacé", label(ids));
-        const dest = folders.find((f) => f.id === folderId)?.name ?? "dossier";
-        notify(`${label(ids)} déplacé${s(ids)} vers ${dest}`, () => patchMany(ids, (f) => ({ folderId: before.get(f.id) ?? f.folderId })));
+        const dest = folders.find((f) => f.id === folderId)?.name ?? t("dossier", "folder");
+        notify(t(`${label(ids)} déplacé${s(ids)} vers ${dest}`, `${labelEn(ids)} moved to ${dest}`), () => patchMany(ids, (f) => ({ folderId: before.get(f.id) ?? f.folderId })));
       },
       copyFile: (id) => {
         const f = byId(id);
         if (!f) return;
         const at = nowIso();
-        const copy: VaultFile = { ...f, id: uid("f"), name: `${f.name} (copie)`.slice(0, 120), createdAt: at, modifiedAt: at, versionAt: at, favorite: false, pinned: false, status: "Draft", archived: false, versions: undefined };
+        const copy: VaultFile = { ...f, id: uid("f"), name: t(`${f.name} (copie)`, `${f.name} (copy)`).slice(0, 120), createdAt: at, modifiedAt: at, versionAt: at, favorite: false, pinned: false, status: "Draft", archived: false, versions: undefined };
         const add = () => {
           setFiles((fs) => [copy, ...fs]);
           log("a copié", fullName(f), f.projectId);
-          notify(`Copie créée : « ${copy.name} »`, () => {
+          notify(t(`Copie créée : « ${copy.name} »`, `Copy created: “${copy.name}”`), () => {
             setFiles((fs) => fs.filter((x) => x.id !== copy.id));
             void db.deleteBlobs([copy.id]);
           });
@@ -1008,24 +1022,24 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         // An uploaded file's copy needs its own stored original.
         void readOriginal(f).then(async (r) => {
           if (r.status === "ok" && (await db.putBlob(copy.id, r.blob))) add();
-          else notify(r.status === "ok" ? "Copie impossible : ce navigateur refuse le stockage." : unreadable(r.status));
+          else notify(r.status === "ok" ? t("Copie impossible : ce navigateur refuse le stockage.", "Cannot copy: this browser refuses storage.") : unreadable(r.status));
         });
       },
       archiveFiles: (ids) => {
         const before = new Map(files.filter((f) => ids.includes(f.id)).map((f) => [f.id, f.status]));
         patchMany(ids, () => ({ archived: true, status: "Archived" as FileStatus, pinned: false }));
         log("a archivé", label(ids));
-        notify(`${label(ids)} archivé${s(ids)}`, () => patchMany(ids, (f) => ({ archived: false, status: before.get(f.id) ?? "Draft" })));
+        notify(t(`${label(ids)} archivé${s(ids)}`, `${labelEn(ids)} archived`), () => patchMany(ids, (f) => ({ archived: false, status: before.get(f.id) ?? "Draft" })));
       },
       restoreFiles: (ids) => {
         patchMany(ids, (f) => ({ archived: false, deleted: false, deletedAt: undefined, status: f.status === "Archived" ? ("Draft" as FileStatus) : f.status }));
         log("a restauré", label(ids));
-        notify(`${label(ids)} restauré${s(ids)}`);
+        notify(t(`${label(ids)} restauré${s(ids)}`, `${labelEn(ids)} restored`));
       },
       deleteFiles: (ids) => {
         patchMany(ids, () => ({ deleted: true, deletedAt: new Date().toISOString(), pinned: false }));
         log("a supprimé", label(ids));
-        notify(`${label(ids)} supprimé${s(ids)} · conservé${s(ids)} ${BIN_DAYS} jours dans la corbeille`, () => patchMany(ids, () => ({ deleted: false, deletedAt: undefined })));
+        notify(t(`${label(ids)} supprimé${s(ids)} · conservé${s(ids)} ${BIN_DAYS} jours dans la corbeille`, `${labelEn(ids)} deleted · kept ${BIN_DAYS} days in the trash`), () => patchMany(ids, () => ({ deleted: false, deletedAt: undefined })));
       },
       purgeFiles: (ids) => {
         const what = label(ids);
@@ -1034,11 +1048,11 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         setFiles((fs) => fs.filter((f) => !set.has(f.id)));
         void db.deleteBlobs(blobs);
         log("a supprimé définitivement", what);
-        notify(`${what} supprimé${s(ids)} définitivement`);
+        notify(t(`${what} supprimé${s(ids)} définitivement`, `${labelEn(ids)} deleted permanently`));
       },
       setStatus: (ids, status) => {
         patchMany(ids, () => ({ status, archived: status === "Archived" }));
-        notify(`Statut : ${STATUS_LABEL[status]}`);
+        notify(t(`Statut : ${STATUS_LABEL[status]}`, `Status: ${STATUS_LABEL[status]}`));
       },
       uploadFiles: async (items, folderId, projectId) => {
         const added: VaultFile[] = [];
@@ -1078,7 +1092,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
           const target = folderFor(it.path);
           added.push({
             id,
-            name: freeName(sanitizeName(it.name) || "Sans titre", it.ext, target),
+            name: freeName(sanitizeName(it.name) || t("Sans titre", "Untitled"), it.ext, target),
             ext: it.ext,
             kind: it.kind,
             size: it.file.size,
@@ -1112,17 +1126,17 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
           setFiles((fs) => [...added, ...fs]);
           log("a téléversé", added.length === 1 ? fullName(added[0]) : count(added.length, "fichier"), projectId);
         }
-        if (refused) notify(`${count(refused, "fichier")} non enregistré${refused > 1 ? "s" : ""} : ce navigateur refuse le stockage ou l’espace est insuffisant.`);
-        else if (added.length) notify(`${count(added.length, "fichier")} téléversé${added.length > 1 ? "s" : ""}`);
+        if (refused) notify(t(`${count(refused, "fichier")} non enregistré${refused > 1 ? "s" : ""} : ce navigateur refuse le stockage ou l’espace est insuffisant.`, `${count(refused, "file")} not saved: this browser refuses storage or there is not enough space.`));
+        else if (added.length) notify(t(`${count(added.length, "fichier")} téléversé${added.length > 1 ? "s" : ""}`, `${count(added.length, "file")} uploaded`));
         return added.length;
       },
       downloadFile: async (id, options) => {
         const f = byId(id);
         if (!f) return;
-        if (f.sample) return notify("Fichier d’exemple : il n’a pas d’original à télécharger.");
+        if (f.sample) return notify(t("Fichier d’exemple : il n’a pas d’original à télécharger.", "Sample file: it has no original to download."));
         if (protectionOf(f) !== "standard") {
           log("a tenté de télécharger un document en consultation seule :", fullName(f), f.projectId, "security", true);
-          return notify("Document en consultation seule : le téléchargement est bloqué. Changez son niveau de protection pour l’autoriser.");
+          return notify(t("Document en consultation seule : le téléchargement est bloqué. Changez son niveau de protection pour l’autoriser.", "View-only document: download is blocked. Change its protection level to allow it."));
         }
         const r = await readOriginal(f);
         if (r.status !== "ok") return notify(unreadable(r.status));
@@ -1136,14 +1150,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
               const stamped = await stampImage(blob, text, f.ext);
               blob = stamped.blob;
               filename = `${f.name}.${stamped.ext}`;
-            } else return notify("Le filigrane s’applique aux PDF et aux images.");
-            filename = filename.replace(/(\.[^.]+)$/, " (filigrané)$1");
+            } else return notify(t("Le filigrane s’applique aux PDF et aux images.", "The watermark applies to PDFs and images."));
+            filename = filename.replace(/(\.[^.]+)$/, t(" (filigrané)$1", " (watermarked)$1"));
           } catch {
-            return notify("Ce fichier ne peut pas être filigrané : il est protégé ou endommagé.");
+            return notify(t("Ce fichier ne peut pas être filigrané : il est protégé ou endommagé.", "This file cannot be watermarked: it is protected or damaged."));
           }
         }
         const result = await saveToDisk(filename, blob);
-        if (result === "failed") return notify("Le téléchargement n’est pas disponible dans cette vue.");
+        if (result === "failed") return notify(t("Le téléchargement n’est pas disponible dans cette vue.", "Download is not available in this view."));
         if (result === "saved") log(options?.stamped ? "a téléchargé avec filigrane" : "a téléchargé", fullName(f), f.projectId);
       },
 
@@ -1151,7 +1165,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const f = byId(fileId);
         if (!f || f.sample || item.error) return false;
         if (item.ext !== f.ext) {
-          notify(`La nouvelle version doit être au même format (.${f.ext}).`);
+          notify(t(`La nouvelle version doit être au même format (.${f.ext}).`, `The new version must be in the same format (.${f.ext}).`));
           return false;
         }
         const current = await readOriginal(f);
@@ -1163,14 +1177,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const versionId = uid("v");
         if (!(await db.putBlob(versionId, current.blob)) || !(await db.putBlob(f.id, item.file))) {
           await db.deleteBlobs([versionId]);
-          notify("Version non enregistrée : ce navigateur refuse le stockage ou l’espace est insuffisant.");
+          notify(t("Version non enregistrée : ce navigateur refuse le stockage ou l’espace est insuffisant.", "Version not saved: this browser refuses storage or there is not enough space."));
           return false;
         }
         const previous: FileVersion = { id: versionId, ext: f.ext, size: f.size, sha256: f.sha256, at: f.versionAt ?? f.createdAt, ownerId: f.ownerId };
         const at = nowIso();
         patchMany([f.id], (x) => ({ size: item.file.size, sha256: item.sha256, mime: item.file.type || undefined, modifiedAt: at, versionAt: at, ownerId: CURRENT_USER_ID, versions: [previous, ...(x.versions ?? [])] }));
         log("a téléversé une nouvelle version de", fullName(f), f.projectId);
-        notify("Nouvelle version enregistrée");
+        notify(t("Nouvelle version enregistrée", "New version saved"));
         return true;
       },
       restoreVersion: async (fileId, versionId) => {
@@ -1183,14 +1197,14 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const keptId = uid("v");
         if (!(await db.putBlob(keptId, current.blob)) || !(await db.putBlob(f.id, old.blob))) {
           await db.deleteBlobs([keptId]);
-          return notify("Restauration impossible : ce navigateur refuse le stockage.");
+          return notify(t("Restauration impossible : ce navigateur refuse le stockage.", "Cannot restore: this browser refuses storage."));
         }
         await db.deleteBlobs([versionId]);
         const kept: FileVersion = { id: keptId, ext: f.ext, size: f.size, sha256: f.sha256, at: f.versionAt ?? f.createdAt, ownerId: f.ownerId };
         const at = nowIso();
         patchMany([f.id], (x) => ({ size: version.size, sha256: version.sha256, modifiedAt: at, versionAt: version.at, ownerId: version.ownerId, versions: [kept, ...(x.versions ?? []).filter((v) => v.id !== versionId)] }));
         log("a restauré une version de", fullName(f), f.projectId);
-        notify(`Version du ${formatDate(version.at)} restaurée`);
+        notify(t(`Version du ${formatDate(version.at)} restaurée`, `Version from ${formatDate(version.at)} restored`));
       },
       deleteVersion: (fileId, versionId) => {
         const f = byId(fileId);
@@ -1198,18 +1212,18 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         patchMany([fileId], (x) => ({ versions: (x.versions ?? []).filter((v) => v.id !== versionId) }));
         void db.deleteBlobs([versionId]);
         log("a supprimé une version de", fullName(f), f.projectId);
-        notify("Version supprimée");
+        notify(t("Version supprimée", "Version deleted"));
       },
       downloadVersion: async (fileId, versionId) => {
         const f = byId(fileId);
         const version = f?.versions?.find((v) => v.id === versionId);
         if (!f || !version) return;
-        if (protectionOf(f) !== "standard") return notify("Document en consultation seule : le téléchargement de ses versions est bloqué.");
+        if (protectionOf(f) !== "standard") return notify(t("Document en consultation seule : le téléchargement de ses versions est bloqué.", "View-only document: downloading its versions is blocked."));
         const r = await readOriginal(f, versionId);
         if (r.status !== "ok") return notify(unreadable(r.status));
         if (version.sha256 && cryptoAvailable() && (await sha256Hex(r.blob)) !== version.sha256) return notify(unreadable("altered"));
-        const result = await saveToDisk(`${f.name} (version du ${formatDate(version.at)}).${version.ext}`, r.blob);
-        if (result === "failed") notify("Le téléchargement n’est pas disponible dans cette vue.");
+        const result = await saveToDisk(t(`${f.name} (version du ${formatDate(version.at)}).${version.ext}`, `${f.name} (version from ${formatDate(version.at)}).${version.ext}`), r.blob);
+        if (result === "failed") notify(t("Le téléchargement n’est pas disponible dans cette vue.", "Download is not available in this view."));
         else if (result === "saved") log("a téléchargé une version de", fullName(f), f.projectId);
       },
 
@@ -1219,7 +1233,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const id = uid("d");
         setFolders((fs) => [...fs, { id, name: clean, parentId }]);
         log("a créé le dossier", clean);
-        notify(`Dossier « ${clean} » créé`);
+        notify(t(`Dossier « ${clean} » créé`, `Folder “${clean}” created`));
         return id;
       },
       renameFolder: (id, name) => {
@@ -1228,7 +1242,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         if (!folder || !clean || !folderRules(folder, folders, files, projects).renamable) return;
         setFolders((fs) => fs.map((f) => (f.id === id ? { ...f, name: clean } : f)));
         log("a renommé le dossier", clean);
-        notify("Dossier renommé");
+        notify(t("Dossier renommé", "Folder renamed"));
       },
       moveFolder: (id, parentId) => {
         const folder = folders.find((f) => f.id === id);
@@ -1238,7 +1252,8 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         const before = folder.parentId;
         setFolders((fs) => fs.map((f) => (f.id === id ? { ...f, parentId } : f)));
         log("a déplacé le dossier", folder.name);
-        notify(`Dossier déplacé vers ${folders.find((f) => f.id === parentId)?.name ?? "dossier"}`, () => setFolders((fs) => fs.map((f) => (f.id === id ? { ...f, parentId: before } : f))));
+        const dest = folders.find((f) => f.id === parentId)?.name ?? t("dossier", "folder");
+        notify(t(`Dossier déplacé vers ${dest}`, `Folder moved to ${dest}`), () => setFolders((fs) => fs.map((f) => (f.id === id ? { ...f, parentId: before } : f))));
         return true;
       },
       deleteFolder: (id) => {
@@ -1251,7 +1266,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         }
         setFolders((fs) => fs.filter((f) => f.id !== id));
         log("a supprimé le dossier", folder.name);
-        notify(`Dossier « ${folder.name} » supprimé`, () => setFolders((fs) => (fs.some((f) => f.id === id) ? fs : [...fs, folder])));
+        notify(t(`Dossier « ${folder.name} » supprimé`, `Folder “${folder.name}” deleted`), () => setFolders((fs) => (fs.some((f) => f.id === id) ? fs : [...fs, folder])));
         return true;
       },
       addProject: ({ name, code, period }) => {
@@ -1263,7 +1278,7 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         setFolders((fs) => [...fs, { id: folderId, name: clean, code: cleanCode || undefined, parentId: fs.some((f) => f.id === "production") ? "production" : "root" }]);
         setProjects((ps) => [...ps, { id, code: cleanCode || clean.slice(0, 3).toUpperCase(), name: clean, period: sanitizeName(period) || "Dates à définir", summary: "Nouvel espace de projet.", storyYears: [], folderId, archived: false }]);
         log("a créé le projet", clean);
-        notify(`Projet « ${clean} » créé`);
+        notify(t(`Projet « ${clean} » créé`, `Project “${clean}” created`));
         return id;
       },
       updateProject: (id, patch) => {
@@ -1274,28 +1289,28 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         setProjects((ps) => ps.map((x) => (x.id === id ? { ...x, name, code, period: sanitizeName(patch.period) || "Dates à définir", summary: patch.summary.trim().slice(0, 300) } : x)));
         setFolders((fs) => fs.map((f) => (f.id === p.folderId ? { ...f, code } : f)));
         log("a modifié le projet", name);
-        notify("Projet enregistré");
+        notify(t("Projet enregistré", "Project saved"));
       },
       setProjectArchived: (id, archived) => {
         const p = projects.find((x) => x.id === id);
         if (!p) return;
         setProjects((ps) => ps.map((x) => (x.id === id ? { ...x, archived } : x)));
         log(archived ? "a archivé le projet" : "a restauré le projet", p.name);
-        notify(archived ? `Projet « ${p.name} » archivé` : `Projet « ${p.name} » restauré`, () => setProjects((ps) => ps.map((x) => (x.id === id ? { ...x, archived: !archived } : x))));
+        notify(archived ? t(`Projet « ${p.name} » archivé`, `Project “${p.name}” archived`) : t(`Projet « ${p.name} » restauré`, `Project “${p.name}” restored`), () => setProjects((ps) => ps.map((x) => (x.id === id ? { ...x, archived: !archived } : x))));
       },
 
       exportZip: async (ids, archiveName) => {
         const targets = files.filter((f) => ids.includes(f.id) && !f.sample);
-        if (!targets.length) return notify("Rien à exporter : les fichiers d’exemple n’ont pas d’original.");
+        if (!targets.length) return notify(t("Rien à exporter : les fichiers d’exemple n’ont pas d’original.", "Nothing to export: sample files have no original."));
         const { entries, skipped } = await exportEntries(targets);
-        if (!entries.length) return notify(skipped ? "Rien à exporter : ces documents sont en consultation seule ou illisibles." : "Aucun original lisible à exporter.");
+        if (!entries.length) return notify(skipped ? t("Rien à exporter : ces documents sont en consultation seule ou illisibles.", "Nothing to export: these documents are view-only or unreadable.") : t("Aucun original lisible à exporter.", "No readable original to export."));
         await saveZip(entries, archiveName, skipped, entries.length);
       },
       exportVault: async () => {
         const targets = files.filter((f) => !f.sample && !f.deleted);
-        if (!targets.length) return notify("Rien à exporter : téléversez d’abord vos fichiers.");
+        if (!targets.length) return notify(t("Rien à exporter : téléversez d’abord vos fichiers.", "Nothing to export: upload your files first."));
         const { entries, skipped } = await exportEntries(targets);
-        if (!entries.length) return notify("Aucun original lisible à exporter.");
+        if (!entries.length) return notify(t("Aucun original lisible à exporter.", "No readable original to export."));
         const user = (id: string) => USERS.find((u) => u.id === id)?.name ?? "";
         const manifest = targets.map((f) => ({
           chemin: pathOf(f),
@@ -1313,15 +1328,18 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         await saveZip([...entries, { path: "manifeste.json", data: new TextEncoder().encode(text) }], `ndf-vault-${nowIso().slice(0, 10)}`, skipped, entries.length);
       },
       exportJournal: async (items) => {
-        if (!items.length) return notify("Le journal est vide.");
+        if (!items.length) return notify(t("Le journal est vide.", "The activity log is empty."));
         const who = (id: string) => USERS.find((u) => u.id === id)?.name ?? "";
         const rows = [
-          ["Date", "Heure", "Qui", "Action", "Élément", "Projet", "Type", "Code de consultation"],
-          ...items.map((a) => [formatDate(a.at), formatTime(a.at), who(a.userId), a.verb, a.target, projects.find((p) => p.id === a.projectId)?.code ?? "", a.kind === "security" ? "Sécurité" : "Fichier", a.code ?? ""]),
+          t(["Date", "Heure", "Qui", "Action", "Élément", "Projet", "Type", "Code de consultation"], ["Date", "Time", "Who", "Action", "Item", "Project", "Type", "Viewing code"]),
+          ...items.map((a) => {
+            const said = journalText(a);
+            return [formatDate(a.at), formatTime(a.at), who(a.userId), said.verb, said.target, projects.find((p) => p.id === a.projectId)?.code ?? "", a.kind === "security" ? t("Sécurité", "Security") : t("Fichier", "File"), a.code ?? ""];
+          }),
         ];
-        const result = await saveToDisk(`journal-ndf-vault-${nowIso().slice(0, 10)}.csv`, new Blob([toCsv(rows)], { type: "text/csv" }));
-        if (result === "failed") notify("L’export n’est pas disponible dans cette vue.");
-        else if (result === "saved") notify(`Journal exporté : ${count(items.length, "entrée")}`);
+        const result = await saveToDisk(t(`journal-ndf-vault-${nowIso().slice(0, 10)}.csv`, `activity-log-ndf-vault-${nowIso().slice(0, 10)}.csv`), new Blob([toCsv(rows)], { type: "text/csv" }));
+        if (result === "failed") notify(t("L’export n’est pas disponible dans cette vue.", "Export is not available in this view."));
+        else if (result === "saved") notify(t(`Journal exporté : ${count(items.length, "entrée")}`, `Activity log exported: ${count(items.length, "entry", "entries")}`));
       },
       resetVault: async () => {
         await db.clearData();
@@ -1338,10 +1356,10 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
         setProfileState(db.DEFAULT_PROFILE);
         setPreview(null);
         navigate({ view: "home" });
-        notify("Vault réinitialisé : les données d’exemple sont de retour.");
+        notify(t("Vault réinitialisé : les données d’exemple sont de retour.", "Vault reset: the sample data is back."));
       },
     };
-  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, privacy, defaultProtection, lastBackupAt, lastAuditAt, infoFileId, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload, searchContent, indexable, indexedCount, judge]);
+  }, [files, folders, projects, activity, route, navigate, sidebarOpen, watermark, personalMark, privacy, defaultProtection, lastBackupAt, lastAuditAt, infoFileId, profile, paletteOpen, dialog, preview, toast, notify, dismissToast, persistent, tourOpen, startTour, endTour, meta, lockNow, saveNow, readOriginal, log, patchMany, reload, searchContent, indexable, indexedCount, judge, lang]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
