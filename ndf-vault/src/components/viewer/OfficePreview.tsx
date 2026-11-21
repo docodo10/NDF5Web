@@ -101,7 +101,8 @@ export function DocxView({ content }: { content: DocxContent }) {
 
 /* -------------------------------------------------------------------- Excel */
 
-const NUMERIC = /^-?[\d\s  ]+(,\d+)?( %)?$/;
+// A number as either language writes it: "1200,5" or "1200.5", "12,5 %" or "12.5%".
+const NUMERIC = /^-?[\d\s\u00a0\u202f]+([,.]\d+)?( ?%)?$/;
 
 export function SheetView({ content, initial = 0 }: { content: XlsxContent; initial?: number }) {
   const [active, setActive] = useState(initial);
