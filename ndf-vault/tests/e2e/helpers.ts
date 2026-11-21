@@ -59,7 +59,7 @@ export const fakeOffice = (name: string): Upload => ({ name, mimeType: `${OFFICE
 /* --------------------------------------------------------------- Navigation */
 
 /** Open the vault on a view. The first-visit tour is skipped unless `tour` is set. */
-export async function openVault(page: Page, hash = "home", options: { tour?: boolean } = {}): Promise<void> {
+export async function openVault(page: Page, hash = "home", options: { tour?: boolean; lang?: "fr" | "en" | "" } = {}): Promise<void> {
   if (!options.tour) {
     await page.addInitScript(() => {
       try {
@@ -69,7 +69,8 @@ export async function openVault(page: Page, hash = "home", options: { tour?: boo
       }
     });
   }
-  await page.goto(`/preview.html#${hash}`);
+  // The suite was written against the French interface: it arrives, as from the French side of the site, with `?lang=fr`.
+  await page.goto(`/preview.html?lang=${options.lang ?? "fr"}#${hash}`);
   await expect(page.locator("#vault-main")).toBeVisible();
 }
 

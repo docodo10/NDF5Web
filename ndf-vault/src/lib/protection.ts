@@ -12,17 +12,32 @@
  * a time, and names the person who made it.
  */
 
+import { localized } from "./i18n";
+
 export type Protection = "standard" | "view" | "high";
 
 export const PROTECTION_LEVELS: Protection[] = ["standard", "view", "high"];
 
-export const PROTECTION_LABEL: Record<Protection, string> = { standard: "Standard", view: "Consultation seule", high: "Haute protection" };
+/** The names of the levels as the journal records them: always French, whatever the interface shows. */
+export const PROTECTION_LABEL_FR: Record<Protection, string> = { standard: "Standard", view: "Consultation seule", high: "Haute protection" };
 
-export const PROTECTION_HINT: Record<Protection, string> = {
-  standard: "Le document s’ouvre, se télécharge et s’exporte normalement.",
-  view: "Téléchargement et export bloqués. Pas de copie ni de clic droit, filigrane personnel incrusté dans l’image, code de consultation au journal.",
-  high: "Consultation seule, plus la lecture protégée : seule une bande du document est nette à la fois, tout se masque dès que la fenêtre n’est plus active, et la phrase secrète est redemandée pour l’ouvrir.",
-};
+export const PROTECTION_LABEL: Record<Protection, string> = localized({
+  standard: ["Standard", "Standard"],
+  view: ["Consultation seule", "View only"],
+  high: ["Haute protection", "High protection"],
+});
+
+export const PROTECTION_HINT: Record<Protection, string> = localized({
+  standard: ["Le document s’ouvre, se télécharge et s’exporte normalement.", "The document opens, downloads and exports as usual."],
+  view: [
+    "Téléchargement et export bloqués. Pas de copie ni de clic droit, filigrane personnel incrusté dans l’image, code de consultation au journal.",
+    "Download and export are blocked. No copying or right-click, a personal watermark drawn into the image, and a viewing code in the activity log.",
+  ],
+  high: [
+    "Consultation seule, plus la lecture protégée : seule une bande du document est nette à la fois, tout se masque dès que la fenêtre n’est plus active, et la phrase secrète est redemandée pour l’ouvrir.",
+    "View only, plus protected reading: only one band of the document is sharp at a time, everything is hidden as soon as the window is no longer active, and the passphrase is asked again to open it.",
+  ],
+});
 
 const RANK: Record<Protection, number> = { standard: 0, view: 1, high: 2 };
 

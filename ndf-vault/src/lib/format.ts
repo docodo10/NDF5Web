@@ -1,14 +1,20 @@
+import { getLang, localized } from "./i18n";
 import type { FileKind, FileStatus, Folder, VaultFile } from "./types";
 
 const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "août", "sept.", "oct.", "nov.", "déc."];
+const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+/** "14 nov. 2026" in French, "Nov 14, 2026" in English. */
 export function formatDate(iso: string): string {
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  if (getLang() === "en") return `${MONTHS_EN[m - 1]} ${d}, ${y}`;
   return `${d === 1 ? "1er" : d} ${MONTHS[m - 1]} ${y}`;
 }
 
+/** "15 h 04" in French, "3:04 PM" in English. */
 export function formatTime(iso: string): string {
   const [h, min] = iso.slice(11, 16).split(":").map(Number);
+  if (getLang() === "en") return `${h % 12 === 0 ? 12 : h % 12}:${String(min).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
   return `${h} h ${String(min).padStart(2, "0")}`;
 }
 
@@ -21,37 +27,39 @@ export function formatMoment(when: Date | string): string {
   return `${formatDate(local)}, ${formatTime(local)}`;
 }
 
-const decimal = (n: number) => n.toFixed(1).replace(".", ",");
-
+/** "2,4 Mo" in French, "2.4 MB" in English. */
 export function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} o`;
+  const en = getLang() === "en";
+  const decimal = (n: number) => (en ? n.toFixed(1) : n.toFixed(1).replace(".", ","));
+  const [b, k, m, g] = en ? ["B", "KB", "MB", "GB"] : ["o", "Ko", "Mo", "Go"];
+  if (bytes < 1024) return `${bytes} ${b}`;
   const kb = bytes / 1024;
-  if (kb < 1024) return `${Math.round(kb)} Ko`;
+  if (kb < 1024) return `${Math.round(kb)} ${k}`;
   const mb = kb / 1024;
-  if (mb < 1024) return `${mb < 10 ? decimal(mb) : Math.round(mb)} Mo`;
-  return `${decimal(mb / 1024)} Go`;
+  if (mb < 1024) return `${mb < 10 ? decimal(mb) : Math.round(mb)} ${m}`;
+  return `${decimal(mb / 1024)} ${g}`;
 }
 
-export const KIND_LABEL: Record<FileKind, string> = {
-  pdf: "PDF",
-  docx: "Document",
-  xlsx: "Tableur",
-  pptx: "Présentation",
-  txt: "Texte",
-  csv: "CSV",
-  image: "Image",
-};
+export const KIND_LABEL: Record<FileKind, string> = localized({
+  pdf: ["PDF", "PDF"],
+  docx: ["Document", "Document"],
+  xlsx: ["Tableur", "Spreadsheet"],
+  pptx: ["Présentation", "Presentation"],
+  txt: ["Texte", "Text"],
+  csv: ["CSV", "CSV"],
+  image: ["Image", "Image"],
+});
 
 /** Statuses keep their internal English ids; this is what the interface shows. */
-export const STATUS_LABEL: Record<FileStatus, string> = {
-  Draft: "Brouillon",
-  "In Review": "En révision",
-  Approved: "Approuvé",
-  Final: "Final",
-  Archived: "Archivé",
-};
+export const STATUS_LABEL: Record<FileStatus, string> = localized({
+  Draft: ["Brouillon", "Draft"],
+  "In Review": ["En révision", "In review"],
+  Approved: ["Approuvé", "Approved"],
+  Final: ["Final", "Final"],
+  Archived: ["Archivé", "Archived"],
+});
 
-/** "1 fichier", "3 fichiers". */
+/** "1 fichier", "3 fichiers"; "1 file", "3 files". The caller gives the noun in the current language. */
 export function count(n: number, singular: string, plural = `${singular}s`): string {
   return `${n} ${n > 1 ? plural : singular}`;
 }

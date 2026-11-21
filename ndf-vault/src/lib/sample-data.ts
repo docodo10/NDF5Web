@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 import type { ActivityItem, FileKind, FileStatus, Folder, Project, User, VaultFile } from "./types";
 
 /**
@@ -7,12 +8,26 @@ import type { ActivityItem, FileKind, FileStatus, Folder, Project, User, VaultFi
  * behind it, and none of it describes real figures, contracts or approvals.
  */
 
+/** A sample department, named in the language of the interface each time it is read. */
+const department = (id: string, fr: [name: string, role: string, initials: string], en: [name: string, role: string, initials: string]): User => ({
+  id,
+  get name() {
+    return t(fr, en)[0];
+  },
+  get role() {
+    return t(fr, en)[1];
+  },
+  get initials() {
+    return t(fr, en)[2];
+  },
+});
+
 export const USERS: User[] = [
-  { id: "u-admin", name: "Admin NDF5", role: "Administration", initials: "AN" },
-  { id: "u-prod", name: "Bureau de production", role: "Production", initials: "BP" },
-  { id: "u-legal", name: "Affaires juridiques", role: "Juridique", initials: "AJ" },
-  { id: "u-fin", name: "Bureau des finances", role: "Finances", initials: "BF" },
-  { id: "u-story", name: "Service scénario", role: "Écriture", initials: "SS" },
+  department("u-admin", ["Admin NDF5", "Administration", "AN"], ["Admin NDF5", "Administration", "AN"]),
+  department("u-prod", ["Bureau de production", "Production", "BP"], ["Production Office", "Production", "PO"]),
+  department("u-legal", ["Affaires juridiques", "Juridique", "AJ"], ["Legal Affairs", "Legal", "LA"]),
+  department("u-fin", ["Bureau des finances", "Finances", "BF"], ["Finance Office", "Finance", "FO"]),
+  department("u-story", ["Service scénario", "Écriture", "SS"], ["Story Department", "Writing", "SD"]),
 ];
 
 export const CURRENT_USER_ID = "u-admin";
