@@ -14,7 +14,7 @@ import { parseDay } from "./due";
 import { extractText } from "./extract";
 import { buildNotices, type Notice } from "./notices";
 import { cleanText, indexText, searchText, type DocText, type Hit, type IndexedText } from "./search";
-import { localizeFiles, localizeFolders, localizeProjects } from "./builtin";
+import { localizeFiles, localizeFolders, localizeProjects, storedName } from "./builtin";
 import { getLang, subscribeLang, t } from "./i18n";
 import { journalText } from "./journal";
 import { consultationCode, lowers, PROTECTION_LABEL, PROTECTION_LABEL_FR, protectionOf, type Protection } from "./protection";
@@ -440,10 +440,12 @@ function VaultSession({ boot, relock, reload, children }: { boot: Ready; relock:
   /** Add a journal entry. `once` skips it when the same entry was just written. */
   const log = useCallback((verb: string, target: string, projectId: string | null = null, kind: "file" | "security" = "file", once = false, code?: string) => {
     const at = nowIso();
+    // Built-in names are recorded as they are stored, so the entry reads the same whatever the language it was made in.
+    const stored = storedName(target);
     setActivity((a) => {
       const top = a[0];
-      if (once && top && top.verb === verb && top.target === target && top.userId === CURRENT_USER_ID && top.at.slice(0, 15) === at.slice(0, 15)) return a;
-      return [{ id: uid("a"), at, userId: CURRENT_USER_ID, verb, target, projectId, kind, ...(code && { code }) }, ...a];
+      if (once && top && top.verb === verb && top.target === stored && top.userId === CURRENT_USER_ID && top.at.slice(0, 15) === at.slice(0, 15)) return a;
+      return [{ id: uid("a"), at, userId: CURRENT_USER_ID, verb, target: stored, projectId, kind, ...(code && { code }) }, ...a];
     });
   }, []);
 

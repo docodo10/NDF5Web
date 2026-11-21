@@ -69,9 +69,9 @@ export function ProjectsView() {
                   )}
                   <span className="mt-5 flex w-full items-center justify-between border-t border-hair pt-3.5 text-[12.5px] text-neutral-500">
                     <span>
-                      <span className="font-medium tabular-nums text-ink">{count(files.length, "fichier")}</span>
+                      <span className="font-medium tabular-nums text-ink">{t(count(files.length, "fichier"), count(files.length, "file"))}</span>
                     </span>
-                    <span>{files[0] ? `Modifié le ${formatDate(files[0].modifiedAt)}` : "Aucun fichier"}</span>
+                    <span>{files[0] ? t(`Modifié le ${formatDate(files[0].modifiedAt)}`, `Modified ${formatDate(files[0].modifiedAt)}`) : t("Aucun fichier", "No files")}</span>
                   </span>
                 </button>
               </li>

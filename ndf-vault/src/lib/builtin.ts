@@ -172,3 +172,26 @@ export function localizeFiles(files: VaultFile[]): VaultFile[] {
     return { ...f, name: FILE[f.name], tags: f.tags.map((tag) => TAG[tag] ?? tag) };
   });
 }
+
+const FILE_FR = new Map(Object.entries(FILE).map(([fr, en]) => [en, fr]));
+const FOLDER_BY_FR = new Map(Object.values(FOLDER).map(({ fr, en }) => [fr, en]));
+const FOLDER_BY_EN = new Map(Object.values(FOLDER).map(({ fr, en }) => [en, fr]));
+
+/** The English name of a built-in folder, when `name` is one; the name itself otherwise. */
+export function builtinFolderName(name: string): string {
+  return english() ? (FOLDER_BY_FR.get(name) ?? name) : name;
+}
+
+/**
+ * The name under which something built-in is stored, whatever language it was
+ * read in: "NDA Template.pdf" → "Modèle d’entente de confidentialité.pdf".
+ * The journal records these, so that an entry reads the same in both languages.
+ */
+export function storedName(shown: string): string {
+  const folder = FOLDER_BY_EN.get(shown);
+  if (folder) return folder;
+  const dot = shown.lastIndexOf(".");
+  const stem = dot > 0 ? shown.slice(0, dot) : shown;
+  const file = FILE_FR.get(stem);
+  return file ? `${file}${dot > 0 ? shown.slice(dot) : ""}` : shown;
+}

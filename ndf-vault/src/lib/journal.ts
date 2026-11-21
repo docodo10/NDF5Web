@@ -1,4 +1,4 @@
-import { sampleFileName } from "./builtin";
+import { builtinFolderName, sampleFileName } from "./builtin";
 import { getLang } from "./i18n";
 import type { ActivityItem } from "./types";
 
@@ -81,6 +81,9 @@ function targetInEnglish(target: string): string {
     const name = sampleFileName(target.slice(0, dot));
     if (name !== target.slice(0, dot)) return `${name}${target.slice(dot)}`;
   }
+  // A folder of the index.
+  const folder = builtinFolderName(target);
+  if (folder !== target) return folder;
   let m = /^(\d+) fichiers?$/.exec(target);
   if (m) return plural(m[1], "file", "files");
   m = /^(\d+) origina(?:l|ux)$/.exec(target);

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { localizeFiles, localizeFolders, localizeProjects, sampleFileName } from "@/lib/builtin";
+import { readFileSync } from "node:fs";
+import { localizeFiles, localizeFolders, localizeProjects, sampleFileName, storedName } from "@/lib/builtin";
 import { count, formatDate, formatMoment, formatSize, formatTime, KIND_LABEL, STATUS_LABEL } from "@/lib/format";
 import { getLang, localized, parseLang, setLangForTests, subscribeLang, t } from "@/lib/i18n";
 import { journalText } from "@/lib/journal";
@@ -155,6 +156,27 @@ describe("the journal", () => {
     expect(en("a laissé la corbeille se vider :", "2 fichiers supprimés depuis plus de 30 jours")).toEqual({ verb: "let the trash empty itself:", target: "2 files deleted more than 30 days ago" });
     // A sample file is named as the interface names it.
     expect(en("a mis à jour", "Extrait du modèle prévisionnel.pdf").target).toBe("Forecast Model Excerpt.pdf");
+  });
+
+  it("records built-in names as they are stored, whatever the language they were read in", () => {
+    expect(storedName("NDA Template.pdf")).toBe("Modèle d’entente de confidentialité.pdf");
+    expect(storedName("Legal and Chain of Title")).toBe("Juridique et chaîne de titres");
+    expect(storedName("Mon contrat.pdf")).toBe("Mon contrat.pdf");
+    expect(storedName("Modèle de contrat d’option.docx")).toBe("Modèle de contrat d’option.docx");
+    // And back again when shown.
+    expect(inEnglish(() => journalText(entry("a déplacé le dossier", "Juridique et chaîne de titres")))).toEqual({ verb: "moved the folder", target: "Legal and Chain of Title" });
+  });
+
+  it("knows every wording the vault writes to the journal", () => {
+    // Read from the source: a new journal entry added without its English would fail here.
+    const source = readFileSync(new URL("../../src/lib/store.tsx", import.meta.url), "utf8") + readFileSync(new URL("../../src/lib/sample-data.ts", import.meta.url), "utf8");
+    const verbs = new Set<string>();
+    for (const line of source.split("\n")) {
+      if (!/\blog\(|verb: "|const VERBS/.test(line)) continue;
+      for (const m of line.matchAll(/"(a [^"]+)"/g)) verbs.add(m[1]);
+    }
+    expect(verbs.size).toBeGreaterThan(35);
+    for (const verb of verbs) expect(inEnglish(() => journalText(entry(verb)).verb), verb).not.toBe(verb);
   });
 
   it("shows a wording it does not know as it was written, rather than guess", () => {

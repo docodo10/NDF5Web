@@ -8,6 +8,7 @@ import { STATUSES } from "@/lib/types";
 import { USERS } from "@/lib/sample-data";
 import { activeFiles, byModifiedDesc, CATEGORY_LABEL, fileCategory, type ProjectCategory } from "@/lib/selectors";
 import { count } from "@/lib/format";
+import { localized, t } from "@/lib/i18n";
 import { ExplorerToolbar, useFileFilters } from "@/components/files/Explorer";
 import { FileTable } from "@/components/files/FileTable";
 import { Avatar, Button, Chip, EmptyState, PageHeader, SegmentedTabs, StatusBadge, type TabItem } from "@/components/ui";
@@ -15,21 +16,25 @@ import { ActivityList, Breadcrumbs, ProjectMenu, SectionTitle, UploadButton } fr
 
 type Tab = "overview" | "files" | "financial" | "production" | "legal" | "team" | "activity";
 
-const TABS: TabItem<Tab>[] = [
-  { id: "overview", label: "Aperçu", icon: LayoutDashboard },
-  { id: "files", label: "Fichiers", icon: Files },
-  { id: "financial", label: "Documents financiers", icon: Landmark },
-  { id: "production", label: "Production", icon: Clapperboard },
-  { id: "legal", label: "Juridique", icon: Scale },
-  { id: "team", label: "Équipe", icon: Users },
-  { id: "activity", label: "Activité", icon: Activity },
+// A function, so that the labels follow the language at the time they are drawn.
+const tabs = (): TabItem<Tab>[] => [
+  { id: "overview", label: t("Aperçu", "Overview"), icon: LayoutDashboard },
+  { id: "files", label: t("Fichiers", "Files"), icon: Files },
+  { id: "financial", label: t("Documents financiers", "Financial documents"), icon: Landmark },
+  { id: "production", label: t("Production", "Production"), icon: Clapperboard },
+  { id: "legal", label: t("Juridique", "Legal"), icon: Scale },
+  { id: "team", label: t("Équipe", "Team"), icon: Users },
+  { id: "activity", label: t("Activité", "Activity"), icon: Activity },
 ];
 
-const CATEGORY_EMPTY: Record<"financial" | "production" | "legal", string> = {
-  financial: "Les fichiers du dossier 05 Affaires et finances liés à ce projet apparaissent ici.",
-  production: "Les fichiers des dossiers 02 Scénarios, 03 Développement de l’histoire, 04 Production et 07 Talents et packaging apparaissent ici.",
-  legal: "Les fichiers du dossier 06 Juridique et chaîne de titres liés à ce projet apparaissent ici.",
-};
+const CATEGORY_EMPTY: Record<"financial" | "production" | "legal", string> = localized({
+  financial: ["Les fichiers du dossier 05 Affaires et finances liés à ce projet apparaissent ici.", "Files from the 05 Business and Finance folder linked to this project appear here."],
+  production: [
+    "Les fichiers des dossiers 02 Scénarios, 03 Développement de l’histoire, 04 Production et 07 Talents et packaging apparaissent ici.",
+    "Files from the 02 Screenplays, 03 Story Development, 04 Production and 07 Talent and Packaging folders appear here.",
+  ],
+  legal: ["Les fichiers du dossier 06 Juridique et chaîne de titres liés à ce projet apparaissent ici.", "Files from the 06 Legal and Chain of Title folder linked to this project appear here."],
+});
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -74,9 +79,9 @@ export function ProjectView({ id }: { id: string }) {
   if (!project) {
     return (
       <div className="rounded-xl border border-line bg-white">
-        <EmptyState icon={FolderSearch} title="Projet introuvable" hint="Ce projet n’existe pas ou a été retiré." />
+        <EmptyState icon={FolderSearch} title={t("Projet introuvable", "Project not found")} hint={t("Ce projet n’existe pas ou a été retiré.", "This project does not exist or has been removed.")} />
         <div className="-mt-8 flex justify-center pb-12">
-          <Button onClick={() => v.navigate({ view: "projects" })}>Voir tous les projets</Button>
+          <Button onClick={() => v.navigate({ view: "projects" })}>{t("Voir tous les projets", "View all projects")}</Button>
         </div>
       </div>
     );
@@ -89,13 +94,13 @@ export function ProjectView({ id }: { id: string }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={<Breadcrumbs items={[{ label: "Tous les projets", onClick: () => v.navigate({ view: "projects" }) }, { label: project.code }]} />}
+        eyebrow={<Breadcrumbs items={[{ label: t("Tous les projets", "All projects"), onClick: () => v.navigate({ view: "projects" }) }, { label: project.code }]} />}
         title={project.name}
-        description={project.archived ? `${project.period} · Projet archivé` : project.period}
+        description={project.archived ? t(`${project.period} · Projet archivé`, `${project.period} · Archived project`) : project.period}
         actions={
           <>
             <Button icon={FolderOpen} onClick={() => v.navigate({ view: "folder", id: project.folderId })}>
-              Ouvrir le dossier
+              {t("Ouvrir le dossier", "Open folder")}
             </Button>
             <UploadButton folderId={project.folderId} />
             <ProjectMenu project={project} />
@@ -103,16 +108,16 @@ export function ProjectView({ id }: { id: string }) {
         }
       />
 
-      <SegmentedTabs<Tab> label="Sections du projet" items={TABS} value={tab} onChange={setTab} />
+      <SegmentedTabs<Tab> label={t("Sections du projet", "Project sections")} items={tabs()} value={tab} onChange={setTab} />
 
       {tab === "overview" && (
         <div className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-3">
-            <Card title="À propos">
+            <Card title={t("À propos", "About")}>
               <p className="mb-3 text-[13px] leading-[19px] text-neutral-600">{project.summary}</p>
               <Row label="Code">{project.code}</Row>
-              <Row label="Période">{project.period}</Row>
-              <Row label="Années">
+              <Row label={t("Période", "Period")}>{project.period}</Row>
+              <Row label={t("Années", "Years")}>
                 {project.storyYears.length > 0 ? (
                   <span className="flex gap-1.5">
                     {project.storyYears.map((y) => (
@@ -120,13 +125,13 @@ export function ProjectView({ id }: { id: string }) {
                     ))}
                   </span>
                 ) : (
-                  <span className="font-normal text-neutral-400">Non défini</span>
+                  <span className="font-normal text-neutral-400">{t("Non défini", "Not set")}</span>
                 )}
               </Row>
             </Card>
 
             <Card title="Documents">
-              <Row label="Tous les fichiers" onClick={() => setTab("files")}>
+              <Row label={t("Tous les fichiers", "All files")} onClick={() => setTab("files")}>
                 {files.length}
               </Row>
               {(["financial", "production", "legal"] as const).map((c) => (
@@ -137,7 +142,7 @@ export function ProjectView({ id }: { id: string }) {
               {byCategory.other.length > 0 && <Row label={CATEGORY_LABEL.other}>{byCategory.other.length}</Row>}
             </Card>
 
-            <Card title="Statuts">
+            <Card title={t("Statuts", "Statuses")}>
               {STATUSES.filter((s) => s !== "Archived").map((s) => (
                 <Row key={s} label={<StatusBadge status={s} />}>
                   {statusCount(s)}
@@ -151,14 +156,20 @@ export function ProjectView({ id }: { id: string }) {
               aside={
                 files.length > recent.length ? (
                   <Button variant="ghost" size="sm" onClick={() => setTab("files")}>
-                    Voir les {count(files.length, "fichier")}
+                    {t(`Voir les ${count(files.length, "fichier")}`, `View all ${count(files.length, "file")}`)}
                   </Button>
                 ) : undefined
               }
             >
-              Modifiés récemment
+              {t("Modifiés récemment", "Recently modified")}
             </SectionTitle>
-            <FileTable variant="compact" files={recent} footer={false} emptyTitle="Aucun fichier dans ce projet" emptyHint="Liez un fichier à ce projet dans Modifier les détails, ou téléversez-en un." />
+            <FileTable
+              variant="compact"
+              files={recent}
+              footer={false}
+              emptyTitle={t("Aucun fichier dans ce projet", "No files in this project")}
+              emptyHint={t("Liez un fichier à ce projet dans Modifier les détails, ou téléversez-en un.", "Link a file to this project in Edit details, or upload one.")}
+            />
           </section>
         </div>
       )}
@@ -170,7 +181,7 @@ export function ProjectView({ id }: { id: string }) {
             filters={filters}
             left={
               <p className="text-[13px] text-neutral-500">
-                <span className="font-medium tabular-nums text-ink">{count(filters.filtered.length, "fichier")}</span>
+                <span className="font-medium tabular-nums text-ink">{t(count(filters.filtered.length, "fichier"), count(filters.filtered.length, "file"))}</span>
                 {tab !== "files" && <span> · {CATEGORY_LABEL[tab]}</span>}
               </p>
             }
@@ -178,8 +189,20 @@ export function ProjectView({ id }: { id: string }) {
           <FileTable
             key={tab}
             files={filters.filtered}
-            emptyTitle={tabFiles.length === 0 ? (tab === "files" ? "Aucun fichier dans ce projet" : `${CATEGORY_LABEL[tab]} : rien pour l’instant`) : "Aucun fichier ne correspond"}
-            emptyHint={tabFiles.length === 0 ? (tab === "files" ? "Liez un fichier à ce projet dans Modifier les détails, ou téléversez-en un." : CATEGORY_EMPTY[tab]) : "Effacez la recherche ou réinitialisez les filtres."}
+            emptyTitle={
+              tabFiles.length === 0
+                ? tab === "files"
+                  ? t("Aucun fichier dans ce projet", "No files in this project")
+                  : t(`${CATEGORY_LABEL[tab]} : rien pour l’instant`, `${CATEGORY_LABEL[tab]}: nothing yet`)
+                : t("Aucun fichier ne correspond", "No files match")
+            }
+            emptyHint={
+              tabFiles.length === 0
+                ? tab === "files"
+                  ? t("Liez un fichier à ce projet dans Modifier les détails, ou téléversez-en un.", "Link a file to this project in Edit details, or upload one.")
+                  : CATEGORY_EMPTY[tab]
+                : t("Effacez la recherche ou réinitialisez les filtres.", "Clear the search or reset the filters.")
+            }
           />
         </div>
       )}
@@ -191,13 +214,13 @@ export function ProjectView({ id }: { id: string }) {
               <thead>
                 <tr className="bg-subtle">
                   <th scope="col" className="h-11 px-4 text-left text-[12.5px] font-medium text-neutral-500">
-                    Service
+                    {t("Service", "Department")}
                   </th>
                   <th scope="col" className="hidden h-11 px-3 text-left text-[12.5px] font-medium text-neutral-500 sm:table-cell">
-                    Rôle
+                    {t("Rôle", "Role")}
                   </th>
                   <th scope="col" className="h-11 w-[120px] px-4 text-right text-[12.5px] font-medium text-neutral-500">
-                    Fichiers du projet
+                    {t("Fichiers du projet", "Project files")}
                   </th>
                 </tr>
               </thead>
@@ -216,13 +239,22 @@ export function ProjectView({ id }: { id: string }) {
                 ))}
               </tbody>
             </table>
-            {team.length === 0 && <EmptyState icon={Users} title="Aucun contributeur" hint="Les services qui ajoutent des fichiers à ce projet apparaissent ici." />}
+            {team.length === 0 && <EmptyState icon={Users} title={t("Aucun contributeur", "No contributors")} hint={t("Les services qui ajoutent des fichiers à ce projet apparaissent ici.", "Departments that add files to this project appear here.")} />}
           </div>
-          <p className="text-[12.5px] text-neutral-500">Services d’exemple, listés parce qu’ils possèdent des fichiers de ce projet. La gestion des membres et des permissions arrivera avec la connexion des invités.</p>
+          <p className="text-[12.5px] text-neutral-500">
+            {t(
+              "Services d’exemple, listés parce qu’ils possèdent des fichiers de ce projet. La gestion des membres et des permissions arrivera avec la connexion des invités.",
+              "Sample departments, listed because they own files in this project. Member and permission management will come with guest sign-in.",
+            )}
+          </p>
         </div>
       )}
 
-      {tab === "activity" && <ActivityList items={activity} emptyTitle="Aucune activité pour ce projet" emptyHint="Les changements apportés aux fichiers de ce projet s’afficheront ici." />}
+      {tab === "activity" && <ActivityList
+          items={activity}
+          emptyTitle={t("Aucune activité pour ce projet", "No activity for this project")}
+          emptyHint={t("Les changements apportés aux fichiers de ce projet s’afficheront ici.", "Changes made to this project’s files will show here.")}
+        />}
     </div>
   );
 }
